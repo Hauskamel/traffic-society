@@ -13,7 +13,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Auf `feature/fundamentals` sind Verkehr und Schritt 3 (Fahrer aussteigen lassen) umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
+Auf `feature/fundamentals` sind Verkehr, Fahreraktionen und erste manuell bedienbare Fahrzeugbereiche umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
 Dokumente, Befragungsdialoge und Durchsuchungen gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
@@ -133,3 +133,21 @@ Prüft alle vier Fahrzeuglängen: keine Freigabe bei überstehendem Heck, sofort
 | Spieler mit Sprint | 21,6 | 6,0 |
 
 Der Straßenverkehr verwendet `BASE_TRAFFIC_SPEED_KMH = 10.8` mal `TRAFFIC_SPEED_FACTOR = 2.0`. Der Faktor verändert nur die Reisegeschwindigkeit der Autos. Parktempo und Spielerbewegung haben eigene Werte. Die angegebenen Fahrzeugwerte sind Ziel-/Höchstgeschwindigkeiten; Bremsen, Abstände und Einfädeln können das Tempo reduzieren. Die Spielerwerte wurden bei dieser Anpassung nicht verändert; die normale Bewegung ist damit eher Laufen als gemütliches Gehen.
+
+## Türen und Kofferraum – zunächst an Bobbys Limousine
+
+Am kontrollierten, geparkten Fahrzeug in die Ego-Ansicht wechseln. Mit dem Fadenkreuz auf **Fahrertür, Beifahrertür oder Kofferraumdeckel** schauen. Der getroffene Bereich wird gelb eingefärbt, dazu erscheint **[E] … öffnen/schließen**. E bewegt das jeweilige Teil mit einer kurzen Scharnieranimation. Zum Schließen erneut das geöffnete Teil ansehen und E drücken.
+
+- Türblech ansehen: Tür bedienen. Fahrerfenster / Fahrer ansehen: weiterhin das Mausrad-Menü öffnen.
+- Maximal circa 2,8 Meter Reichweite; Wände oder andere Hindernisse verdecken die Interaktion. Die Türen werden von ihrer jeweiligen Fahrzeugseite bedient, der Kofferraum vom Heck.
+- Während der Aus-/Einstiegsanimation übernimmt der Fahrer die Fahrertür. Manuelle Aktionen sind währenddessen gesperrt; der bereits geöffnete Türflügel wird ohne Zuschlagen übernommen.
+- Vor dem Weiterfahren alle geöffneten Bereiche schließen. Sonst bleibt der Wagen stehen und zeigt einen Hinweis.
+- Noch keine Gegenstände oder Durchsuchungen. Die manuell bedienbaren Bereiche sind zunächst nur an der Limousine vorhanden. Andere Modelle behalten ihre bisherigen Fahreraktionen.
+
+Grafischer Test:
+
+```sh
+godot --path . --script res://tests/vehicle_parts_test.gd
+```
+
+Prüft Auswahl/Markierung mit dem Fadenkreuz, E-Hinweise, beide Türen und Kofferraum, Öffnen/Schließen, Reichweite, Verdeckung durch eine Wand, das Fahrer-Menü, die Übergabe an die Fahreranimation und die Abfahrtsbedingungen.

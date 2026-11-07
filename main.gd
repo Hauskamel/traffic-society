@@ -20,6 +20,8 @@ var interaction_index := 0
 var interaction_actions: Array[String] = []
 var interaction_panel: PanelContainer
 var interaction_rows: RichTextLabel
+const VehiclePart = preload("res://scripts/vehicle_part.gd")
+var hovered_part: VehiclePart
 var feedback := ""
 var feedback_time := 0.0
 
@@ -237,8 +239,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			aerial = not aerial
 			update_camera()
 		elif event.keycode == KEY_E:
+			update_part_focus()
 			if interaction_open:
 				confirm_interaction()
+			elif is_instance_valid(hovered_part):
+				hovered_part.toggle()
 			elif can_interact():
 				open_interaction()
 		elif event.keycode == KEY_ESCAPE:
@@ -332,6 +337,7 @@ func can_interact() -> bool:
 	return difference.length() < 2.2 and facing.dot(difference.normalized()) > 0.72 and (outside or car.to_local(player.global_position).x < -0.9)
 
 func refresh_encounter_ui() -> void:
+	update_part_focus()
 	var selected := traffic.selected_car
 	var controlled := traffic.controlled_car
 	stop_button.visible = aerial and is_instance_valid(selected)
@@ -359,6 +365,8 @@ func refresh_encounter_ui() -> void:
 		text += "\n" + feedback
 	encounter_status.text = text
 	interact_hint.text = "[E] Mit %s sprechen" % controlled.driver_name if can_interact() and not interaction_open else ""
+	if is_instance_valid(hovered_part):
+		interact_hint.text = "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
 
 
 func open_interaction() -> void:
@@ -398,6 +406,35 @@ func confirm_interaction() -> void:
 		"Weiterfahren lassen":
 			succeeded = car.release()
 	if not succeeded:
-		feedback = "Aktion momentan nicht moeglich."
+		feedback = "Bitte zuerst Tueren und Kofferraum schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich."
 		feedback_time = 6.0
 	close_interaction()
+
+
+func update_part_focus() -> void:
+	var target: VehiclePart
+	var car := traffic.controlled_car
+	if not aerial and not interaction_open and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_instance_valid(car) and car.state == TrafficCar.State.PARKED and not car.driver.is_busy():
+		var origin := eyes.global_position
+		var end := origin - eyes.global_basis.z * 2.8
+		var query := PhysicsRayQueryParameters3D.create(origin, end, 8)
+		query.collide_with_areas = true
+		query.collide_with_bodies = false
+		var hit := get_world_3d().direct_space_state.intersect_ray(query)
+		var part = hit.get("collider")
+		if part is VehiclePart and part.vehicle == car and part.can_use(origin):
+			# The coarse car body encloses empty cabin/trunk space. Exclude it,
+			# use side checks above, and still respect other world obstacles.
+			var blocked := PhysicsRayQueryParameters3D.create(origin, hit.position, 7)
+			var ignored: Array[RID] = [car.get_rid(), player.get_rid()]
+			for section in car.parts:
+				ignored.append(section.pivot.get_rid())
+			blocked.exclude = ignored
+			if get_world_3d().direct_space_state.intersect_ray(blocked).is_empty():
+				target = part
+	if hovered_part != target:
+		if is_instance_valid(hovered_part):
+			hovered_part.set_highlight(false)
+		hovered_part = target
+		if is_instance_valid(hovered_part):
+			hovered_part.set_highlight(true)

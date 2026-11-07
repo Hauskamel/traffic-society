@@ -27,6 +27,8 @@ var front_wheels: Array[Node3D] = []
 const DriverActor = preload("res://scripts/driver_actor.gd")
 var driver: DriverActor
 var driver_door: AnimatableBody3D
+const VehiclePart = preload("res://scripts/vehicle_part.gd")
+var parts: Array[VehiclePart] = []
 
 func material(color: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -61,7 +63,8 @@ func _ready() -> void:
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
 	glass.albedo_color.a = 0.28
 	piece(Vector3(0, 0.55, 0), Vector3(1.8, 0.18, body_length), paint)
-	piece(Vector3(0, 0.79, 0), Vector3(1.55, 0.45, body_length), paint)
+	if model_kind != "sedan":
+		piece(Vector3(0, 0.79, 0), Vector3(1.55, 0.45, body_length), paint)
 	var cabin_z := 0.15
 	var cabin_length := 2.15
 	var roof_y := 1.6
@@ -84,13 +87,41 @@ func _ready() -> void:
 		for x in [-0.84, 0.84]:
 			piece(Vector3(x, 1.22, 1.2), Vector3(0.13, 0.4, 1.8), paint)
 		piece(Vector3(0, 1.22, 2.04), Vector3(1.8, 0.4, 0.13), paint)
+	if model_kind == "sedan":
+		var rear_start := cabin_z + cabin_length / 2.0
+		var main_length := rear_start + body_length / 2.0
+		piece(Vector3(0, 0.79, -body_length / 2.0 + main_length / 2.0), Vector3(1.55, 0.45, main_length), paint)
+		var trunk_length := body_length / 2.0 - rear_start
+		var trunk_center := rear_start + trunk_length / 2.0
+		piece(Vector3(0, 0.66, trunk_center), Vector3(1.65, 0.08, trunk_length), trim)
+		for x in [-0.84, 0.84]:
+			piece(Vector3(x, 0.81, trunk_center), Vector3(0.12, 0.34, trunk_length), paint)
+		piece(Vector3(0, 0.81, body_length / 2.0), Vector3(1.8, 0.34, 0.1), paint)
+		var lid := AnimatableBody3D.new()
+		lid.name = "TrunkLid"
+		lid.sync_to_physics = false
+		lid.collision_layer = 4
+		lid.collision_mask = 0
+		add_child(lid)
+		lid.position = Vector3(0, 1.04, rear_start)
+		piece(Vector3(0, 0, trunk_length / 2.0), Vector3(1.8, 0.08, trunk_length), paint, lid)
+		var hit_lid := CollisionShape3D.new()
+		var shape_lid := BoxShape3D.new()
+		shape_lid.size = Vector3(1.8, 0.08, trunk_length)
+		hit_lid.shape = shape_lid
+		hit_lid.position.z = trunk_length / 2.0
+		lid.add_child(hit_lid)
+		add_part(lid, "Kofferraum", "trunk", Vector3(0, 0, trunk_length / 2.0), Vector3(1.85, 0.24, trunk_length), Vector3.RIGHT, -1.2)
 	var cabin_y := (1.04 + roof_y) / 2.0
 	var door_length := minf(1.25, cabin_length * 0.65)
 	var front_z := cabin_z - cabin_length / 2.0
 	# Separate front, rear and passenger windows leave a real opening on the left.
 	for z in [front_z, cabin_z + cabin_length / 2.0]:
 		piece(Vector3(0, cabin_y, z), Vector3(1.6, roof_y - 1.0, 0.035), glass)
-	piece(Vector3(0.8, cabin_y, cabin_z), Vector3(0.035, roof_y - 1.0, cabin_length), glass)
+	if model_kind != "sedan":
+		piece(Vector3(0.8, cabin_y, cabin_z), Vector3(0.035, roof_y - 1.0, cabin_length), glass)
+	else:
+		piece(Vector3(0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
 	piece(Vector3(-0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
 	piece(Vector3(0, roof_y, cabin_z), Vector3(1.7, 0.12, cabin_length + 0.1), paint)
 	piece(Vector3(0, cabin_y, front_z + door_length), Vector3(1.65, roof_y - 0.95, 0.08), paint)
@@ -111,6 +142,13 @@ func _ready() -> void:
 	door_hit.shape = door_box
 	door_hit.position = Vector3(0, (roof_y + 0.5) / 2.0, door_length / 2.0)
 	driver_door.add_child(door_hit)
+	if model_kind == "sedan":
+		var passenger := driver_door.duplicate() as AnimatableBody3D
+		passenger.name = "PassengerDoor"
+		add_child(passenger)
+		passenger.position.x = 0.91
+		add_part(passenger, "Beifahrertuer", "passenger_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, 1.15)
+		add_part(driver_door, "Fahrertuer", "driver_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, -1.15)
 	for z in [-body_length / 2.0, body_length / 2.0]:
 		piece(Vector3(0, 0.52, z), Vector3(1.82, 0.14, 0.14), trim)
 	for x in [-0.96, 0.96]:
@@ -178,6 +216,8 @@ func set_route(points: Array[Vector3]) -> void:
 	distance = 0.0
 
 func new_test_drive() -> void:
+	for part in parts:
+		part.reset()
 	driver.reset()
 	visible = true
 	position = Vector3(2, 0.08, start_z)
@@ -204,7 +244,7 @@ func request_stop() -> bool:
 	return true
 
 func release() -> bool:
-	if state != State.PARKED or not driver.can_drive():
+	if state != State.PARKED or not driver.can_drive() or not all_parts_closed():
 		return false
 	state = State.LEAVING
 	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),
@@ -249,3 +289,27 @@ func _physics_process(delta: float) -> void:
 			state = State.FINISHED
 			visible = false
 		state_changed.emit()
+
+
+func add_part(hinge: AnimatableBody3D, label: String, kind: String, at: Vector3, size: Vector3, axis: Vector3, opening: float) -> void:
+	var part := VehiclePart.new()
+	part.vehicle = self
+	part.pivot = hinge
+	part.title = label
+	part.kind = kind
+	part.axis = axis
+	part.open_angle = opening
+	var hit := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	hit.shape = shape
+	part.add_child(hit)
+	hinge.add_child(part)
+	part.position = at
+	parts.append(part)
+
+func all_parts_closed() -> bool:
+	for part in parts:
+		if not part.is_closed():
+			return false
+	return true

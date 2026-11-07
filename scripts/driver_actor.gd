@@ -4,6 +4,7 @@ enum State { SEATED, EXITING, OUTSIDE, ENTERING }
 const DURATION := 2.4
 var state: State = State.SEATED
 var progress := 0.0
+var initial_door_angle := 0.0
 var seat := Vector3.ZERO
 var outside := Vector3.ZERO
 var door: AnimatableBody3D
@@ -72,6 +73,7 @@ func request_exit() -> bool:
 	if state != State.SEATED:
 		return false
 	# Animations intentionally pass through obstacles for responsive interaction.
+	initial_door_angle = door.rotation.y
 	door.collision_layer = 0
 	state = State.EXITING
 	progress = 0
@@ -81,6 +83,7 @@ func request_enter() -> bool:
 	if state != State.OUTSIDE:
 		return false
 	collider.disabled = true
+	initial_door_angle = door.rotation.y
 	door.collision_layer = 0
 	state = State.ENTERING
 	progress = 0
@@ -98,6 +101,10 @@ func interaction_point() -> Vector3:
 func apply_pose(t: float) -> void:
 	var door_open := minf(clampf(t / 0.22, 0, 1), clampf((1.0 - t) / 0.18, 0, 1))
 	door.rotation.y = -1.15 * smoothstep(0.0, 1.0, door_open)
+	if state == State.EXITING and t < 0.22:
+		door.rotation.y = lerpf(initial_door_angle, -1.15, smoothstep(0.0, 0.22, t))
+	elif state == State.ENTERING and t > 0.82:
+		door.rotation.y = lerpf(initial_door_angle, -1.15, smoothstep(0.0, 0.18, 1.0 - t))
 	var movement := smoothstep(0.0, 1.0, clampf((t - 0.24) / 0.55, 0, 1))
 	position = seat.lerp(outside, movement)
 	rotation.y = lerpf(0, PI / 2.0, movement)

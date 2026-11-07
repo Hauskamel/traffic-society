@@ -157,6 +157,28 @@ Das Ein-/Ausparktempo bleibt bei 2,5 m/s (9 km/h), der Spieler bei 3,5 m/s (12,6
 
 Fundament-, mehrminütiger Verkehrs- und Stellplatztest mit Godot 4.6.3 erneut bestanden. Der Verkehrstest prüft weiterhin Abstände und das Wiedereinfädeln aller vier Modelle bei unterschiedlichen Verkehrsphasen. Der neue Tempoeindruck ist unter Windows zu beurteilen.
 
+## Fahrzeugbereiche – Türen und Kofferraum · umgesetzt
+
+Vor der Dokumenten- und Dialogarbeit wurde das Fundament der direkten Fahrzeuginteraktion ergänzt. Die erste Ausbaustufe betrifft Bobbys Limousine: Fahrertür, Beifahrertür und Kofferraumdeckel lassen sich separat öffnen und schließen. Die übrigen Modelle behalten ihre bisherigen Fahreraktionen.
+
+### Bedienung und Darstellung
+
+In Ego-Ansicht wird der Bereich unter dem Fadenkreuz gelb eingefärbt. Ein benannter E-Hinweis zeigt die nächste Aktion an. Ein Tastendruck öffnet beziehungsweise schließt den Bereich; auch der bewegte/geöffnete Flügel bleibt anwählbar. Die Markierung verschwindet beim Wegsehen, im Menü, außerhalb der Reichweite oder in der Übersicht.
+
+Das Türblech ist vom Fahrerfenster getrennt: An der unteren Türfläche bedient E die Tür, am Fahrerfenster weiterhin das Mausrad-Menü für den Fahrer. Der Kofferraum hat einen eigenen schwenkbaren Deckel und einen sichtbaren, leeren Innenraum. Die Beifahrertür schwenkt zur gegenüberliegenden Seite.
+
+### Technik
+
+`scripts/vehicle_part.gd` bündelt Bezeichnung, Trefferfläche, Hervorhebung und reversible Scharnierbewegung. Die Fahrzeuggeometrie wird aus getrennten Fenster-, Tür- und Kofferraumteilen aufgebaut. Eine eigene Physikebene für Interaktionsflächen ermöglicht die gezielte Auswahl. Eine zusätzliche Sichtprüfung berücksichtigt Welt-Hindernisse; Seiten- und Entfernungsprüfungen verhindern Interaktionen von der falschen Seite oder aus der Ferne.
+
+Manuelle Aktionen sind nur am kontrollierten, geparkten Auto und außerhalb der Fahreranimation verfügbar. Die Aus-/Einstiegsanimation übernimmt die Fahrertür, auch wenn diese bereits manuell geöffnet wurde. Alle bedienbaren Bereiche müssen vor der Abfahrt geschlossen sein. Während der Bewegung bleibt das bisherige nachsichtige Verhalten gegenüber Hindernissen erhalten.
+
+### Prüfung
+
+Mit Godot 4.6.3 unter Linux bestanden: bestehende Fundament-, Verkehrs-, Fahrer- und Stellplatztests. Der neue grafische Test `vehicle_parts_test.gd` prüft beide Türen und Kofferraum, Hervorhebung und E-Hinweise, erneutes Anvisieren zum Schließen, Wegsehen, Reichweite, Verdeckung durch eine Wand, das weiterhin nutzbare Fahrer-Menü, die Übergabe einer geöffneten Tür an die Fahreranimation und die gesperrte Abfahrt bei geöffneten Teilen. Screenshots wurden visuell geprüft.
+
+Der Windows-Test mit Godot 4.7.2 steht noch aus. Inhalte, Dokumente und Durchsuchungen wurden nicht ergänzt.
+
 ## Schritt 4 – Erste Kontrolle · Ausblick
 
 Dokumente anfordern und vergleichen sowie eine einfache persönliche Durchsuchung. Umfang, Bedienung und Darstellung sind noch offen.
