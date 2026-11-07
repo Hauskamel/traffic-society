@@ -13,9 +13,11 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Schritt 1 ist umgesetzt. Der vom Nutzer bereitgestellte, unter Windows funktionierende Projektstand wurde aus der ZIP übernommen. Fahrzeuge und Kontrollen sind noch nicht implementiert.
+Auf `feature/fundamentals` ist Schritt 2 umgesetzt: Ein festes Fahrzeug mit Bobby Mayer fährt vorbei, lässt sich in die Parkbucht holen und am Fahrerfenster wieder freigeben. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
-Prüfung beim Import: Szenenstart mit Godot 4.6.3 im Headless-Modus über 120 Frames ohne Skript- oder Laufzeitfehler. Die grafische Bedienung unter Godot 4.7.2 wurde hier nicht erneut geprüft.
+Fahrer aussteigen lassen, Dokumente, Durchsuchungen und mehrere Fahrzeuge gehören noch nicht zu dieser Version.
+
+Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Ein Windows-Test unter Godot 4.7.2 steht noch aus.
 
 ## Spiel starten
 
@@ -31,6 +33,9 @@ Prüfung beim Import: Szenenstart mit Godot 4.6.3 im Headless-Modus über 120 Fr
 | Escape | Maus freigeben |
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
 | R | Spielerposition zurücksetzen |
+| Linksklick auf Auto / Schaltfläche | In der Übersicht Kontrolle anfordern, solange die Einfahrt noch nicht passiert wurde |
+| E | In Ego-Ansicht am linken Fahrerfenster weiterfahren lassen |
+| N | Nach Abfahrt eine neue Testfahrt starten |
 
 ## Dokumentation
 
@@ -47,7 +52,31 @@ Mit installiertem Git:
 Set-Location E:\godot-projects
 git clone https://github.com/Hauskamel/traffic-society.git
 Set-Location traffic-society
-git switch develop
+git switch --track origin/feature/fundamentals
 ```
 
-Alternativ auf GitHub unter **Code → Download ZIP** herunterladen und unter `E:\godot-projects` entpacken. Eine ZIP ist eine Momentaufnahme ohne lokale Git-Historie.
+Alternativ auf GitHub zuerst den Branch **feature/fundamentals** auswählen und unter **Code → Download ZIP** herunterladen und unter `E:\godot-projects` entpacken. Eine ZIP ist eine Momentaufnahme ohne lokale Git-Historie.
+
+## Schritt 2 ausprobieren
+
+1. F5 drücken und in der Übersicht das Auto anklicken oder **Zur Kontrolle anhalten** wählen. Das geht nur vor der Einfahrt. Bei verpasster Einfahrt bis zur Abfahrt warten und mit N neu starten.
+2. Warten, bis der Wagen in der Bucht steht. Mit Tab in die Ego-Ansicht wechseln.
+3. Auf die linke Fahrzeugseite gehen und aus kurzer Entfernung auf das Fahrerfenster schauen.
+4. Wenn der Hinweis erscheint, E drücken. Der Wagen fährt aus der Bucht und verlässt die Straße.
+5. Mit N oder der Schaltfläche eine neue Testfahrt starten.
+
+## Automatischer Ablauf-Test
+
+```sh
+godot --headless --path . --script res://tests/fundamentals_test.gd
+```
+
+Unter Windows gegebenenfalls den vollständigen Pfad zur Godot-Konsolen-EXE verwenden. Der Test prüft unter anderem Einparken, Kollision, Abfahrt, verpasste Einfahrt und Wiederholung; Mausinteraktion braucht zusätzlich einen grafischen Test.
+
+Grafischer Interaktionstest (benötigt ein Fenster/Display):
+
+```sh
+godot --path . --script res://tests/fundamentals_interaction_test.gd
+```
+
+Er prüft die Fahrzeugauswahl per Physikstrahl, Kamerawechsel und die Freigabe mit E samt Blick- und Seitenprüfung. Vorschau-Screenshots werden im Godot-Benutzerdatenordner (`user://`) gespeichert. Beide Tests wurden mit Godot 4.6.3 ausgeführt; der Windows-Test mit 4.7.2 bleibt offen.

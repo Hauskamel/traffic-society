@@ -7,6 +7,12 @@ var aerial := true
 var pitch := 0.0
 var title: Label
 var instructions: Label
+const TrafficCar = preload("res://scripts/traffic_car.gd")
+var car: TrafficCar
+var encounter_status: Label
+var interact_hint: Label
+var stop_button: Button
+var new_drive_button: Button
 
 func mat(hex: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -129,6 +135,7 @@ func _ready() -> void:
 		add_child(tree)
 
 	player = CharacterBody3D.new()
+	player.collision_mask = 3
 	player.position = Vector3(7.5, 0.2, 8)
 	var hit := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
@@ -146,10 +153,13 @@ func _ready() -> void:
 
 	overview = Camera3D.new()
 	overview.projection = Camera3D.PROJECTION_ORTHOGONAL
-	overview.size = 53
-	overview.position = Vector3(35, 48, 38)
+	overview.size = 65
+	overview.position = Vector3(35, 52, 50)
 	add_child(overview)
-	overview.look_at(Vector3(2, 0, 0))
+	overview.look_at(Vector3(2, 0, 12))
+
+	car = TrafficCar.new()
+	add_child(car)
 
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -168,7 +178,29 @@ func _ready() -> void:
 	instructions = Label.new()
 	instructions.add_theme_font_size_override("font_size", 15)
 	stack.add_child(instructions)
+	encounter_status = Label.new()
+	encounter_status.add_theme_color_override("font_color", Color("efd58b"))
+	stack.add_child(encounter_status)
+	stop_button = Button.new()
+	stop_button.text = "Zur Kontrolle anhalten"
+	stop_button.focus_mode = Control.FOCUS_NONE
+	stop_button.pressed.connect(order_stop)
+	stack.add_child(stop_button)
+	new_drive_button = Button.new()
+	new_drive_button.text = "Neue Testfahrt [N]"
+	new_drive_button.focus_mode = Control.FOCUS_NONE
+	new_drive_button.pressed.connect(new_test_drive)
+	stack.add_child(new_drive_button)
+	interact_hint = Label.new()
+	stack.add_child(interact_hint)
+	var crosshair := Label.new()
+	crosshair.text = "+"
+	crosshair.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	crosshair.position -= Vector2(5, 12)
+	crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(crosshair)
 	update_camera()
+	refresh_encounter_ui()
 
 func update_camera() -> void:
 	overview.current = aerial
@@ -176,13 +208,17 @@ func update_camera() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
 	title.text = "KONTROLLPUNKT  /  " + ("UEBERSICHT" if aerial else "EGO-ANSICHT")
 	instructions.text = "TAB: Ansicht wechseln | WASD / Pfeile: bewegen\n"
-	instructions.text += "Mausrad: Zoom | R: Spieler zuruecksetzen" if aerial else "Maus: umsehen | Shift: schneller | Esc: Maus freigeben"
+	instructions.text += "Auto anklicken: anhalten | Mausrad: Zoom\nR: Spieler zuruecksetzen" if aerial else "Maus: umsehen | Shift: schneller | E: interagieren\nEsc: Maus freigeben | R: Spieler zuruecksetzen"
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
 			aerial = not aerial
 			update_camera()
+		elif event.keycode == KEY_E and can_release():
+			car.release()
+		elif event.keycode == KEY_N:
+			new_test_drive()
 		elif event.keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		elif event.keycode == KEY_R:
@@ -193,6 +229,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			eyes.rotation.x = 0
 	if event is InputEventMouseButton and event.pressed:
 		if aerial:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				var origin := overview.project_ray_origin(event.position)
+				var end := origin + overview.project_ray_normal(event.position) * 250.0
+				var query := PhysicsRayQueryParameters3D.create(origin, end, 2)
+				var result := get_world_3d().direct_space_state.intersect_ray(query)
+				if result.get("collider") == car:
+					order_stop()
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				overview.size = maxf(20, overview.size - 3)
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
@@ -232,3 +275,40 @@ func _physics_process(delta: float) -> void:
 	player.move_and_slide()
 	player.position.x = clampf(player.position.x, -80, 80)
 	player.position.z = clampf(player.position.z, -80, 80)
+	refresh_encounter_ui()
+
+func order_stop() -> void:
+	if aerial:
+		car.request_stop()
+
+func new_test_drive() -> void:
+	if car.state == TrafficCar.State.FINISHED:
+		car.new_test_drive()
+
+func can_release() -> bool:
+	if aerial or car.state != TrafficCar.State.PARKED:
+		return false
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		return false
+	var target := car.window_point.global_position
+	var difference := target - eyes.global_position
+	var facing := -eyes.global_basis.z
+	return difference.length() < 2.2 and facing.dot(difference.normalized()) > 0.72 and car.to_local(player.global_position).x < -0.9
+
+func refresh_encounter_ui() -> void:
+	stop_button.visible = aerial and car.state == TrafficCar.State.DRIVING
+	stop_button.disabled = not car.can_stop()
+	new_drive_button.visible = car.state == TrafficCar.State.FINISHED
+	var heading := "Bobby Mayer  |  TS BM 104\n"
+	match car.state:
+		TrafficCar.State.DRIVING:
+			encounter_status.text = heading + ("Fahrzeug unterwegs: zur Kontrolle auswaehlen." if car.can_stop() else "Einfahrt passiert. Nach der Abfahrt neue Testfahrt starten.")
+		TrafficCar.State.PULLING_OVER:
+			encounter_status.text = heading + "Kontrolle angefordert. Fahrzeug faehrt in die Parkbucht."
+		TrafficCar.State.PARKED:
+			encounter_status.text = heading + ("Fahrzeug steht. Mit TAB vor Ort gehen und zum linken Fahrerfenster laufen." if aerial else "Fahrzeug steht. Zum linken Fahrerfenster gehen und hineinschauen.")
+		TrafficCar.State.LEAVING:
+			encounter_status.text = heading + "Kontrolle beendet. Fahrzeug faehrt zurueck auf die Strasse."
+		TrafficCar.State.FINISHED:
+			encounter_status.text = "Testfahrt beendet. Neue Testfahrt mit N starten."
+	interact_hint.text = "[E] Bobby Mayer weiterfahren lassen" if can_release() else ""
