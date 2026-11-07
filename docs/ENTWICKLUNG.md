@@ -77,7 +77,7 @@ Ein einfacher fortlaufender Verkehr fährt auf der rechten Spur von +Z nach -Z. 
 
 **Kein Fahrzeug fährt von selbst zur Kontrolle in die Bucht.** Ein Klick in der Vogelperspektive wählt ein Auto zunächst nur aus. Erst die Schaltfläche **Zur Kontrolle anhalten** erteilt den Auftrag. Fahrer, Modell und Kennzeichen der Auswahl werden angezeigt. Eine verpasste Einfahrt kann nicht rückwärts angefahren werden.
 
-Die Kontrollbucht hat vorerst genau einen Besitzer, vom Anhalteauftrag bis zur vollständigen Abfahrt. Weitere Anhalteaufträge werden währenddessen abgewiesen; der übrige Verkehr läuft weiter. Die Freigabe am linken Fahrerfenster bleibt erhalten. Ein einfacher Abstandsregler und eine Warteprüfung beim Einfädeln berücksichtigen andere Fahrzeuge. Verkehrsbedingtes Bremsen ist kein automatischer Kontrollauftrag.
+Der Kontrollstellplatz hat genau einen Besitzer, vom Anhalteauftrag bis das ganze Fahrzeug den markierten Stellplatz geräumt hat. Das abfahrende Auto darf sich danach noch in der Bucht befinden. Weitere Anhalteaufträge werden nur während der Stellplatzbelegung abgewiesen; der übrige Verkehr läuft weiter. Die Freigabe am linken Fahrerfenster bleibt erhalten. Ein einfacher Abstandsregler und eine Warteprüfung beim Einfädeln berücksichtigen andere Fahrzeuge. Verkehrsbedingtes Bremsen ist kein automatischer Kontrollauftrag.
 
 ### Umsetzung
 
@@ -125,6 +125,14 @@ Nach dem Aussteigen wartet der Fahrer neben der linken Tür. Ansehen und E öffn
 Nach dem Windows-Test wurde die vorherige Platzprüfung auf Wunsch des Nutzers entfernt: Sie zwang den Spieler zum Zurücktreten und wiederholten Anfordern. Ein bestätigter Auftrag wird jetzt auch bei blockierter Tür oder belegtem Weg vollständig ausgeführt und während der Animation nicht mehr pausiert. Es gibt keine Platzmangel-Meldung mehr.
 
 Die Tür kollidiert während der Bewegung vorübergehend nicht mit dem Spieler. Tür und Fahrer dürfen dabei Hindernisse durchdringen; ein wartender Fahrer hat anschließend weiterhin eine Kollision. Die Zustandsprüfung gegen doppelte Aufträge und die Abfahrt nur mit sitzendem Fahrer und geschlossener Tür bleiben erhalten.
+
+### Gameplay-Anpassung – Stellplatz frühzeitig freigeben
+
+Die Reservierung endet beim Räumen des markierten Kontrollstellplatzes (z=0 bis 10), nicht erst beim Verlassen der gesamten Bucht oder Szene. Die Berechnung berücksichtigt Fahrzeugbreite, Länge und Drehung. Erst wenn auch das Heck vollständig außerhalb steht, wird der Platz für den nächsten Anhalteauftrag frei.
+
+Das vorherige Auto bleibt unabhängig davon als abfahrender Verkehrsteilnehmer erhalten. Seine spätere Entfernung darf die Reservierung einer neuen Kontrolle nicht aufheben. Statusanzeige und Markierung folgen der neuen Stellplatzreservierung.
+
+Der neue Test `parking_reservation_test.gd` prüft die Freigabegrenze und aufeinanderfolgende Reservierungen für alle vier Modelle. Der mehrminütige Verkehrstest wurde ebenfalls erneut bestanden (Godot 4.6.3, Headless).
 
 ### Prüfung
 

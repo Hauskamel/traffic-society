@@ -343,7 +343,7 @@ func refresh_encounter_ui() -> void:
 			TrafficCar.State.PARKED:
 				text += "TAB: vor Ort gehen. Mit E am Fenster oder Fahrer interagieren." if aerial else "Am Fahrerfenster oder beim Fahrer mit E interagieren."
 			TrafficCar.State.LEAVING:
-				text += "Fahrzeug faehrt ab. Die Bucht bleibt bis zur Abfahrt reserviert."
+				text += "Fahrzeug faehrt ab. Sobald der Stellplatz frei ist, ist die naechste Kontrolle moeglich."
 	else:
 		text += "Bucht frei. Kein Fahrzeug haelt ohne deinen Anhalteauftrag."
 	if is_instance_valid(selected):

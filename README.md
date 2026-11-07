@@ -15,7 +15,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 Auf `feature/fundamentals` sind Verkehr und Schritt 3 (Fahrer aussteigen lassen) umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
-Dokumente, Befragungsdialoge und Durchsuchungen gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und eine gleichzeitig belegbare Kontrollbucht.
+Dokumente, Befragungsdialoge und Durchsuchungen gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
 Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Der Verkehr bis Schritt 2a wurde vom Nutzer unter Windows bestätigt. Der neue Fahrer-/Menüablauf benötigt noch einen Windows-Test unter Godot 4.7.2.
 
@@ -67,7 +67,7 @@ Alternativ auf GitHub zuerst den Branch **feature/fundamentals** auswählen und 
 6. Der bestätigte Aus-/Einstiegsauftrag läuft vollständig durch, auch wenn du direkt vor der Tür oder im Weg stehst. Zurücktreten und erneutes Anfordern sind nicht nötig. Während der Animation darf die Tür Hindernisse durchdringen.
 7. Der Fahrer öffnet die Tür, steigt mit einer einfachen Animation aus und bleibt neben dem Auto stehen. Ansehen und E drücken: **Einsteigen lassen** oder **Gespräch beenden**. Letzteres schließt nur das Menü; der Fahrer wartet weiter.
 8. Nach dem Wiedereinsteigen und Schließen der Tür erneut am Fenster das Menü öffnen und **Weiterfahren lassen** wählen. Das Fahrzeug fädelt wieder ein. Alternativ kann es bereits vor dem Aussteigen freigegeben werden.
-9. Nach seiner Abfahrt ist die Bucht wieder frei. Kein manueller Neustart mit N ist nötig.
+9. Sobald auch das Heck den markierten Kontrollstellplatz vollständig verlassen hat, kannst du das nächste Auto anhalten. Das erste darf dabei noch in der Bucht oder an der Ausfahrt unterwegs sein. Kein manueller Neustart mit N ist nötig.
 
 ### Vorbereitete Fahrzeuge
 
@@ -112,3 +112,11 @@ godot --path . --script res://tests/driver_menu_test.gd
 Der erste prüft bei allen vier Modellen Aus-/Einsteigen, Türbewegung, belegte Wege ohne Abbruch oder Pause, Fahrerkollision und Abfahrtsbedingungen. Der zweite benötigt ein Display und prüft den vollständigen Menüablauf einschließlich Mausrad in beide Richtungen, Esc, pausiertem Mausblick und unverändertem Übersichtszoom.
 
 Tests unter Linux mit Godot 4.6.3; die neue Funktion ist unter Windows/4.7.2 noch zu prüfen.
+
+Test für die frühzeitige Stellplatzfreigabe:
+
+```sh
+godot --headless --path . --script res://tests/parking_reservation_test.gd
+```
+
+Prüft alle vier Fahrzeuglängen: keine Freigabe bei überstehendem Heck, sofortige nächste Kontrolle nach Räumen des Stellplatzes und unabhängiges Entfernen des vorherigen Autos.

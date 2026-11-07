@@ -2,6 +2,8 @@ extends Node3D
 ## Small deterministic roster and one control bay; no generated NPCs.
 const TrafficCar = preload("res://scripts/traffic_car.gd")
 const SPAWN_INTERVAL := 11.0
+# Painted control space: x=4.65..9.55, z=0..10, not the whole lay-by.
+const PARKING_SPACE := Rect2(4.65, 0.0, 4.9, 10.0)
 const ROSTER := [
 	{"driver": "Bobby Mayer", "plate": "TS BM 104", "model": "Limousine", "kind": "sedan", "color": "477e89", "length": 4.2, "height": 1.65},
 	{"driver": "Nora Beck", "plate": "TS NB 217", "model": "Kleinwagen", "kind": "hatch", "color": "c9a452", "length": 3.5, "height": 1.65},
@@ -55,6 +57,7 @@ func select_car(car: TrafficCar) -> void:
 	refresh_markers()
 
 func request_control() -> bool:
+	update_parking_reservation()
 	if is_instance_valid(controlled_car) or not is_instance_valid(selected_car):
 		return false
 	if not selected_car.request_stop():
@@ -68,7 +71,22 @@ func refresh_markers() -> void:
 	for car in cars:
 		car.marker.visible = car == selected_car or car == controlled_car
 
+func parking_space_cleared(car: TrafficCar) -> bool:
+	# Include full body length and rotation so the rear must clear the marking.
+	var half_length := (car.body_length + 0.1) / 2.0
+	var half_width := 1.95 / 2.0
+	var x_extent := absf(cos(car.rotation.y)) * half_width + absf(sin(car.rotation.y)) * half_length
+	var z_extent := absf(cos(car.rotation.y)) * half_length + absf(sin(car.rotation.y)) * half_width
+	var footprint := Rect2(Vector2(car.position.x - x_extent, car.position.z - z_extent), Vector2(x_extent * 2.0, z_extent * 2.0))
+	return not PARKING_SPACE.intersects(footprint, true)
+
+func update_parking_reservation() -> void:
+	if is_instance_valid(controlled_car) and controlled_car.state == TrafficCar.State.LEAVING and parking_space_cleared(controlled_car):
+		controlled_car = null
+		refresh_markers()
+
 func _physics_process(delta: float) -> void:
+	update_parking_reservation()
 	for i in range(cars.size() - 1, -1, -1):
 		var car := cars[i]
 		if car.state == TrafficCar.State.FINISHED:
