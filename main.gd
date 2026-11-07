@@ -13,6 +13,13 @@ var traffic: TrafficManager
 var encounter_status: Label
 var interact_hint: Label
 var stop_button: Button
+var interaction_open := false
+var interaction_index := 0
+var interaction_actions: Array[String] = []
+var interaction_panel: PanelContainer
+var interaction_rows: RichTextLabel
+var feedback := ""
+var feedback_time := 0.0
 
 func mat(hex: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -135,7 +142,7 @@ func _ready() -> void:
 		add_child(tree)
 
 	player = CharacterBody3D.new()
-	player.collision_mask = 3
+	player.collision_mask = 7
 	player.position = Vector3(7.5, 0.2, 8)
 	var hit := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
@@ -194,10 +201,27 @@ func _ready() -> void:
 	crosshair.position -= Vector2(5, 12)
 	crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(crosshair)
+	interaction_panel = PanelContainer.new()
+	interaction_panel.position = Vector2(760, 280)
+	interaction_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(interaction_panel)
+	var menu_margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		menu_margin.add_theme_constant_override("margin_" + side, 20)
+	interaction_panel.add_child(menu_margin)
+	interaction_rows = RichTextLabel.new()
+	interaction_rows.bbcode_enabled = true
+	interaction_rows.fit_content = true
+	interaction_rows.scroll_active = false
+	interaction_rows.custom_minimum_size.x = 350
+	interaction_rows.add_theme_font_size_override("normal_font_size", 20)
+	menu_margin.add_child(interaction_rows)
+	interaction_panel.visible = false
 	update_camera()
 	refresh_encounter_ui()
 
 func update_camera() -> void:
+	close_interaction()
 	overview.current = aerial
 	eyes.current = not aerial
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
@@ -210,17 +234,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_TAB:
 			aerial = not aerial
 			update_camera()
-		elif event.keycode == KEY_E and can_release():
-			traffic.controlled_car.release()
+		elif event.keycode == KEY_E:
+			if interaction_open:
+				confirm_interaction()
+			elif can_interact():
+				open_interaction()
 		elif event.keycode == KEY_ESCAPE:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			if interaction_open:
+				close_interaction()
+			else:
+				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		elif event.keycode == KEY_R:
+			close_interaction()
 			player.position = Vector3(7.5, 0.2, 8)
 			player.velocity = Vector3.ZERO
 			player.rotation.y = PI / 2
 			pitch = 0
 			eyes.rotation.x = 0
 	if event is InputEventMouseButton and event.pressed:
+		if interaction_open:
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				interaction_index = posmod(interaction_index - 1, interaction_actions.size())
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				interaction_index = posmod(interaction_index + 1, interaction_actions.size())
+			refresh_interaction()
+			return
 		if aerial:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				var origin := overview.project_ray_origin(event.position)
@@ -235,7 +273,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				overview.size = minf(85, overview.size + 3)
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event is InputEventMouseMotion and not aerial and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if event is InputEventMouseMotion and not aerial and not interaction_open and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		player.rotation.y -= event.relative.x * 0.0025
 		pitch = clampf(pitch - event.relative.y * 0.0025, -1.35, 1.35)
 		eyes.rotation.x = pitch
@@ -248,6 +286,11 @@ func _physics_process(delta: float) -> void:
 		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
 		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
 	).normalized()
+	if interaction_open:
+		move = Vector2.ZERO
+	feedback_time = maxf(0, feedback_time - delta)
+	if interaction_open and not can_interact():
+		close_interaction()
 	if aerial:
 		var forward := -overview.global_basis.z
 		forward.y = 0
@@ -274,16 +317,17 @@ func order_stop() -> void:
 	if aerial:
 		traffic.request_control()
 
-func can_release() -> bool:
+func can_interact() -> bool:
 	var car := traffic.controlled_car
 	if aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
 		return false
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy():
 		return false
-	var target := car.window_point.global_position
+	var outside: bool = car.driver.state == car.driver.State.OUTSIDE
+	var target := car.driver.interaction_point() if outside else car.window_point.global_position
 	var difference := target - eyes.global_position
 	var facing := -eyes.global_basis.z
-	return difference.length() < 2.2 and facing.dot(difference.normalized()) > 0.72 and car.to_local(player.global_position).x < -0.9
+	return difference.length() < 2.2 and facing.dot(difference.normalized()) > 0.72 and (outside or car.to_local(player.global_position).x < -0.9)
 
 func refresh_encounter_ui() -> void:
 	var selected := traffic.selected_car
@@ -297,7 +341,7 @@ func refresh_encounter_ui() -> void:
 			TrafficCar.State.PULLING_OVER:
 				text += "Faehrt in die Parkbucht. Weitere Fahrzeuge fahren vorbei."
 			TrafficCar.State.PARKED:
-				text += "TAB: vor Ort gehen. Am linken Fahrerfenster mit E freigeben." if aerial else "Zum linken Fahrerfenster gehen und hineinschauen."
+				text += "TAB: vor Ort gehen. Mit E am Fenster oder Fahrer interagieren." if aerial else "Am Fahrerfenster oder beim Fahrer mit E interagieren."
 			TrafficCar.State.LEAVING:
 				text += "Fahrzeug faehrt ab. Die Bucht bleibt bis zur Abfahrt reserviert."
 	else:
@@ -307,5 +351,53 @@ func refresh_encounter_ui() -> void:
 		text += "Bucht belegt: erst die laufende Kontrolle abschliessen." if is_instance_valid(controlled) else ("Jetzt 'Zur Kontrolle anhalten' waehlen." if selected.can_stop() else "Einfahrt bereits passiert. Ein anderes Fahrzeug auswaehlen.")
 	elif not is_instance_valid(controlled) and aerial:
 		text += "\nIn der Uebersicht ein vorbeifahrendes Fahrzeug anklicken."
+	if is_instance_valid(controlled) and controlled.driver.is_busy():
+		text += "\nFahrer steigt aus ..." if controlled.driver.state == controlled.driver.State.EXITING else "\nFahrer steigt ein ..."
+		if not controlled.driver.message.is_empty():
+			text += "\n" + controlled.driver.message
+	if feedback_time > 0:
+		text += "\n" + feedback
 	encounter_status.text = text
-	interact_hint.text = "[E] %s weiterfahren lassen" % controlled.driver_name if can_release() else ""
+	interact_hint.text = "[E] Mit %s sprechen" % controlled.driver_name if can_interact() and not interaction_open else ""
+
+
+func open_interaction() -> void:
+	if not can_interact():
+		return
+	var driver := traffic.controlled_car.driver
+	interaction_actions.assign(["Einsteigen lassen", "Gespraech beenden"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
+	interaction_index = 0
+	interaction_open = true
+	interaction_panel.visible = true
+	refresh_interaction()
+
+func close_interaction() -> void:
+	interaction_open = false
+	if is_instance_valid(interaction_panel):
+		interaction_panel.visible = false
+
+func refresh_interaction() -> void:
+	var text := "AKTION WAEHLEN\n\n"
+	for i in range(interaction_actions.size()):
+		text += ("[color=#efd58b]>  " + interaction_actions[i] + "[/color]" if i == interaction_index else "    " + interaction_actions[i]) + "\n"
+	text += "\nMausrad: Auswahl\nE: Bestaetigen  |  Esc: Zurueck"
+	interaction_rows.text = text
+
+func confirm_interaction() -> void:
+	if not interaction_open or not can_interact():
+		close_interaction()
+		return
+	var car := traffic.controlled_car
+	var action := interaction_actions[interaction_index]
+	var succeeded := true
+	match action:
+		"Aussteigen lassen":
+			succeeded = car.driver.request_exit()
+		"Einsteigen lassen":
+			succeeded = car.driver.request_enter()
+		"Weiterfahren lassen":
+			succeeded = car.release()
+	if not succeeded:
+		feedback = car.driver.message if not car.driver.message.is_empty() else "Aktion momentan nicht moeglich."
+		feedback_time = 6.0
+	close_interaction()

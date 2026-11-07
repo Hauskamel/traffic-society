@@ -13,11 +13,11 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Auf `feature/fundamentals` sind Schritt 2 und die Verkehrserweiterung 2a umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster kann es wieder freigegeben werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
+Auf `feature/fundamentals` sind Verkehr und Schritt 3 (Fahrer aussteigen lassen) umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
-Fahrer aussteigen lassen, Dokumente und Durchsuchungen gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und eine gleichzeitig belegbare Kontrollbucht.
+Dokumente, Befragungsdialoge und Durchsuchungen gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und eine gleichzeitig belegbare Kontrollbucht.
 
-Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Ein Windows-Test unter Godot 4.7.2 steht noch aus.
+Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Der Verkehr bis Schritt 2a wurde vom Nutzer unter Windows bestätigt. Der neue Fahrer-/Menüablauf benötigt noch einen Windows-Test unter Godot 4.7.2.
 
 ## Spiel starten
 
@@ -27,15 +27,15 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | --- | --- |
 | Tab | Vogelperspektive / Ego-Ansicht |
 | WASD oder Pfeiltasten | Bewegen |
-| Maus | In der Ego-Ansicht umsehen |
+| Maus | In der Ego-Ansicht umsehen; pausiert während der Menüauswahl |
 | Shift | Schneller gehen |
-| Mausrad | Übersicht zoomen |
-| Escape | Maus freigeben |
+| Mausrad | Übersicht zoomen oder im offenen Interaktionsmenü die Aktion wählen |
+| Escape | Interaktionsmenü schließen; ohne Menü die Maus freigeben |
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
 | R | Spielerposition zurücksetzen |
 | Linksklick auf Auto | In der Übersicht auswählen; hält das Fahrzeug noch nicht an |
 | Zur Kontrolle anhalten | Ausgewähltes Fahrzeug ausdrücklich in die freie Bucht holen |
-| E | In Ego-Ansicht am linken Fahrerfenster weiterfahren lassen |
+| E | Am Fenster / stehenden Fahrer Menü öffnen und ausgewählte Aktion bestätigen |
 
 ## Dokumentation
 
@@ -63,8 +63,11 @@ Alternativ auf GitHub zuerst den Branch **feature/fundamentals** auswählen und 
 2. In der Übersicht ein Auto vor der Einfahrt anklicken. Die Auswahl zeigt Fahrer, Modell und Kennzeichen. Die Auswahl allein hält niemanden an.
 3. **Zur Kontrolle anhalten** drücken. Nur dieses Auto fährt in die freie Bucht. Die übrigen Fahrzeuge fahren vorbei. Bei verpasster Einfahrt ein anderes Auto auswählen.
 4. Sobald das Auto steht, mit Tab zur Ego-Ansicht wechseln und zum linken Fahrerfenster gehen.
-5. Auf das Fenster schauen und bei sichtbarem Hinweis E drücken. Das Fahrzeug fährt ab und fädelt unter Berücksichtigung des übrigen Verkehrs ein.
-6. Nach seiner Abfahrt ist die Bucht wieder frei. Kein manueller Neustart mit N ist mehr nötig.
+5. Auf das Fenster schauen und E drücken. Mit dem Mausrad **Aussteigen lassen** oder **Weiterfahren lassen** auswählen und mit E bestätigen. Esc schließt das Menü. Blick und Bewegung pausieren während der Auswahl.
+6. Für das Aussteigen den Türbereich freihalten: möglichst etwa zwei Meter seitlich vom Fenster zurücktreten und weiter zum Fenster schauen. Bei einem blockierten Weg erscheint ein Hinweis; nach dem Zurücktreten erneut E drücken und die Aktion wählen.
+7. Der Fahrer öffnet die Tür, steigt mit einer einfachen Animation aus und bleibt neben dem Auto stehen. Ansehen und E drücken: **Einsteigen lassen** oder **Gespräch beenden**. Letzteres schließt nur das Menü; der Fahrer wartet weiter.
+8. Nach dem Wiedereinsteigen und Schließen der Tür erneut am Fenster das Menü öffnen und **Weiterfahren lassen** wählen. Das Fahrzeug fädelt wieder ein. Alternativ kann es bereits vor dem Aussteigen freigegeben werden.
+9. Nach seiner Abfahrt ist die Bucht wieder frei. Kein manueller Neustart mit N ist nötig.
 
 ### Vorbereitete Fahrzeuge
 
@@ -99,4 +102,13 @@ Grafischer Interaktionstest (benötigt ein Fenster/Display):
 godot --path . --script res://tests/fundamentals_interaction_test.gd
 ```
 
-Er prüft die Fahrzeugauswahl per Physikstrahl, Kamerawechsel und die Freigabe mit E samt Blick- und Seitenprüfung. Vorschau-Screenshots werden im Godot-Benutzerdatenordner (`user://`) gespeichert. Alle drei Tests wurden mit Godot 4.6.3 ausgeführt; der Windows-Test mit 4.7.2 bleibt offen.
+Er prüft die Fahrzeugauswahl per Physikstrahl, Kamerawechsel und die Freigabe über das Menü samt Blick- und Seitenprüfung. Vorschau-Screenshots werden im Godot-Benutzerdatenordner (`user://`) gespeichert. Zusätzliche Tests für Schritt 3:
+
+```sh
+godot --headless --path . --script res://tests/driver_test.gd
+godot --path . --script res://tests/driver_menu_test.gd
+```
+
+Der erste prüft bei allen vier Modellen Aus-/Einsteigen, Türbewegung, blockierte Wege, Pausieren/Fortsetzen, Fahrerkollision und Abfahrtsbedingungen. Der zweite benötigt ein Display und prüft den vollständigen Menüablauf einschließlich Mausrad in beide Richtungen, Esc, pausiertem Mausblick und unverändertem Übersichtszoom.
+
+Tests unter Linux mit Godot 4.6.3; die neue Funktion ist unter Windows/4.7.2 noch zu prüfen.

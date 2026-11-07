@@ -96,15 +96,48 @@ Mit Godot 4.6.3 bestanden:
 - Neuer Verkehrstest: zwei simulierte Minuten ohne Anhalteauftrag, laufender Nachschub, höchstens vier Fahrzeuge, keine doppelte Fahreridentität und kein automatischer Kontrollhalt. Anschließend Buchtreservierung und Kontrollen aller vier Modelle bei unterschiedlichen Verkehrsphasen, inklusive Abfahrt und Prüfung auf Fahrzeugüberschneidungen.
 - Grafischer Interaktionstest: Auswahl des angeklickten Autos hält es noch nicht an; erst die Schaltfläche löst die Kontrolle aus. Ego-Wechsel und Freigabe am Fahrerfenster funktionieren weiterhin. Übersicht und Ego-Ansicht wurden anhand von Screenshots visuell geprüft.
 
-Ein Test unter Windows/Godot 4.7.2 steht weiterhin aus.
+Der Nutzer hat den Verkehr und die Kontrolle anschließend unter Windows getestet und bestätigt.
 
 ### Grenzen
 
 Eine Fahrtrichtung, feste Routen und einfache Abstandsregeln. Noch keine Kreuzungen, Gegenverkehr, Überholmanöver, allgemeine Hindernisvermeidung oder vollständige Verkehrs-KI. Die automatische Wiederkehr der festen Figuren dient dem Prototyp; Schichtplanung und Story-Fortschritt sind noch offen. Die Modelle sind bewusst einfache Platzhalter. Fahrer steigen weiterhin nicht aus.
 
-## Schritt 3 – Fahrer aussteigen lassen · Ausblick
+## Schritt 3 – Interaktionsmenü und Fahrer aussteigen lassen · umgesetzt
 
-Ein fester Fahrer erhält einen Körper, eine Sitzposition, einen freien Ausstiegspunkt und einen einfachen Ablauf zum Aussteigen. Die Aufforderung soll am Fahrerfenster erfolgen. Details und Animationen werden vor der Umsetzung besprochen.
+### Bedienung
+
+Der vorherige Verkehrsstand wurde vom Nutzer unter Windows bestätigt. Auf dessen Wunsch werden mehrere Aktionen per Mausrad ausgewählt.
+
+E öffnet am linken Fahrerfenster das Menü **Aussteigen lassen / Weiterfahren lassen**. Mausrad hoch und runter wechselt die gelb hervorgehobene Auswahl, einschließlich Umlauf vom letzten zum ersten Eintrag. E bestätigt, Esc schließt. Während des Menüs sind Mausblick und Laufbewegung pausiert; die übrige Welt läuft weiter. In der Übersicht zoomt das Mausrad weiterhin. Kamerawechsel und Zurücksetzen schließen ein offenes Menü.
+
+Nach dem Aussteigen wartet der Fahrer neben der linken Tür. Ansehen und E öffnet **Einsteigen lassen / Gespräch beenden**. Gespräch beenden schließt nur das Menü. Nach dem Wiedereinsteigen kann das Auto am Fenster freigegeben werden. Es fährt nur, wenn der Fahrer sitzt und die Tür vollständig geschlossen ist.
+
+### Darstellung und Zustände
+
+- `scripts/driver_actor.gd` enthält einen einfachen Low-Poly-Körper mit Kopf, Armen und Beinen sowie die Zustände sitzend, steigt aus, steht draußen und steigt ein.
+- Eine kurze prozedurale Animation öffnet die Fahrertür, bewegt und dreht den Fahrer neben das Auto und schließt die Tür. Der Einstieg verwendet den umgekehrten Ablauf.
+- Alle vier Karosserien erhalten einen separaten Türflügel mit Scharnier und Kollisionskörper. Fenster und Türöffnung werden aus einzelnen Teilen aufgebaut.
+- Sitzhöhe und Türposition passen zur jeweiligen Kabine; der Fahrer steht draußen auf Bodenniveau.
+- Ein wartender Fahrer hat eine Kollision. Die spätere Übernahme eines geriggten GLB-Modells bleibt möglich; die Animation ist bisher ein bewusst einfacher Platzhalter.
+
+### Platzprüfung und Rückmeldungen
+
+Eine Physikabfrage deckt Türschwenk und den kurzen Weg neben dem Auto ab. Bei einem blockierten Aus-/Einstieg wird die Aktion abgewiesen und ein Hinweis angezeigt. Der Spieler kann nach dem Schließen des Menüs zurücktreten und erneut anfragen. Tritt er während der Bewegung in den Bereich, pausiert die Animation, bis der Weg wieder frei ist. Eigene Fahrzeug-, Tür- und Fahrerkollisionen werden bei dieser Prüfung ausgeschlossen.
+
+### Prüfung
+
+Mit Godot 4.6.3 unter Linux:
+
+- `driver_test.gd`: Aus-/Einsteigen bei allen vier Modellen, Türöffnung und -schluss, blockierte Wege, Pausieren/Fortsetzen, stehender Fahrer als Hindernis und gesperrte Freigabe ohne sitzenden Fahrer.
+- `driver_menu_test.gd` mit Display: E öffnet/bestätigt, Mausrad in beide Richtungen samt Umlauf, Esc schließt, Mausblick pausiert, wechselnde Aktionen draußen, Gespräch beenden, Wiedereinsteigen und abschließende Freigabe. Übersichtszoom bleibt erhalten.
+- Bestehende Fundament-, Verkehrs- und grafische Interaktionstests wurden an die Menübedienung angepasst und erneut bestanden.
+- Screenshots von geöffneter Tür, aussteigendem Fahrer und Außenmenü wurden visuell geprüft.
+
+Die neue Funktion benötigt noch den Windows-Test unter Godot 4.7.2. `main` und `develop` bleiben unverändert; Entwicklung auf `feature/fundamentals`.
+
+### Grenzen
+
+Feste kurze Bewegungsbahn neben dem Fahrzeug, kein freies NPC-Wegfinden und keine hochwertige Skelettanimation. Fahrer warten an einem festen Punkt. Befragen, Dokumente und Durchsuchungen sind noch nicht enthalten.
 
 ## Schritt 4 – Erste Kontrolle · Ausblick
 

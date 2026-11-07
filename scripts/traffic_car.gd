@@ -23,6 +23,9 @@ var brake_material: StandardMaterial3D
 var marker: MeshInstance3D
 var window_point: Marker3D
 var front_wheels: Array[Node3D] = []
+const DriverActor = preload("res://scripts/driver_actor.gd")
+var driver: DriverActor
+var driver_door: AnimatableBody3D
 
 func material(color: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -56,7 +59,8 @@ func _ready() -> void:
 	var glass := material("a5c2cc")
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
 	glass.albedo_color.a = 0.28
-	piece(Vector3(0, 0.75, 0), Vector3(1.8, 0.58, body_length), paint)
+	piece(Vector3(0, 0.55, 0), Vector3(1.8, 0.18, body_length), paint)
+	piece(Vector3(0, 0.79, 0), Vector3(1.55, 0.45, body_length), paint)
 	var cabin_z := 0.15
 	var cabin_length := 2.15
 	var roof_y := 1.6
@@ -80,9 +84,32 @@ func _ready() -> void:
 			piece(Vector3(x, 1.22, 1.2), Vector3(0.13, 0.4, 1.8), paint)
 		piece(Vector3(0, 1.22, 2.04), Vector3(1.8, 0.4, 0.13), paint)
 	var cabin_y := (1.04 + roof_y) / 2.0
-	piece(Vector3(0, cabin_y, cabin_z), Vector3(1.6, roof_y - 1.0, cabin_length), glass)
+	var door_length := minf(1.25, cabin_length * 0.65)
+	var front_z := cabin_z - cabin_length / 2.0
+	# Separate front, rear and passenger windows leave a real opening on the left.
+	for z in [front_z, cabin_z + cabin_length / 2.0]:
+		piece(Vector3(0, cabin_y, z), Vector3(1.6, roof_y - 1.0, 0.035), glass)
+	piece(Vector3(0.8, cabin_y, cabin_z), Vector3(0.035, roof_y - 1.0, cabin_length), glass)
+	piece(Vector3(-0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
 	piece(Vector3(0, roof_y, cabin_z), Vector3(1.7, 0.12, cabin_length + 0.1), paint)
-	piece(Vector3(0, cabin_y, cabin_z), Vector3(1.65, roof_y - 0.95, 0.10), paint)
+	piece(Vector3(0, cabin_y, front_z + door_length), Vector3(1.65, roof_y - 0.95, 0.08), paint)
+	driver_door = AnimatableBody3D.new()
+	driver_door.name = "DriverDoor"
+	driver_door.sync_to_physics = false
+	driver_door.collision_layer = 4
+	driver_door.collision_mask = 0
+	add_child(driver_door)
+	driver_door.position = Vector3(-0.91, 0, front_z)
+	piece(Vector3(0, 0.82, door_length / 2.0), Vector3(0.10, 0.48, door_length), paint, driver_door)
+	piece(Vector3(0, cabin_y, door_length / 2.0), Vector3(0.035, roof_y - 1.0, door_length), glass, driver_door)
+	piece(Vector3(0, roof_y - 0.02, door_length / 2.0), Vector3(0.07, 0.06, door_length), paint, driver_door)
+	piece(Vector3(-0.065, 0.98, door_length * 0.8), Vector3(0.04, 0.04, 0.16), trim, driver_door)
+	var door_hit := CollisionShape3D.new()
+	var door_box := BoxShape3D.new()
+	door_box.size = Vector3(0.12, roof_y - 0.5, door_length)
+	door_hit.shape = door_box
+	door_hit.position = Vector3(0, (roof_y + 0.5) / 2.0, door_length / 2.0)
+	driver_door.add_child(door_hit)
 	for z in [-body_length / 2.0, body_length / 2.0]:
 		piece(Vector3(0, 0.52, z), Vector3(1.82, 0.14, 0.14), trim)
 	for x in [-0.96, 0.96]:
@@ -112,9 +139,11 @@ func _ready() -> void:
 			tire.rotation.z = PI / 2
 			spin.add_child(tire)
 			piece(Vector3(0, 0, 0), Vector3(0.235, 0.17, 0.17), material("a8b2ae"), spin)
-	# Fixed seated placeholder driver, ready for a later exit interaction.
-	piece(Vector3(-0.43, cabin_y - 0.13, cabin_z - 0.2), Vector3(0.42, 0.49, 0.34), material("b79b69"))
-	piece(Vector3(-0.43, roof_y - 0.23, cabin_z - 0.25), Vector3(0.28, 0.28, 0.28), material("d7b49a"))
+	driver = DriverActor.new()
+	driver.door = driver_door
+	driver.seat = Vector3(-0.43, roof_y - 1.48, cabin_z - 0.2)
+	driver.outside = Vector3(-2.1, -0.08, cabin_z - 0.2)
+	add_child(driver)
 	var plate := Label3D.new()
 	plate.text = plate_number
 	plate.font_size = 32
@@ -148,6 +177,7 @@ func set_route(points: Array[Vector3]) -> void:
 	distance = 0.0
 
 func new_test_drive() -> void:
+	driver.reset()
 	visible = true
 	position = Vector3(2, 0.08, start_z)
 	rotation = Vector3.ZERO
@@ -173,7 +203,7 @@ func request_stop() -> bool:
 	return true
 
 func release() -> bool:
-	if state != State.PARKED:
+	if state != State.PARKED or not driver.can_drive():
 		return false
 	state = State.LEAVING
 	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),

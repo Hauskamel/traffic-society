@@ -56,21 +56,29 @@ func run() -> void:
 	scene.player.rotation.y = -PI / 2
 	scene.eyes.look_at(car.window_point.global_position)
 	scene.refresh_encounter_ui()
-	check(scene.can_release(), "Looking at nearby driver window must enable release")
+	check(scene.can_interact(), "Looking at nearby driver window must enable release")
 	await screenshot("fundamentals-driver-window")
 	# Facing away and the passenger side must not enable interaction.
 	scene.player.rotation.y += PI
-	check(not scene.can_release(), "Looking away must prevent release")
+	check(not scene.can_interact(), "Looking away must prevent release")
 	scene.player.position = Vector3(9, 0.1, 5)
 	scene.eyes.look_at(car.window_point.global_position)
-	check(not scene.can_release(), "Passenger side must prevent release")
+	check(not scene.can_interact(), "Passenger side must prevent release")
 	scene.player.position = Vector3(4.8, 0.1, 5)
 	scene.eyes.look_at(car.window_point.global_position)
 	var interact := InputEventKey.new()
 	interact.keycode = KEY_E
 	interact.pressed = true
 	scene._unhandled_input(interact)
-	check(car.state == scene.TrafficCar.State.LEAVING, "E must release the car")
+	check(scene.interaction_open, "E must open the interaction menu")
+	check(car.state == scene.TrafficCar.State.PARKED, "Opening a menu must not release the car")
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	wheel.pressed = true
+	scene._unhandled_input(wheel)
+	check(scene.interaction_index == 1, "Mouse wheel must select release")
+	scene._unhandled_input(interact)
+	check(car.state == scene.TrafficCar.State.LEAVING, "Confirming release with E must release the car")
 	if not failed:
 		print("PASS: vehicle picking, visible spawn, camera switch, window distance/side/look, E release")
 	quit(1 if failed else 0)

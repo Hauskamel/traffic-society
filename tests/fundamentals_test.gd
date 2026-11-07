@@ -32,12 +32,12 @@ func run() -> void:
 	scene.traffic.select_car(car)
 	check(scene.traffic.request_control(), "Control request must succeed")
 	check(not car.request_stop(), "Duplicate stop request must be rejected")
-	check(not scene.can_release(), "Car cannot be released while entering the bay")
+	check(not scene.can_interact(), "Car cannot be released while entering the bay")
 	advance_car(car, car.State.PARKED)
 	check(car.position.distance_to(Vector3(7.1, 0.08, 5)) < 0.05, "Car must park in the designated space")
 	check(car.speed == 0, "Parked car must be stationary")
 	check(absf(car.rotation.y) < 0.01, "Parked car must face the exit")
-	check(not scene.can_release(), "Overview must not allow releasing at a distance")
+	check(not scene.can_interact(), "Overview must not allow releasing at a distance")
 	await physics_frame
 	# The officer must collide with the parked body.
 	scene.player.position = Vector3(4, 0.1, 5)
@@ -47,7 +47,7 @@ func run() -> void:
 	# are covered in the graphical test instead.
 	scene.aerial = false
 	scene.player.position = Vector3(20, 0.1, 20)
-	check(not scene.can_release(), "Release must fail when too far away")
+	check(not scene.can_interact(), "Release must fail when too far away")
 	check(car.release(), "Parked car must accept release")
 	check(not car.release(), "Duplicate release must be rejected")
 	advance_car(car, car.State.FINISHED)
