@@ -1,0 +1,24 @@
+# Godot-generated cache
+.godot/
+
+# Local exports
+/build/
+/builds/
+/export/
+/exports/
+
+# Local editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.log
+*.bak
+
+# Credentials
+.env
+.env.*
+!.env.example
+export_credentials.cfg
