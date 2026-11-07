@@ -120,3 +120,16 @@ godot --headless --path . --script res://tests/parking_reservation_test.gd
 ```
 
 Prüft alle vier Fahrzeuglängen: keine Freigabe bei überstehendem Heck, sofortige nächste Kontrolle nach Räumen des Stellplatzes und unabhängiges Entfernen des vorherigen Autos.
+
+## Geschwindigkeiten und Maßstab
+
+1 Godot-Einheit entspricht 1 Meter. Bewegungen verwenden Meter pro Sekunde; die zentralen Werte in `scripts/speed_settings.gd` sind in km/h angegeben und werden durch 3,6 geteilt.
+
+| Bewegung | km/h | m/s |
+| --- | --- | --- |
+| Straßenverkehr | 21,6 | 6,0 |
+| Ein-/Ausparken | 9,0 | 2,5 |
+| Spieler ohne Sprint | 12,6 | 3,5 |
+| Spieler mit Sprint | 21,6 | 6,0 |
+
+Der Straßenverkehr verwendet `BASE_TRAFFIC_SPEED_KMH = 10.8` mal `TRAFFIC_SPEED_FACTOR = 2.0`. Der Faktor verändert nur die Reisegeschwindigkeit der Autos. Parktempo und Spielerbewegung haben eigene Werte. Die angegebenen Fahrzeugwerte sind Ziel-/Höchstgeschwindigkeiten; Bremsen, Abstände und Einfädeln können das Tempo reduzieren. Die Spielerwerte wurden bei dieser Anpassung nicht verändert; die normale Bewegung ist damit eher Laufen als gemütliches Gehen.

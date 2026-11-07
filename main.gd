@@ -1,5 +1,7 @@
 extends Node3D
 
+const SpeedSettings = preload("res://scripts/speed_settings.gd")
+
 var player: CharacterBody3D
 var eyes: Camera3D
 var overview: Camera3D
@@ -301,7 +303,7 @@ func _physics_process(delta: float) -> void:
 		player.velocity.z = 0
 	else:
 		var direction := player.basis * Vector3(move.x, 0, move.y)
-		var speed := 6.0 if Input.is_physical_key_pressed(KEY_SHIFT) else 3.5
+		var speed := (SpeedSettings.SPRINT_SPEED_KMH if Input.is_physical_key_pressed(KEY_SHIFT) else SpeedSettings.WALK_SPEED_KMH) / 3.6
 		player.velocity.x = direction.x * speed
 		player.velocity.z = direction.z * speed
 	if not player.is_on_floor():

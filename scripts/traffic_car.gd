@@ -12,8 +12,9 @@ var body_length := 4.2
 var body_height := 1.65
 var speed_limit := ROAD_SPEED
 var start_z := 52.0
-const ROAD_SPEED := 3.0
-const BAY_SPEED := 2.5
+const SpeedSettings = preload("res://scripts/speed_settings.gd")
+const ROAD_SPEED := SpeedSettings.TRAFFIC_SPEED_KMH / 3.6
+const BAY_SPEED := SpeedSettings.PARKING_SPEED_KMH / 3.6
 var state: State = State.DRIVING
 var speed := ROAD_SPEED
 var route: Curve3D
