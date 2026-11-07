@@ -3,8 +3,15 @@ extends AnimatableBody3D
 signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
-const DRIVER_NAME := "Bobby Mayer"
-const PLATE := "TS BM 104"
+var driver_name := "Bobby Mayer"
+var plate_number := "TS BM 104"
+var model_name := "Limousine"
+var body_color := "477e89"
+var model_kind := "sedan"
+var body_length := 4.2
+var body_height := 1.65
+var speed_limit := ROAD_SPEED
+var start_z := 52.0
 const ROAD_SPEED := 3.0
 const BAY_SPEED := 2.5
 var state: State = State.DRIVING
@@ -34,35 +41,58 @@ func piece(at: Vector3, size: Vector3, m: Material, parent: Node3D = self) -> Me
 	return mesh
 
 func _ready() -> void:
-	name = "BobbyCar"
+	name = driver_name.replace(" ", "")
 	sync_to_physics = false
 	collision_layer = 2
 	collision_mask = 0
 	var hit := CollisionShape3D.new()
 	var bounds := BoxShape3D.new()
-	bounds.size = Vector3(1.85, 1.5, 4.25)
+	bounds.size = Vector3(1.95, body_height - 0.15, body_length + 0.1)
 	hit.shape = bounds
-	hit.position.y = 0.96
+	hit.position.y = (body_height + 0.15) / 2.0
 	add_child(hit)
-	var paint := material("477e89")
+	var paint := material(body_color)
 	var trim := material("24323b")
 	var glass := material("a5c2cc")
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
 	glass.albedo_color.a = 0.28
-	piece(Vector3(0, 0.75, 0), Vector3(1.8, 0.58, 4.2), paint)
-	piece(Vector3(0, 1.22, 0.15), Vector3(1.6, 0.68, 2.15), glass)
-	piece(Vector3(0, 1.6, 0.15), Vector3(1.7, 0.12, 2.25), paint)
-	piece(Vector3(0, 1.22, 0.15), Vector3(1.65, 0.72, 0.10), paint)
-	piece(Vector3(0, 0.52, -2.12), Vector3(1.82, 0.14, 0.14), trim)
-	piece(Vector3(0, 0.52, 2.12), Vector3(1.82, 0.14, 0.14), trim)
-	piece(Vector3(-0.96, 1.12, -0.4), Vector3(0.2, 0.18, 0.3), paint)
-	piece(Vector3(0.96, 1.12, -0.4), Vector3(0.2, 0.18, 0.3), paint)
+	piece(Vector3(0, 0.75, 0), Vector3(1.8, 0.58, body_length), paint)
+	var cabin_z := 0.15
+	var cabin_length := 2.15
+	var roof_y := 1.6
+	if model_kind == "hatch":
+		cabin_z = 0.35
+		cabin_length = 2.25
+	elif model_kind == "van":
+		cabin_z = -1.25
+		cabin_length = 1.45
+		roof_y = 2.25
+		piece(Vector3(0, 1.45, 0.7), Vector3(1.84, 1.5, 3.1), paint)
+		piece(Vector3(0, 2.23, 0.7), Vector3(1.9, 0.12, 3.15), trim)
+		piece(Vector3(0, 1.4, body_length / 2.0 + 0.01), Vector3(0.03, 1.35, 0.03), trim)
+	elif model_kind == "pickup":
+		cabin_z = -0.75
+		cabin_length = 1.6
+		roof_y = 1.8
+		# Open cargo bed with separate rails and visible floor.
+		piece(Vector3(0, 1.04, 1.2), Vector3(1.55, 0.06, 1.65), trim)
+		for x in [-0.84, 0.84]:
+			piece(Vector3(x, 1.22, 1.2), Vector3(0.13, 0.4, 1.8), paint)
+		piece(Vector3(0, 1.22, 2.04), Vector3(1.8, 0.4, 0.13), paint)
+	var cabin_y := (1.04 + roof_y) / 2.0
+	piece(Vector3(0, cabin_y, cabin_z), Vector3(1.6, roof_y - 1.0, cabin_length), glass)
+	piece(Vector3(0, roof_y, cabin_z), Vector3(1.7, 0.12, cabin_length + 0.1), paint)
+	piece(Vector3(0, cabin_y, cabin_z), Vector3(1.65, roof_y - 0.95, 0.10), paint)
+	for z in [-body_length / 2.0, body_length / 2.0]:
+		piece(Vector3(0, 0.52, z), Vector3(1.82, 0.14, 0.14), trim)
+	for x in [-0.96, 0.96]:
+		piece(Vector3(x, cabin_y, cabin_z - cabin_length * 0.3), Vector3(0.2, 0.18, 0.3), paint)
 	brake_material = material("862c2b")
 	for x in [-0.61, 0.61]:
-		piece(Vector3(x, 0.82, -2.11), Vector3(0.42, 0.2, 0.04), material("fff0c7"))
-		piece(Vector3(x, 0.82, 2.11), Vector3(0.42, 0.2, 0.04), brake_material)
+		piece(Vector3(x, 0.82, -body_length / 2.0 - 0.01), Vector3(0.42, 0.2, 0.04), material("fff0c7"))
+		piece(Vector3(x, 0.82, body_length / 2.0 + 0.01), Vector3(0.42, 0.2, 0.04), brake_material)
 	for x in [-0.92, 0.92]:
-		for z in [-1.35, 1.35]:
+		for z in [-body_length * 0.32, body_length * 0.32]:
 			var steer := Node3D.new()
 			add_child(steer)
 			steer.position = Vector3(x, 0.35, z)
@@ -83,13 +113,13 @@ func _ready() -> void:
 			spin.add_child(tire)
 			piece(Vector3(0, 0, 0), Vector3(0.235, 0.17, 0.17), material("a8b2ae"), spin)
 	# Fixed seated placeholder driver, ready for a later exit interaction.
-	piece(Vector3(-0.43, 1.13, -0.1), Vector3(0.42, 0.49, 0.34), material("b79b69"))
-	piece(Vector3(-0.43, 1.37, -0.15), Vector3(0.28, 0.28, 0.28), material("d7b49a"))
+	piece(Vector3(-0.43, cabin_y - 0.13, cabin_z - 0.2), Vector3(0.42, 0.49, 0.34), material("b79b69"))
+	piece(Vector3(-0.43, roof_y - 0.23, cabin_z - 0.25), Vector3(0.28, 0.28, 0.28), material("d7b49a"))
 	var plate := Label3D.new()
-	plate.text = PLATE
+	plate.text = plate_number
 	plate.font_size = 32
 	plate.pixel_size = 0.008
-	plate.position = Vector3(0, 0.59, -2.2)
+	plate.position = Vector3(0, 0.59, -body_length / 2.0 - 0.1)
 	plate.rotation.y = PI
 	add_child(plate)
 	marker = MeshInstance3D.new()
@@ -103,7 +133,7 @@ func _ready() -> void:
 	add_child(marker)
 	window_point = Marker3D.new()
 	window_point.name = "DriverWindow"
-	window_point.position = Vector3(-1.2, 1.3, -0.35)
+	window_point.position = Vector3(-1.2, cabin_y, cabin_z - 0.25)
 	add_child(window_point)
 	new_test_drive()
 
@@ -119,7 +149,7 @@ func set_route(points: Array[Vector3]) -> void:
 
 func new_test_drive() -> void:
 	visible = true
-	position = Vector3(2, 0.08, 52)
+	position = Vector3(2, 0.08, start_z)
 	rotation = Vector3.ZERO
 	speed = ROAD_SPEED
 	state = State.DRIVING
@@ -160,6 +190,7 @@ func _physics_process(delta: float) -> void:
 		target = minf(BAY_SPEED, sqrt(maxf(0.0, 2.0 * 1.6 * remaining)))
 	elif state == State.LEAVING and position.z > -26:
 		target = BAY_SPEED
+	target = minf(target, speed_limit)
 	speed = move_toward(speed, target, 1.6 * delta)
 	var travel := minf(speed * delta, remaining)
 	distance += travel

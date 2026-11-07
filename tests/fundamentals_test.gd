@@ -21,12 +21,16 @@ func run() -> void:
 	var scene = load("res://main.tscn").instantiate()
 	root.add_child(scene)
 	await physics_frame
-	var car = scene.car
+	var car = scene.traffic.cars[0]
+	scene.traffic.set_physics_process(false)
+	for other in scene.traffic.cars:
+		other.set_physics_process(false)
 	scene.set_physics_process(false)
 	car.set_physics_process(false)
 	check(car.can_stop(), "Car must be selectable at the start")
 	check(not car.release(), "A driving car cannot be released")
-	check(car.request_stop(), "Control request must succeed")
+	scene.traffic.select_car(car)
+	check(scene.traffic.request_control(), "Control request must succeed")
 	check(not car.request_stop(), "Duplicate stop request must be rejected")
 	check(not scene.can_release(), "Car cannot be released while entering the bay")
 	advance_car(car, car.State.PARKED)
@@ -48,7 +52,7 @@ func run() -> void:
 	check(not car.release(), "Duplicate release must be rejected")
 	advance_car(car, car.State.FINISHED)
 	check(car.position.z < -60 and not car.visible, "Departed car must leave and disappear")
-	scene.new_test_drive()
+	car.new_test_drive()
 	check(car.visible and car.can_stop(), "New test drive must restore visible selectable car")
 	check(car.wheels.size() == 4, "Car must have four animated wheels")
 	# Missed encounter: no reversing into the bay after the entry.
@@ -56,7 +60,7 @@ func run() -> void:
 		car._physics_process(1.0 / 60.0)
 	check(not car.request_stop(), "Stop request after the entry must be rejected")
 	advance_car(car, car.State.FINISHED)
-	scene.new_test_drive()
+	car.new_test_drive()
 	check(car.request_stop(), "Second encounter must be repeatable")
 	advance_car(car, car.State.PARKED)
 	check(car.release(), "Second encounter release must work")
