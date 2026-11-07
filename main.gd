@@ -406,7 +406,7 @@ func confirm_interaction() -> void:
 		"Weiterfahren lassen":
 			succeeded = car.release()
 	if not succeeded:
-		feedback = "Bitte zuerst Tueren und Kofferraum schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich."
+		feedback = "Bitte zuerst alle Tueren und Klappen schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich."
 		feedback_time = 6.0
 	close_interaction()
 

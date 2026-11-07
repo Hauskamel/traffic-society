@@ -63,7 +63,7 @@ func _ready() -> void:
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
 	glass.albedo_color.a = 0.28
 	piece(Vector3(0, 0.55, 0), Vector3(1.8, 0.18, body_length), paint)
-	if model_kind != "sedan":
+	if model_kind == "pickup":
 		piece(Vector3(0, 0.79, 0), Vector3(1.55, 0.45, body_length), paint)
 	var cabin_z := 0.15
 	var cabin_length := 2.15
@@ -75,18 +75,27 @@ func _ready() -> void:
 		cabin_z = -1.25
 		cabin_length = 1.45
 		roof_y = 2.25
-		piece(Vector3(0, 1.45, 0.7), Vector3(1.84, 1.5, 3.1), paint)
-		piece(Vector3(0, 2.23, 0.7), Vector3(1.9, 0.12, 3.15), trim)
-		piece(Vector3(0, 1.4, body_length / 2.0 + 0.01), Vector3(0.03, 1.35, 0.03), trim)
+		# Hollow cargo volume: floor, sides, bulkhead and roof, no solid rear wall.
+		piece(Vector3(0, 0.79, -1.7), Vector3(1.55, 0.45, 1.6), paint)
+		piece(Vector3(0, 0.7, 0.75), Vector3(1.72, 0.1, 3.4), trim)
+		for x in [-0.87, 0.87]:
+			piece(Vector3(x, 1.45, 0.75), Vector3(0.12, 1.5, 3.4), paint)
+		piece(Vector3(0, 1.45, -0.9), Vector3(1.8, 1.5, 0.1), paint)
+		piece(Vector3(0, 2.23, 0.75), Vector3(1.9, 0.12, 3.5), trim)
+		for side in [-1.0, 1.0]:
+			var rear := panel_hinge(Vector3(side * 0.9, 0, body_length / 2.0), Vector3(0.87, 1.5, 0.1), Vector3(-side * 0.435, 1.45, 0), paint, "CargoDoor")
+			piece(Vector3(-side * 0.76, 1.35, 0.065), Vector3(0.05, 0.25, 0.04), trim, rear)
+			add_part(rear, "Linke Ladetuer" if side < 0 else "Rechte Ladetuer", "trunk", Vector3(-side * 0.435, 1.45, 0), Vector3(0.9, 1.5, 0.24), Vector3.UP, side * 1.5)
 	elif model_kind == "pickup":
 		cabin_z = -0.75
 		cabin_length = 1.6
 		roof_y = 1.8
 		# Open cargo bed with separate rails and visible floor.
-		piece(Vector3(0, 1.04, 1.2), Vector3(1.55, 0.06, 1.65), trim)
+		piece(Vector3(0, 1.04, 1.3), Vector3(1.55, 0.06, 2.1), trim)
 		for x in [-0.84, 0.84]:
-			piece(Vector3(x, 1.22, 1.2), Vector3(0.13, 0.4, 1.8), paint)
-		piece(Vector3(0, 1.22, 2.04), Vector3(1.8, 0.4, 0.13), paint)
+			piece(Vector3(x, 1.22, 1.3), Vector3(0.13, 0.4, 2.1), paint)
+		var tailgate := panel_hinge(Vector3(0, 1.02, body_length / 2.0 - 0.05), Vector3(1.8, 0.4, 0.12), Vector3(0, 0.2, 0), paint, "Tailgate")
+		add_part(tailgate, "Ladeflaechenklappe", "trunk", Vector3(0, 0.2, 0), Vector3(1.8, 0.45, 0.24), Vector3.RIGHT, 1.5)
 	if model_kind == "sedan":
 		var rear_start := cabin_z + cabin_length / 2.0
 		var main_length := rear_start + body_length / 2.0
@@ -112,16 +121,24 @@ func _ready() -> void:
 		hit_lid.position.z = trunk_length / 2.0
 		lid.add_child(hit_lid)
 		add_part(lid, "Kofferraum", "trunk", Vector3(0, 0, trunk_length / 2.0), Vector3(1.85, 0.24, trunk_length), Vector3.RIGHT, -1.2)
+	if model_kind == "hatch":
+		piece(Vector3(0, 0.79, -0.48), Vector3(1.55, 0.45, 2.55), paint)
+		piece(Vector3(0, 0.66, 1.24), Vector3(1.65, 0.08, 1.0), trim)
+		for x in [-0.84, 0.84]:
+			piece(Vector3(x, 0.82, 1.24), Vector3(0.12, 0.36, 1.0), paint)
+		var hatch := panel_hinge(Vector3(0, roof_y + 0.02, body_length / 2.0), Vector3(1.8, 0.6, 0.1), Vector3(0, -0.7, 0), paint, "RearHatch")
+		piece(Vector3(0, -0.22, 0), Vector3(1.65, 0.38, 0.04), glass, hatch)
+		add_part(hatch, "Heckklappe", "trunk", Vector3(0, -0.5, 0), Vector3(1.8, 1.0, 0.24), Vector3.RIGHT, -1.85)
 	var cabin_y := (1.04 + roof_y) / 2.0
 	var door_length := minf(1.25, cabin_length * 0.65)
 	var front_z := cabin_z - cabin_length / 2.0
 	# Separate front, rear and passenger windows leave a real opening on the left.
-	for z in [front_z, cabin_z + cabin_length / 2.0]:
+	var window_ends: Array[float] = [front_z]
+	if model_kind != "hatch":
+		window_ends.append(cabin_z + cabin_length / 2.0)
+	for z in window_ends:
 		piece(Vector3(0, cabin_y, z), Vector3(1.6, roof_y - 1.0, 0.035), glass)
-	if model_kind != "sedan":
-		piece(Vector3(0.8, cabin_y, cabin_z), Vector3(0.035, roof_y - 1.0, cabin_length), glass)
-	else:
-		piece(Vector3(0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
+	piece(Vector3(0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
 	piece(Vector3(-0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
 	piece(Vector3(0, roof_y, cabin_z), Vector3(1.7, 0.12, cabin_length + 0.1), paint)
 	piece(Vector3(0, cabin_y, front_z + door_length), Vector3(1.65, roof_y - 0.95, 0.08), paint)
@@ -142,13 +159,12 @@ func _ready() -> void:
 	door_hit.shape = door_box
 	door_hit.position = Vector3(0, (roof_y + 0.5) / 2.0, door_length / 2.0)
 	driver_door.add_child(door_hit)
-	if model_kind == "sedan":
-		var passenger := driver_door.duplicate() as AnimatableBody3D
-		passenger.name = "PassengerDoor"
-		add_child(passenger)
-		passenger.position.x = 0.91
-		add_part(passenger, "Beifahrertuer", "passenger_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, 1.15)
-		add_part(driver_door, "Fahrertuer", "driver_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, -1.15)
+	var passenger := driver_door.duplicate() as AnimatableBody3D
+	passenger.name = "PassengerDoor"
+	add_child(passenger)
+	passenger.position.x = 0.91
+	add_part(passenger, "Beifahrertuer", "passenger_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, 1.15)
+	add_part(driver_door, "Fahrertuer", "driver_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, -1.15)
 	for z in [-body_length / 2.0, body_length / 2.0]:
 		piece(Vector3(0, 0.52, z), Vector3(1.82, 0.14, 0.14), trim)
 	for x in [-0.96, 0.96]:
@@ -156,7 +172,7 @@ func _ready() -> void:
 	brake_material = material("862c2b")
 	for x in [-0.61, 0.61]:
 		piece(Vector3(x, 0.82, -body_length / 2.0 - 0.01), Vector3(0.42, 0.2, 0.04), material("fff0c7"))
-		piece(Vector3(x, 0.82, body_length / 2.0 + 0.01), Vector3(0.42, 0.2, 0.04), brake_material)
+		piece(Vector3(signf(x) * 0.86 if model_kind in ["van", "hatch"] else x, 0.82, body_length / 2.0 + 0.01), Vector3(0.14 if model_kind in ["van", "hatch"] else 0.42, 0.2, 0.04), brake_material)
 	for x in [-0.92, 0.92]:
 		for z in [-body_length * 0.32, body_length * 0.32]:
 			var steer := Node3D.new()
@@ -313,3 +329,21 @@ func all_parts_closed() -> bool:
 		if not part.is_closed():
 			return false
 	return true
+
+
+func panel_hinge(at: Vector3, size: Vector3, center: Vector3, mat: Material, label: String) -> AnimatableBody3D:
+	var hinge := AnimatableBody3D.new()
+	hinge.name = label
+	hinge.sync_to_physics = false
+	hinge.collision_layer = 4
+	hinge.collision_mask = 0
+	add_child(hinge)
+	hinge.position = at
+	piece(center, size, mat, hinge)
+	var hit := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	hit.shape = shape
+	hit.position = center
+	hinge.add_child(hit)
+	return hinge

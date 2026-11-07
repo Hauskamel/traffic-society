@@ -134,15 +134,17 @@ Prüft alle vier Fahrzeuglängen: keine Freigabe bei überstehendem Heck, sofort
 
 Der Straßenverkehr verwendet `BASE_TRAFFIC_SPEED_KMH = 10.8` mal `TRAFFIC_SPEED_FACTOR = 2.0`. Der Faktor verändert nur die Reisegeschwindigkeit der Autos. Parktempo und Spielerbewegung haben eigene Werte. Die angegebenen Fahrzeugwerte sind Ziel-/Höchstgeschwindigkeiten; Bremsen, Abstände und Einfädeln können das Tempo reduzieren. Die Spielerwerte wurden bei dieser Anpassung nicht verändert; die normale Bewegung ist damit eher Laufen als gemütliches Gehen.
 
-## Türen und Kofferraum – zunächst an Bobbys Limousine
+## Türen und Ladebereiche – an allen vier Fahrzeugmodellen
 
-Am kontrollierten, geparkten Fahrzeug in die Ego-Ansicht wechseln. Mit dem Fadenkreuz auf **Fahrertür, Beifahrertür oder Kofferraumdeckel** schauen. Der getroffene Bereich wird gelb eingefärbt, dazu erscheint **[E] … öffnen/schließen**. E bewegt das jeweilige Teil mit einer kurzen Scharnieranimation. Zum Schließen erneut das geöffnete Teil ansehen und E drücken.
+Am kontrollierten, geparkten Fahrzeug in die Ego-Ansicht wechseln. Mit dem Fadenkreuz auf **Fahrertür, Beifahrertür oder den hinteren Ladebereich** schauen. Der getroffene Bereich wird gelb eingefärbt, dazu erscheint **[E] … öffnen/schließen**. E bewegt das jeweilige Teil mit einer kurzen Scharnieranimation. Zum Schließen erneut das geöffnete Teil ansehen und E drücken.
 
 - Türblech ansehen: Tür bedienen. Fahrerfenster / Fahrer ansehen: weiterhin das Mausrad-Menü öffnen.
 - Maximal circa 2,8 Meter Reichweite; Wände oder andere Hindernisse verdecken die Interaktion. Die Türen werden von ihrer jeweiligen Fahrzeugseite bedient, der Kofferraum vom Heck.
 - Während der Aus-/Einstiegsanimation übernimmt der Fahrer die Fahrertür. Manuelle Aktionen sind währenddessen gesperrt; der bereits geöffnete Türflügel wird ohne Zuschlagen übernommen.
 - Vor dem Weiterfahren alle geöffneten Bereiche schließen. Sonst bleibt der Wagen stehen und zeigt einen Hinweis.
-- Noch keine Gegenstände oder Durchsuchungen. Die manuell bedienbaren Bereiche sind zunächst nur an der Limousine vorhanden. Andere Modelle behalten ihre bisherigen Fahreraktionen.
+- Alle Modelle haben manuell bedienbare Fahrer- und Beifahrertüren.
+- Limousine: Kofferraumdeckel. Kleinwagen: obere Heckklappe. Weißer Transporter: zwei einzeln bedienbare hintere Ladetüren. Pickup: nach unten klappbare Ladeflächenklappe.
+- Die Ladebereiche sind leer und sichtbar geöffnet; noch keine Gegenstände oder Durchsuchungen.
 
 Grafischer Test:
 
@@ -151,3 +153,11 @@ godot --path . --script res://tests/vehicle_parts_test.gd
 ```
 
 Prüft Auswahl/Markierung mit dem Fadenkreuz, E-Hinweise, beide Türen und Kofferraum, Öffnen/Schließen, Reichweite, Verdeckung durch eine Wand, das Fahrer-Menü, die Übergabe an die Fahreranimation und die Abfahrtsbedingungen.
+
+Grafischer Test für alle Modelle:
+
+```sh
+godot --path . --script res://tests/all_vehicle_parts_test.gd
+```
+
+Prüft jedes bedienbare Teil an allen vier Modellen: Fadenkreuz-Markierung, benannter E-Hinweis, Öffnen, erneutes Anvisieren zum Schließen und die gesperrte Abfahrt bei offenen Teilen. Für die Ladetüren des Transporters jeweils den linken oder rechten Flügel ansehen.

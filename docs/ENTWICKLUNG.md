@@ -179,6 +179,19 @@ Mit Godot 4.6.3 unter Linux bestanden: bestehende Fundament-, Verkehrs-, Fahrer-
 
 Der Windows-Test mit Godot 4.7.2 steht noch aus. Inhalte, Dokumente und Durchsuchungen wurden nicht ergänzt.
 
+## Fahrzeugbereiche – Erweiterung auf alle Modelle · umgesetzt
+
+Die zunächst auf die Limousine begrenzte Bedienung wurde auf alle vier Fahrzeuge übertragen. Jedes Modell hat eine manuell bedienbare Fahrer- und Beifahrertür. Hinzu kommen passende hintere Öffnungen:
+
+- Limousine: bisheriger Kofferraumdeckel.
+- Kleinwagen: nach oben schwenkende Heckklappe samt Heckscheibe.
+- Weißer Transporter: zwei separat nach außen schwenkende Ladetüren; der vorher massive Aufbau ist als leerer Laderaum mit Boden, Seitenwänden und Dach modelliert.
+- Pickup: nach unten schwenkende Ladeflächenklappe.
+
+Alle Bereiche verwenden dieselbe Fadenkreuz-Hervorhebung, benannte E-Hinweise und erneutes E zum Schließen. Die festen Fahreraktionen bleiben erhalten. Eine Abfahrt ist bei jedem Modell erst mit geschlossenen Bereichen möglich.
+
+Mit Godot 4.6.3 geprüft: Der neue grafische Test `all_vehicle_parts_test.gd` durchläuft jedes Teil bei jedem Modell einschließlich Markierung, Öffnen, erneutem Anvisieren zum Schließen und Freigabeprüfung. Der Fahrertest für alle vier Modelle sowie Fundament-, Verkehrs- und Stellplatztests wurden ebenfalls bestanden. Screenshots der hinteren Öffnungen wurden visuell geprüft. Windows/Godot 4.7.2 ist noch vom Nutzer zu testen.
+
 ## Schritt 4 – Erste Kontrolle · Ausblick
 
 Dokumente anfordern und vergleichen sowie eine einfache persönliche Durchsuchung. Umfang, Bedienung und Darstellung sind noch offen.
