@@ -3,6 +3,7 @@ extends AnimatableBody3D
 signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
+var inventory: RefCounted
 var driver_name := "Bobby Mayer"
 var plate_number := "TS BM 104"
 var model_name := "Limousine"

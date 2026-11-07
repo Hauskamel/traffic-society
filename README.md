@@ -13,9 +13,9 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Auf `feature/fundamentals` sind Verkehr, Fahreraktionen und erste manuell bedienbare Fahrzeugbereiche umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
+Auf `feature/fundamentals` sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche und eine einfache Personendurchsuchung mit Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
-Dokumente, Befragungsdialoge und Durchsuchungen gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
+Dokumentenkontrolle, Befragungsdialoge und Fahrzeugdurchsuchung gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
 Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Der Verkehr bis Schritt 2a wurde vom Nutzer unter Windows bestätigt. Der neue Fahrer-/Menüablauf benötigt noch einen Windows-Test unter Godot 4.7.2.
 
@@ -30,9 +30,10 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Maus | In der Ego-Ansicht umsehen; pausiert während der Menüauswahl |
 | Shift | Schneller gehen |
 | Mausrad | Übersicht zoomen oder im offenen Interaktionsmenü die Aktion wählen |
-| Escape | Interaktionsmenü schließen; ohne Menü die Maus freigeben |
+| Escape | Menü / Inventar schließen oder die kurze Durchsuchung abbrechen; sonst Maus freigeben |
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
 | R | Spielerposition zurücksetzen |
+| I | Eigenes Inventar in der Ego-Ansicht öffnen; Esc schließt |
 | Linksklick auf Auto | In der Übersicht auswählen; hält das Fahrzeug noch nicht an |
 | Zur Kontrolle anhalten | Ausgewähltes Fahrzeug ausdrücklich in die freie Bucht holen |
 | E | Am Fenster / stehenden Fahrer Menü öffnen und ausgewählte Aktion bestätigen |
@@ -161,3 +162,26 @@ godot --path . --script res://tests/all_vehicle_parts_test.gd
 ```
 
 Prüft jedes bedienbare Teil an allen vier Modellen: Fadenkreuz-Markierung, benannter E-Hinweis, Öffnen, erneutes Anvisieren zum Schließen und die gesperrte Abfahrt bei offenen Teilen. Für die Ladetüren des Transporters jeweils den linken oder rechten Flügel ansehen.
+
+## Person durchsuchen und Inventare
+
+1. Fahrzeug anhalten, Fahrer aussteigen lassen und den wartenden Fahrer ansehen.
+2. E öffnet das Mausrad-Menü. **Person durchsuchen** wählen und mit E bestätigen.
+3. Der Fahrer nimmt eine kurze Durchsuchungshaltung ein. Nach circa 1,6 Sekunden öffnet sich die Übersicht mit Mauszeiger. Es gibt keine einzeln anzuklickenden Körperbereiche.
+4. Links stehen die gefundenen NPC-Gegenstände, in der Mitte die Details des angeklickten Items, rechts das Spielerinventar. Ein Klick betrachtet nur; **Übernehmen** und **Zurückgeben** verschieben den ausgewählten Gegenstand.
+5. Esc oder die untere Schaltfläche beendet die Durchsuchung. Der Fahrer wartet wieder normal und kann zum Einsteigen aufgefordert werden.
+
+Die Welt und der Verkehr laufen weiter. Blick und Bewegung des Spielers sind während der Animation und Ansicht gesperrt; Esc kann auch die kurze Animation abbrechen. Mit I lässt sich außerhalb einer Durchsuchung das eigene Inventar ohne NPC-Inhalt ansehen.
+
+Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand, vorerst ohne Benutzungsfunktion. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
+
+Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop, verschachtelte Taschen oder 3D-Drehen von Gegenständen. Fahrzeug-Ladebereiche haben noch kein Inventar.
+
+Tests:
+
+```sh
+godot --headless --path . --script res://tests/inventory_test.gd
+godot --path . --script res://tests/search_interaction_test.gd
+```
+
+Der grafische Test prüft den gesamten Menü-/Suchablauf, erst danach sichtbare Items, Anklicken ohne Wegnehmen, Übernehmen und Zurückgeben, gesperrte Bewegung und Mausblick bei weiterlaufendem Verkehr sowie Esc, Abbruch und das eigene Inventar.

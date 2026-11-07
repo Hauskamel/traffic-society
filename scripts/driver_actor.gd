@@ -1,7 +1,10 @@
 extends Node3D
 ## Procedural placeholder animation, replaceable by a rigged GLB later.
-enum State { SEATED, EXITING, OUTSIDE, ENTERING }
+enum State { SEATED, EXITING, OUTSIDE, ENTERING, SEARCHING }
 const DURATION := 2.4
+const SEARCH_DURATION := 1.6
+var search_clock := 0.0
+var search_ready := false
 var state: State = State.SEATED
 var progress := 0.0
 var initial_door_angle := 0.0
@@ -63,6 +66,11 @@ func _ready() -> void:
 	reset()
 
 func reset() -> void:
+	search_clock = 0
+	search_ready = false
+	for limb in limbs:
+		limb.rotation.z = 0
+	torso.rotation.x = 0
 	state = State.SEATED
 	door.collision_layer = 4
 	progress = 0
@@ -90,7 +98,7 @@ func request_enter() -> bool:
 	return true
 
 func is_busy() -> bool:
-	return state == State.EXITING or state == State.ENTERING
+	return state == State.EXITING or state == State.ENTERING or state == State.SEARCHING
 
 func can_drive() -> bool:
 	return state == State.SEATED and absf(door.rotation.y) < 0.01
@@ -115,7 +123,32 @@ func apply_pose(t: float) -> void:
 		limbs[i].rotation.x = lerpf(seated_angle, 0, movement) + sway * (1 if i % 2 == 0 else -1)
 	body.global_position = global_position
 
+func begin_search() -> bool:
+	if state != State.OUTSIDE:
+		return false
+	state = State.SEARCHING
+	search_clock = 0.0
+	search_ready = false
+	return true
+
+func end_search() -> void:
+	if state != State.SEARCHING:
+		return
+	state = State.OUTSIDE
+	search_ready = false
+	limbs[2].rotation.z = 0
+	limbs[3].rotation.z = 0
+	torso.rotation.x = 0
+
 func _physics_process(delta: float) -> void:
+	if state == State.SEARCHING:
+		search_clock = minf(SEARCH_DURATION, search_clock + delta)
+		var amount := smoothstep(0.0, 0.5, search_clock)
+		limbs[2].rotation.z = -1.2 * amount
+		limbs[3].rotation.z = 1.2 * amount
+		torso.rotation.x = sin(search_clock * 7.0) * 0.035 if search_clock < SEARCH_DURATION else 0.0
+		search_ready = search_clock >= SEARCH_DURATION
+		return
 	if not is_busy():
 		return
 	progress = minf(1.0, progress + delta / DURATION)

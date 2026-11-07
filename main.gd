@@ -22,6 +22,12 @@ var interaction_panel: PanelContainer
 var interaction_rows: RichTextLabel
 const VehiclePart = preload("res://scripts/vehicle_part.gd")
 var hovered_part: VehiclePart
+const ItemInventory = preload("res://scripts/item_inventory.gd")
+const InventoryView = preload("res://scripts/inventory_view.gd")
+var player_inventory: RefCounted = ItemInventory.for_player()
+var inventory_view: InventoryView
+var searching_driver: Node3D
+var searching_car: Node3D
 var feedback := ""
 var feedback_time := 0.0
 
@@ -221,6 +227,9 @@ func _ready() -> void:
 	interaction_rows.add_theme_font_size_override("normal_font_size", 20)
 	menu_margin.add_child(interaction_rows)
 	interaction_panel.visible = false
+	inventory_view = InventoryView.new()
+	layer.add_child(inventory_view)
+	inventory_view.closed.connect(finish_search)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -234,6 +243,13 @@ func update_camera() -> void:
 	instructions.text += "Auto auswaehlen, dann Anhalten | Mausrad: Zoom\nR: Spieler zuruecksetzen" if aerial else "Maus: umsehen | Shift: schneller | E: interagieren\nEsc: Maus freigeben | R: Spieler zuruecksetzen"
 
 func _unhandled_input(event: InputEvent) -> void:
+	if inventory_view.visible or is_instance_valid(searching_driver):
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+			if inventory_view.visible:
+				inventory_view.close_view()
+			else:
+				finish_search()
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
 			aerial = not aerial
@@ -251,6 +267,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				close_interaction()
 			else:
 				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		elif event.keycode == KEY_I and not aerial:
+			close_interaction()
+			inventory_view.open_view(player_inventory)
 		elif event.keycode == KEY_R:
 			close_interaction()
 			player.position = Vector3(7.5, 0.2, 8)
@@ -280,7 +299,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				overview.size = minf(85, overview.size + 3)
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event is InputEventMouseMotion and not aerial and not interaction_open and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if event is InputEventMouseMotion and not aerial and not interaction_open and not inventory_view.visible and not is_instance_valid(searching_driver) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		player.rotation.y -= event.relative.x * 0.0025
 		pitch = clampf(pitch - event.relative.y * 0.0025, -1.35, 1.35)
 		eyes.rotation.x = pitch
@@ -293,8 +312,10 @@ func _physics_process(delta: float) -> void:
 		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
 		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
 	).normalized()
-	if interaction_open:
+	if interaction_open or inventory_view.visible or is_instance_valid(searching_driver):
 		move = Vector2.ZERO
+	if is_instance_valid(searching_driver) and searching_driver.search_ready and not inventory_view.visible:
+		inventory_view.open_view(player_inventory, searching_car.inventory, searching_car.driver_name)
 	feedback_time = maxf(0, feedback_time - delta)
 	if interaction_open and not can_interact():
 		close_interaction()
@@ -326,7 +347,7 @@ func order_stop() -> void:
 
 func can_interact() -> bool:
 	var car := traffic.controlled_car
-	if aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+	if inventory_view.visible or is_instance_valid(searching_driver) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
 		return false
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy():
 		return false
@@ -360,7 +381,7 @@ func refresh_encounter_ui() -> void:
 	elif not is_instance_valid(controlled) and aerial:
 		text += "\nIn der Uebersicht ein vorbeifahrendes Fahrzeug anklicken."
 	if is_instance_valid(controlled) and controlled.driver.is_busy():
-		text += "\nFahrer steigt aus ..." if controlled.driver.state == controlled.driver.State.EXITING else "\nFahrer steigt ein ..."
+		text += "\nPerson wird durchsucht ... [Esc: abbrechen]" if controlled.driver.state == controlled.driver.State.SEARCHING else ("\nFahrer steigt aus ..." if controlled.driver.state == controlled.driver.State.EXITING else "\nFahrer steigt ein ...")
 	if feedback_time > 0:
 		text += "\n" + feedback
 	encounter_status.text = text
@@ -373,7 +394,7 @@ func open_interaction() -> void:
 	if not can_interact():
 		return
 	var driver := traffic.controlled_car.driver
-	interaction_actions.assign(["Einsteigen lassen", "Gespraech beenden"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
+	interaction_actions.assign(["Person durchsuchen", "Einsteigen lassen", "Gespraech beenden"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
 	interaction_index = 0
 	interaction_open = true
 	interaction_panel.visible = true
@@ -405,6 +426,11 @@ func confirm_interaction() -> void:
 			succeeded = car.driver.request_enter()
 		"Weiterfahren lassen":
 			succeeded = car.release()
+		"Person durchsuchen":
+			succeeded = car.driver.begin_search()
+			if succeeded:
+				searching_driver = car.driver
+				searching_car = car
 	if not succeeded:
 		feedback = "Bitte zuerst alle Tueren und Klappen schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich."
 		feedback_time = 6.0
@@ -414,7 +440,7 @@ func confirm_interaction() -> void:
 func update_part_focus() -> void:
 	var target: VehiclePart
 	var car := traffic.controlled_car
-	if not aerial and not interaction_open and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_instance_valid(car) and car.state == TrafficCar.State.PARKED and not car.driver.is_busy():
+	if not aerial and not interaction_open and not inventory_view.visible and not is_instance_valid(searching_driver) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_instance_valid(car) and car.state == TrafficCar.State.PARKED and not car.driver.is_busy():
 		var origin := eyes.global_position
 		var end := origin - eyes.global_basis.z * 2.8
 		var query := PhysicsRayQueryParameters3D.create(origin, end, 8)
@@ -438,3 +464,11 @@ func update_part_focus() -> void:
 		hovered_part = target
 		if is_instance_valid(hovered_part):
 			hovered_part.set_highlight(true)
+
+
+func finish_search() -> void:
+	if is_instance_valid(searching_driver):
+		searching_driver.end_search()
+	searching_driver = null
+	searching_car = null
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED

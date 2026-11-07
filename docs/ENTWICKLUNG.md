@@ -192,9 +192,34 @@ Alle Bereiche verwenden dieselbe Fadenkreuz-Hervorhebung, benannte E-Hinweise un
 
 Mit Godot 4.6.3 geprüft: Der neue grafische Test `all_vehicle_parts_test.gd` durchläuft jedes Teil bei jedem Modell einschließlich Markierung, Öffnen, erneutem Anvisieren zum Schließen und Freigabeprüfung. Der Fahrertest für alle vier Modelle sowie Fundament-, Verkehrs- und Stellplatztests wurden ebenfalls bestanden. Screenshots der hinteren Öffnungen wurden visuell geprüft. Windows/Godot 4.7.2 ist noch vom Nutzer zu testen.
 
-## Schritt 4 – Erste Kontrolle · Ausblick
+## Schritt 4 – Personendurchsuchung und Inventare · umgesetzt
 
-Dokumente anfordern und vergleichen sowie eine einfache persönliche Durchsuchung. Umfang, Bedienung und Darstellung sind noch offen.
+### Ablauf
+
+Eine Aktion **Person durchsuchen** im Mausrad-Menü des ausgestiegenen Fahrers startet die Durchsuchung. Der Spieler muss keine Taschen oder Körperbereiche einzeln abarbeiten. Der Fahrer hebt in einer circa 1,6 Sekunden langen Platzhalteranimation die Arme und nimmt eine Durchsuchungshaltung ein. Erst danach werden seine mitgeführten Gegenstände sichtbar.
+
+Die Übersicht besitzt drei Spalten: NPC-Inventar links, ausgewählter Gegenstand mit Symbol und lesbaren Details in der Mitte, Spielerinventar rechts. Anklicken betrachtet nur. Separate Schaltflächen übernehmen oder geben zurück. Esc beziehungsweise die untere Schaltfläche schließen die Übersicht und stellen die normale Wartehaltung wieder her. Esc während der kurzen Animation bricht sauber ab. Der Fahrer kann anschließend wieder einsteigen.
+
+Verkehr und Welt laufen weiter. Spielerbewegung, Kamera und Weltinteraktionen sind während der Animation und Übersicht gesperrt. Die Übersicht verwendet den freien Mauszeiger. I öffnet in Ego-Ansicht das eigene Inventar ohne Einblick in noch nicht durchsuchte NPCs.
+
+### Daten und Umfang
+
+- `scripts/item_inventory.gd`: gemeinsame Inventargrundlage mit Kapazität und atomarem Verschieben derselben Gegenstandsinstanz.
+- `scripts/inventory_view.gd`: Übersicht, Slots, Symbole, Details, getrennte Transferaktionen und Rückmeldungen.
+- `assets/items/`: einfache eigene SVG-Symbole für Schlüsselbund, Geldbörse, Quittung und Taschenlampe.
+- Alle vier Fahrer erhalten dieselben drei Gegenstandskategorien mit festen, zur Figur gehörenden Kennungen und individuell beschrifteten Quittungen. Keine zufälligen NPC-Gegenstände.
+- Acht Plätze pro NPC, zwölf beim Spieler. Die Start-Taschenlampe ist ein Platzhalter ohne Benutzungsfunktion. Volles Inventar oder ungültige Übertragung verliert beziehungsweise dupliziert keinen Gegenstand. Fremdes Spielerequipment lässt sich nicht als Rückgabe an einen NPC verschieben.
+- Der Verkehrsmanager hält das Inventar jeder festen Figur für die Sitzung vor. Eine erneute Durchfahrt erzeugt keine bereits weggenommenen Items neu. Übernommene Gegenstände bleiben beim Spieler. Ein Spielneustart setzt die Daten zurück.
+
+### Prüfung
+
+Godot 4.6.3 unter Linux: Inventartest für volle Kapazität, Übernehmen/Rückgabe, fehlgeschlagene doppelte Transfers, feste Identitäten und erhaltene NPC-Inhalte bei erneuter Durchfahrt. Die Suchhaltung wurde für alle vier Fahrer geprüft. Der grafische Test durchläuft Menü, verzögerte Inventaröffnung, Details, Transfer/Rückgabe, Bewegung-/Blicksperre, weiterfahrenden Verkehr, Schließen, eigenes Inventar und Abbruch. Die Übersicht wurde anhand eines Screenshots visuell geprüft.
+
+Bestehende Fundament-, Verkehrs-, Fahrer- und Stellplatztests sind weiterhin bestanden. Der vorhandene grafische Fahrermenütest wurde an die zusätzliche Aktion angepasst und erneut bestanden. Der Windows-Test unter Godot 4.7.2 steht noch aus.
+
+### Grenzen
+
+Keine Speicherung über Spielneustarts, Gewicht, verschachtelten Taschen, Drag-and-drop oder 3D-Objektdrehung. Kein Beweis-/Bewertungssystem, keine Durchsuchung der Fahrzeuge und keine zusätzlichen Dialoge. Eine einzelne Durchsuchung gehört zur aktuell reservierten Kontrolle. `main` und `develop` bleiben unverändert.
 
 ## Dokumentationsregel
 
