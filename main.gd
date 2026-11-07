@@ -353,8 +353,6 @@ func refresh_encounter_ui() -> void:
 		text += "\nIn der Uebersicht ein vorbeifahrendes Fahrzeug anklicken."
 	if is_instance_valid(controlled) and controlled.driver.is_busy():
 		text += "\nFahrer steigt aus ..." if controlled.driver.state == controlled.driver.State.EXITING else "\nFahrer steigt ein ..."
-		if not controlled.driver.message.is_empty():
-			text += "\n" + controlled.driver.message
 	if feedback_time > 0:
 		text += "\n" + feedback
 	encounter_status.text = text
@@ -398,6 +396,6 @@ func confirm_interaction() -> void:
 		"Weiterfahren lassen":
 			succeeded = car.release()
 	if not succeeded:
-		feedback = car.driver.message if not car.driver.message.is_empty() else "Aktion momentan nicht moeglich."
+		feedback = "Aktion momentan nicht moeglich."
 		feedback_time = 6.0
 	close_interaction()

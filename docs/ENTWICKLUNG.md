@@ -120,15 +120,17 @@ Nach dem Aussteigen wartet der Fahrer neben der linken Tür. Ansehen und E öffn
 - Sitzhöhe und Türposition passen zur jeweiligen Kabine; der Fahrer steht draußen auf Bodenniveau.
 - Ein wartender Fahrer hat eine Kollision. Die spätere Übernahme eines geriggten GLB-Modells bleibt möglich; die Animation ist bisher ein bewusst einfacher Platzhalter.
 
-### Platzprüfung und Rückmeldungen
+### Gameplay-Anpassung – Aus-/Einsteigen ohne Platzprüfung
 
-Eine Physikabfrage deckt Türschwenk und den kurzen Weg neben dem Auto ab. Bei einem blockierten Aus-/Einstieg wird die Aktion abgewiesen und ein Hinweis angezeigt. Der Spieler kann nach dem Schließen des Menüs zurücktreten und erneut anfragen. Tritt er während der Bewegung in den Bereich, pausiert die Animation, bis der Weg wieder frei ist. Eigene Fahrzeug-, Tür- und Fahrerkollisionen werden bei dieser Prüfung ausgeschlossen.
+Nach dem Windows-Test wurde die vorherige Platzprüfung auf Wunsch des Nutzers entfernt: Sie zwang den Spieler zum Zurücktreten und wiederholten Anfordern. Ein bestätigter Auftrag wird jetzt auch bei blockierter Tür oder belegtem Weg vollständig ausgeführt und während der Animation nicht mehr pausiert. Es gibt keine Platzmangel-Meldung mehr.
+
+Die Tür kollidiert während der Bewegung vorübergehend nicht mit dem Spieler. Tür und Fahrer dürfen dabei Hindernisse durchdringen; ein wartender Fahrer hat anschließend weiterhin eine Kollision. Die Zustandsprüfung gegen doppelte Aufträge und die Abfahrt nur mit sitzendem Fahrer und geschlossener Tür bleiben erhalten.
 
 ### Prüfung
 
 Mit Godot 4.6.3 unter Linux:
 
-- `driver_test.gd`: Aus-/Einsteigen bei allen vier Modellen, Türöffnung und -schluss, blockierte Wege, Pausieren/Fortsetzen, stehender Fahrer als Hindernis und gesperrte Freigabe ohne sitzenden Fahrer.
+- `driver_test.gd`: Aus-/Einsteigen bei allen vier Modellen, Türöffnung und -schluss, belegte Wege ohne erneuten Auftrag oder Pause, stehender Fahrer als Hindernis und gesperrte Freigabe ohne sitzenden Fahrer.
 - `driver_menu_test.gd` mit Display: E öffnet/bestätigt, Mausrad in beide Richtungen samt Umlauf, Esc schließt, Mausblick pausiert, wechselnde Aktionen draußen, Gespräch beenden, Wiedereinsteigen und abschließende Freigabe. Übersichtszoom bleibt erhalten.
 - Bestehende Fundament-, Verkehrs- und grafische Interaktionstests wurden an die Menübedienung angepasst und erneut bestanden.
 - Screenshots von geöffneter Tür, aussteigendem Fahrer und Außenmenü wurden visuell geprüft.

@@ -13,7 +13,6 @@ var head: MeshInstance3D
 var limbs: Array[Node3D] = []
 var body: StaticBody3D
 var collider: CollisionShape3D
-var message := ""
 
 func block(at: Vector3, size: Vector3, color: String, parent: Node3D) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
@@ -64,28 +63,16 @@ func _ready() -> void:
 
 func reset() -> void:
 	state = State.SEATED
+	door.collision_layer = 4
 	progress = 0
 	collider.disabled = true
 	apply_pose(0)
 
-func space_clear() -> bool:
-	# Covers the door sweep and the entire short path beside the vehicle.
-	var query := PhysicsShapeQueryParameters3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(1.85, 1.95, 2.2)
-	query.shape = shape
-	query.transform = get_parent().global_transform * Transform3D(Basis.IDENTITY, Vector3(-1.93, 1.1, outside.z))
-	query.collision_mask = 7
-	query.exclude = [get_parent().get_rid(), body.get_rid(), door.get_rid()]
-	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
-
 func request_exit() -> bool:
 	if state != State.SEATED:
 		return false
-	if not space_clear():
-		message = "Bitte seitlich Platz machen: Tuer und Ausstiegsweg sind blockiert."
-		return false
-	message = ""
+	# Animations intentionally pass through obstacles for responsive interaction.
+	door.collision_layer = 0
 	state = State.EXITING
 	progress = 0
 	return true
@@ -93,11 +80,8 @@ func request_exit() -> bool:
 func request_enter() -> bool:
 	if state != State.OUTSIDE:
 		return false
-	if not space_clear():
-		message = "Bitte vom Einstiegsweg zuruecktreten."
-		return false
-	message = ""
 	collider.disabled = true
+	door.collision_layer = 0
 	state = State.ENTERING
 	progress = 0
 	return true
@@ -127,13 +111,9 @@ func apply_pose(t: float) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_busy():
 		return
-	# Pause safely if the officer steps into the path during the animation.
-	if not space_clear():
-		message = "Bewegung pausiert: bitte Tuer und Weg freihalten."
-		return
-	message = ""
 	progress = minf(1.0, progress + delta / DURATION)
 	apply_pose(progress if state == State.EXITING else 1.0 - progress)
 	if progress >= 1.0:
 		state = State.OUTSIDE if state == State.EXITING else State.SEATED
 		collider.disabled = state != State.OUTSIDE
+		door.collision_layer = 4

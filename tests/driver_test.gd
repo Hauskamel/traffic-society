@@ -31,24 +31,18 @@ func run() -> void:
 		scene.player.position = Vector3(4.9, 0.1, driver.global_position.z)
 		await physics_frame
 		await physics_frame
-		check(not driver.request_exit(), "Exit must reject an officer blocking the path: " + car.model_kind)
-		scene.player.position = Vector3(3.8, 0.1, driver.global_position.z)
-		await physics_frame
-		await physics_frame
-		check(driver.request_exit(), "Clear exit must work: " + car.model_kind)
+		check(driver.request_exit(), "Exit must work even when the officer blocks the door: " + car.model_kind)
+		check(car.driver_door.collision_layer == 0, "Moving door must not push or trap the officer")
 		check(not driver.request_exit(), "Duplicate exit must be rejected")
 		check(not car.release(), "Car must not drive during exit")
 		animate(driver, 45)
 		check(absf(car.driver_door.rotation.y) > 0.5, "Door must visibly open")
-		var paused_at: float = driver.progress
+		var previous_progress: float = driver.progress
 		scene.player.position = car.to_global(Vector3(-2, 0.1, driver.outside.z))
 		await physics_frame
 		await physics_frame
 		animate(driver, 15)
-		check(driver.progress == paused_at, "Obstruction must pause animation")
-		scene.player.position = Vector3(3.8, 0.1, 8)
-		await physics_frame
-		await physics_frame
+		check(driver.progress > previous_progress, "Obstruction must not pause animation")
 		animate(driver)
 		check(driver.state == driver.State.OUTSIDE, "Driver must finish outside: " + car.model_kind)
 		check(absf(driver.global_position.y) < 0.02, "Outside driver must stand on the ground")
@@ -64,11 +58,7 @@ func run() -> void:
 		scene.player.position = car.to_global(Vector3(-2, 0.1, driver.outside.z))
 		await physics_frame
 		await physics_frame
-		check(not driver.request_enter(), "Blocked return path must be rejected")
-		scene.player.position = Vector3(3.8, 0.1, 8)
-		await physics_frame
-		await physics_frame
-		check(driver.request_enter(), "Return must work after making room")
+		check(driver.request_enter(), "Entry must work while the officer blocks the path")
 		check(not car.release(), "Car must not drive during entry")
 		animate(driver)
 		check(driver.can_drive(), "Driver must be seated with a closed door: " + car.model_kind)
@@ -77,5 +67,5 @@ func run() -> void:
 		scene.queue_free()
 		await process_frame
 	if failures.is_empty():
-		print("PASS: all four models, door animation, blocked paths, pause/resume, exit, driver collision, entry and release guards")
+		print("PASS: all four models, door animation, obstructed paths without retries or pauses, exit, driver collision, entry and release guards")
 	quit(0 if failures.is_empty() else 1)

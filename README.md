@@ -64,7 +64,7 @@ Alternativ auf GitHub zuerst den Branch **feature/fundamentals** auswählen und 
 3. **Zur Kontrolle anhalten** drücken. Nur dieses Auto fährt in die freie Bucht. Die übrigen Fahrzeuge fahren vorbei. Bei verpasster Einfahrt ein anderes Auto auswählen.
 4. Sobald das Auto steht, mit Tab zur Ego-Ansicht wechseln und zum linken Fahrerfenster gehen.
 5. Auf das Fenster schauen und E drücken. Mit dem Mausrad **Aussteigen lassen** oder **Weiterfahren lassen** auswählen und mit E bestätigen. Esc schließt das Menü. Blick und Bewegung pausieren während der Auswahl.
-6. Für das Aussteigen den Türbereich freihalten: möglichst etwa zwei Meter seitlich vom Fenster zurücktreten und weiter zum Fenster schauen. Bei einem blockierten Weg erscheint ein Hinweis; nach dem Zurücktreten erneut E drücken und die Aktion wählen.
+6. Der bestätigte Aus-/Einstiegsauftrag läuft vollständig durch, auch wenn du direkt vor der Tür oder im Weg stehst. Zurücktreten und erneutes Anfordern sind nicht nötig. Während der Animation darf die Tür Hindernisse durchdringen.
 7. Der Fahrer öffnet die Tür, steigt mit einer einfachen Animation aus und bleibt neben dem Auto stehen. Ansehen und E drücken: **Einsteigen lassen** oder **Gespräch beenden**. Letzteres schließt nur das Menü; der Fahrer wartet weiter.
 8. Nach dem Wiedereinsteigen und Schließen der Tür erneut am Fenster das Menü öffnen und **Weiterfahren lassen** wählen. Das Fahrzeug fädelt wieder ein. Alternativ kann es bereits vor dem Aussteigen freigegeben werden.
 9. Nach seiner Abfahrt ist die Bucht wieder frei. Kein manueller Neustart mit N ist nötig.
@@ -109,6 +109,6 @@ godot --headless --path . --script res://tests/driver_test.gd
 godot --path . --script res://tests/driver_menu_test.gd
 ```
 
-Der erste prüft bei allen vier Modellen Aus-/Einsteigen, Türbewegung, blockierte Wege, Pausieren/Fortsetzen, Fahrerkollision und Abfahrtsbedingungen. Der zweite benötigt ein Display und prüft den vollständigen Menüablauf einschließlich Mausrad in beide Richtungen, Esc, pausiertem Mausblick und unverändertem Übersichtszoom.
+Der erste prüft bei allen vier Modellen Aus-/Einsteigen, Türbewegung, belegte Wege ohne Abbruch oder Pause, Fahrerkollision und Abfahrtsbedingungen. Der zweite benötigt ein Display und prüft den vollständigen Menüablauf einschließlich Mausrad in beide Richtungen, Esc, pausiertem Mausblick und unverändertem Übersichtszoom.
 
 Tests unter Linux mit Godot 4.6.3; die neue Funktion ist unter Windows/4.7.2 noch zu prüfen.

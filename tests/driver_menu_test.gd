@@ -40,7 +40,7 @@ func run() -> void:
 	car.state = car.State.PARKED
 	scene.traffic.controlled_car = car
 	key(scene, KEY_TAB)
-	scene.player.position = Vector3(3.8, 0.1, car.window_point.global_position.z)
+	scene.player.position = Vector3(4.9, 0.1, car.window_point.global_position.z)
 	scene.eyes.look_at(car.window_point.global_position)
 	await physics_frame
 	await physics_frame
