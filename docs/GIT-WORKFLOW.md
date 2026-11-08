@@ -34,3 +34,7 @@ Große Binärdateien können bei Bedarf später über Git LFS verwaltet werden. 
 ## Erster Projektimport – durchgeführt
 
 Der funktionierende Windows-Stand wurde mit `project.godot`, `main.tscn`, `main.gd` und `main.gd.uid` übernommen. Generierte Inhalte aus `.godot` wurden ausgeschlossen. `main` und `develop` starten am selben Commit. Zukünftige Änderungen erfolgen nach dem oben beschriebenen Ablauf.
+
+## Aktueller Entwicklungszweig
+
+PR #1 (`feature/fundamentals` → `develop`) wurde übernommen. `feature/vehicleSearches` basiert auf diesem Integrationsstand und enthält die nächste Ausbaustufe der Fahrzeugdurchsuchung. Änderungen an dieser Stufe werden separat nach `develop` vorgeschlagen. `main` bleibt unverändert.

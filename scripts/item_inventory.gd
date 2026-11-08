@@ -65,4 +65,16 @@ Enthaelt ein Paket und eine Materialkiste."]],
 	var contents: Array = sets.get(driver_name, sets["Bobby Mayer"])
 	for i in range(contents.size()):
 		inventory.items.append({"id": plate + ":cargo:" + str(i), "name": contents[i][0], "icon": contents[i][1], "description": contents[i][2], "owner": "Fahrzeug " + plate})
+		if contents[i][0] == "Werkzeugkoffer":
+			var toolbox: Dictionary = inventory.items.back()
+			toolbox.container_type = "toolbox"
+			toolbox.unlocked = false
+			toolbox.opened = false
+			toolbox.description = "Ein Werkzeugkoffer mit einem Verschluss und aufklappbarem Deckel.\nMit 'Genauer untersuchen' laesst er sich oeffnen."
+			var inside := new()
+			inside.capacity = 3
+			inside.items.append({"id": toolbox.id + ":hammer", "name": "Hammer", "icon": "hammer", "owner": toolbox.owner, "container_id": toolbox.id, "description": "Ein einfacher Hammer mit Holzgriff und Gebrauchsspuren."})
+			if driver_name == "Bobby Mayer":
+				inside.items.append({"id": toolbox.id + ":knife", "name": "Messer", "icon": "knife", "owner": toolbox.owner, "container_id": toolbox.id, "description": "Ein Messer mit dunkelroten Spuren auf der Klinge. Ob es Blut ist, ist noch nicht geklaert."})
+			toolbox.contents = inside
 	return inventory

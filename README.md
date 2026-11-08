@@ -13,7 +13,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Auf `feature/fundamentals` sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
+Der Stand von `feature/fundamentals` wurde in `develop` übernommen. Auf `feature/vehicleSearches` werden die Fahrzeugdurchsuchungen erweitert. Bereits umgesetzt sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` bleibt beim Ausgangsstand; `develop` enthält die übernommenen Grundlagen.
 
 Die Dokumentenansicht ist verfügbar; ein Vergleichsmodus und Befragungsdialoge folgen später. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
@@ -325,3 +325,22 @@ Die Aufgabe bleibt beim Senken der Waffe bestehen. Aus der Nähe (etwa zwei Mete
 Die Streife kann bei einer blockierten Fahrbahn seitlich anfahren; ihre Abholwege berücksichtigen den tatsächlichen Standort des Verhafteten. Es bleibt ein einfacher Ablauf für diesen Kontrollplatz, kein allgemeines Verkehrs- oder Navigationssystem. Die groben Fahrzeugkollisionen schließen die transparenten Kabinen ein; deshalb wird das anvisierte Fahrzeug bei der Sichtprüfung ausgenommen. Andere Fahrzeuge und feste Hindernisse blockieren die Erkennung.
 
 Geprüft: `tests/compliance_test.gd` grafisch für alle vier Modelle, Aufgabe außerhalb des Autos, Glock/Taser-Abgrenzung, blockierte Sicht, Bremsen vor Aussteigen, Hände oben, direkte Handschellen und Folgeaktionen. `tests/patrol_test.gd` prüft zusätzlich die Straßenabholung bei weiterhin belegter Kontrollbucht. Linux/Godot 4.6.3; Windows/Godot 4.7.2 bitte testen.
+
+## Interaktive Werkzeugkoffer · erste Testversion
+
+Auf **feature/vehicleSearches** lässt sich die Ladung genauer untersuchen:
+
+1. Fahrzeug anhalten und den Ladebereich wie bisher öffnen/durchsuchen.
+2. **Werkzeugkoffer** auswählen → **Genauer untersuchen**.
+3. In der großen 3D-Ansicht den **goldenen Verschluss anklicken**, danach den **Deckel anklicken**.
+4. Sichtbare Gegenstände im Koffer anklicken. Rechts erscheint ihre drehbare Nahansicht; **Entnehmen** legt den gewählten Gegenstand ins Spielerinventar.
+
+Im großen Bild: **Linksklick bedient Teile**, **rechte Maustaste halten und ziehen dreht den Koffer**, **Mausrad zoomt**. Die Nahansicht rechts wird wie die bisherige Vorschau mit links gedreht. Esc führt zuerst zum Inventar zurück; ein weiteres Esc beendet die Durchsuchung. Die Welt läuft weiterhin normal, Blick und Bewegung bleiben gesperrt.
+
+**Bobby Mayer:** Hammer und Messer mit sichtbaren dunkelroten Spuren. **Mara Wolf:** nur ein Hammer. Keine automatische Blutbestätigung und kein Fundtext vor dem Öffnen. Noras Ladung und Eriks Arbeitsmaterial bleiben zunächst bei der bisherigen Untersuchung.
+
+Verschluss, Deckel und Inhalt bleiben innerhalb der Sitzung erhalten – auch beim Schließen der Ansicht, beim Mitnehmen des ganzen Koffers oder bei erneuter Durchfahrt des Fahrzeugs. Entnommene Gegenstände verschwinden aus dem Koffer. In der großen Ansicht lassen sich eigene Entnahmen über **Zurücklegen** in genau diesen Koffer zurücklegen. Volles Inventar verhindert die Entnahme ohne Verlust. Die Zustände werden noch nicht über Spielneustarts gespeichert.
+
+Es ist zunächst ein einfacher Behältertyp, noch kein allgemeines System verschachtelter Inventare. Kein Farbeimer, keine Drogenanalyse oder neue Dialoge. Die Kofferöffnung wird in der Untersuchungsansicht dargestellt; der kleine Beladungsplatzhalter im Fahrzeug bleibt vereinfacht.
+
+Prüfung unter Linux/Godot 4.6.3: `tests/toolbox_test.gd` für echtes 3D-Anklicken von Verschluss/Deckel/Inhalt, Funddarstellung, Entnahme/Rückgabe, volle Inventare, Mitnehmen und Wiederkehr. Die gemeinsame 3D-Vorschau umfasst jetzt 15 Modellkategorien. Windows/Godot 4.7.2 bitte testen.

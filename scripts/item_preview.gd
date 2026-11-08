@@ -109,7 +109,19 @@ func set_item(item: Dictionary) -> void:
 			var lines: PackedStringArray = item.description.split("\n", false)
 			text_on_surface(item.name + "\n\n" + lines[0], Vector3(0, 0.12, 0.012))
 			text_on_surface("Notizen\n\n" + ("\n".join(lines.slice(1)) if lines.size() > 1 else "Keine weiteren Vermerke."), Vector3(0, 0.1, -0.012), true)
+		"hammer", "knife":
+			var tool := Node3D.new()
+			model.add_child(tool)
+			preload("res://scripts/toolbox_model.gd").build_tool(tool, item.icon)
+			tool.scale = Vector3.ONE * 1.7
+			tool.rotation.x = 0.6
 		"case":
+			if item.get("container_type") == "toolbox":
+				var crate = preload("res://scripts/toolbox_model.gd").new()
+				model.add_child(crate)
+				crate.configure(item)
+				reset_view()
+				return
 			cube(Vector3.ZERO, Vector3(1.1, 0.62, 0.5), "617b83")
 			cube(Vector3(0, 0, 0.26), Vector3(1.1, 0.07, 0.035), "d3bd87")
 			for x in [-0.2, 0.2]:

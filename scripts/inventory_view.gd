@@ -20,6 +20,9 @@ const ItemPreview = preload("res://scripts/item_preview.gd")
 var preview: ItemPreview
 var take_button: Button
 var return_button: Button
+const ToolboxInspection = preload("res://scripts/toolbox_inspection.gd")
+var inspection: ToolboxInspection
+var inspect_button: Button
 var status: Label
 
 func label(text: String, size: int, parent: Node) -> Label:
@@ -85,6 +88,7 @@ func _ready() -> void:
 	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_theme_font_size_override("normal_font_size", 17)
 	containers[1].add_child(detail)
+	inspect_button = button("Genauer untersuchen", containers[1], inspect_selected)
 	take_button = button("Uebernehmen", containers[1], transfer_selected.bind("npc"))
 	return_button = button("Zurueckgeben", containers[1], transfer_selected.bind("player"))
 	right_title = label("SPIELER", 20, containers[2])
@@ -93,9 +97,14 @@ func _ready() -> void:
 	containers[2].add_child(right_grid)
 	status = label("", 16, layout)
 	button("Durchsuchung beenden / Schliessen [Esc]", layout, close_view)
+	inspection = ToolboxInspection.new()
+	add_child(inspection)
+	inspection.changed.connect(container_changed)
 	hide()
 
 func open_view(player: RefCounted, npc: RefCounted = null, person := "", owner_id := "", cargo := false) -> void:
+	if inspection.visible:
+		inspection.close_view()
 	player_inventory = player
 	npc_inventory = npc
 	npc_name = person
@@ -115,6 +124,8 @@ func open_view(player: RefCounted, npc: RefCounted = null, person := "", owner_i
 func close_view() -> void:
 	if not visible:
 		return
+	if inspection.visible:
+		inspection.close_view()
 	hide()
 	npc_inventory = null
 	closed.emit()
@@ -170,14 +181,15 @@ func refresh() -> void:
 	detail_name.text = item.get("name", "GEGENSTAND")
 	preview.set_item(item)
 	detail.text = item.description if not item.is_empty() else "Waehle einen Gegenstand, um ihn genauer anzusehen."
+	inspect_button.visible = item.get("container_type") == "toolbox"
 	take_button.disabled = item.is_empty() or selected_source != "npc"
-	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != source_owner
+	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != source_owner or item.has("container_id")
 
 func transfer_selected(source: String) -> void:
 	var item := selected_item()
 	if item.is_empty() or selected_source != source or npc_inventory == null:
 		return
-	if source == "player" and item.owner != source_owner:
+	if source == "player" and (item.owner != source_owner or item.has("container_id")):
 		status.text = "Dieser Gegenstand gehoert nicht zu diesem Inventar."
 		return
 	var origin: RefCounted = npc_inventory if source == "npc" else player_inventory
@@ -189,3 +201,20 @@ func transfer_selected(source: String) -> void:
 	else:
 		status.text = "Kein Platz im Zielinventar. Der Gegenstand bleibt an seinem Ort."
 	refresh()
+
+func inspect_selected() -> void:
+	var item := selected_item()
+	if item.get("container_type") == "toolbox":
+		inspection.open_view(item, player_inventory)
+
+func container_changed() -> void:
+	# Rebuild the small preview so opening/removing is visible after returning.
+	preview.selected_id = ""
+	refresh()
+	contents_changed.emit()
+
+func back() -> void:
+	if inspection.visible:
+		inspection.close_view()
+	else:
+		close_view()
