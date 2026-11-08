@@ -36,3 +36,22 @@ static func for_player() -> RefCounted:
 	var inventory := new()
 	inventory.items.append({"id": "player:flashlight", "name": "Taschenlampe", "icon": "flashlight", "owner": "Spieler", "description": "Deine dienstliche Taschenlampe.\nNoch ohne eigene Benutzungsfunktion."})
 	return inventory
+
+
+static func for_vehicle(driver_name: String, plate: String) -> RefCounted:
+	var inventory := new()
+	inventory.capacity = 9
+	var sets := {
+		"Bobby Mayer": [["Werkzeugkoffer", "case", "Schraubendreher, Zange und ein kleiner Schraubenschluessel."], ["Ersatzteil", "parcel", "Ein verpackter Oelfilter. Beschriftung: Fuer die alte Limousine."], ["Werkstattbeleg", "receipt", "Werkstatt Nord – Oelwechsel.
+Notiz: Ersatzteil beim naechsten Termin mitbringen."]],
+		"Nora Beck": [["Einkaufstasche", "bag", "Brot, Obst und eine Packung Tee."], ["Geschenk", "parcel", "Ein sorgfaeltig verpacktes Geschenk.
+Anhaenger: Fuer Leon."], ["Kassenbon", "receipt", "Supermarkt am Markt – Lebensmittel, 18,40 Euro."]],
+		"Erik Sommer": [["Paket", "parcel", "Versandkarton.
+Empfaenger: Lager Sued, Tor 3."], ["Arbeitsmaterial", "case", "Eine Kiste mit Kabeln und Befestigungsmaterial."], ["Lieferschein", "receipt", "Auftrag 308 – Lager Sued.
+Enthaelt ein Paket und eine Materialkiste."]],
+		"Mara Wolf": [["Seil", "rope", "Ein aufgewickeltes Arbeitsseil."], ["Werkzeugkoffer", "case", "Ein Koffer mit gebrauchten Handwerkzeugen."], ["Handschuhe", "gloves", "Ein Paar robuste Arbeitshandschuhe."]]
+	}
+	var contents: Array = sets.get(driver_name, sets["Bobby Mayer"])
+	for i in range(contents.size()):
+		inventory.items.append({"id": plate + ":cargo:" + str(i), "name": contents[i][0], "icon": contents[i][1], "description": contents[i][2], "owner": "Fahrzeug " + plate})
+	return inventory

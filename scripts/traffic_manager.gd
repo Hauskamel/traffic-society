@@ -3,6 +3,7 @@ extends Node3D
 const TrafficCar = preload("res://scripts/traffic_car.gd")
 const ItemInventory = preload("res://scripts/item_inventory.gd")
 var npc_inventories: Dictionary = {}
+var vehicle_inventories: Dictionary = {}
 const SPAWN_INTERVAL := 11.0
 # Painted control space: x=4.65..9.55, z=0..10, not the whole lay-by.
 const PARKING_SPACE := Rect2(4.65, 0.0, 4.9, 10.0)
@@ -43,6 +44,9 @@ func spawn_next(z := 52.0) -> bool:
 			npc_inventories[data.driver] = ItemInventory.for_driver(data.driver)
 		car.inventory = npc_inventories[data.driver]
 		car.plate_number = data.plate
+		if not vehicle_inventories.has(data.plate):
+			vehicle_inventories[data.plate] = ItemInventory.for_vehicle(data.driver, data.plate)
+		car.cargo_inventory = vehicle_inventories[data.plate]
 		car.model_name = data.model
 		car.model_kind = data.kind
 		car.body_color = data.color

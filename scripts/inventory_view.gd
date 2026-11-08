@@ -1,5 +1,10 @@
 extends Control
 signal closed
+signal contents_changed
+var source_owner := ""
+var vehicle_mode := false
+var heading: Label
+var instructions: Label
 var player_inventory: RefCounted
 var npc_inventory: RefCounted
 var npc_name := ""
@@ -45,8 +50,8 @@ func _ready() -> void:
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 18)
 	margin.add_child(layout)
-	label("DURCHSUCHUNG / INVENTAR", 26, layout)
-	label("Gegenstand anklicken: ansehen  |  Uebernehmen und Zurueckgeben sind eigene Aktionen", 15, layout)
+	heading = label("DURCHSUCHUNG / INVENTAR", 26, layout)
+	instructions = label("Gegenstand anklicken: ansehen  |  Uebernehmen und Zurueckgeben sind eigene Aktionen", 15, layout)
 	var columns := HBoxContainer.new()
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	columns.add_theme_constant_override("separation", 24)
@@ -89,10 +94,16 @@ func _ready() -> void:
 	button("Durchsuchung beenden / Schliessen [Esc]", layout, close_view)
 	hide()
 
-func open_view(player: RefCounted, npc: RefCounted = null, person := "") -> void:
+func open_view(player: RefCounted, npc: RefCounted = null, person := "", owner_id := "", cargo := false) -> void:
 	player_inventory = player
 	npc_inventory = npc
 	npc_name = person
+	source_owner = owner_id if not owner_id.is_empty() else person
+	vehicle_mode = cargo
+	heading.text = "FAHRZEUGDURCHSUCHUNG" if cargo else "DURCHSUCHUNG / INVENTAR"
+	instructions.text = "Gegenstand anklicken: ansehen  |  Entnehmen und Zuruecklegen sind eigene Aktionen" if cargo else "Gegenstand anklicken: ansehen  |  Uebernehmen und Zurueckgeben sind eigene Aktionen"
+	take_button.text = "Entnehmen" if cargo else "Uebernehmen"
+	return_button.text = "Zuruecklegen" if cargo else "Zurueckgeben"
 	selected_id = ""
 	selected_source = ""
 	status.text = "Die Welt laeuft weiter. Blick und Bewegung sind waehrend der Ansicht gesperrt."
@@ -159,20 +170,21 @@ func refresh() -> void:
 	preview.texture = icon(item.icon) if not item.is_empty() else null
 	detail.text = (item.description + "\n\nUrspruenglicher Besitzer: " + item.owner) if not item.is_empty() else "Waehle einen Gegenstand, um ihn genauer anzusehen."
 	take_button.disabled = item.is_empty() or selected_source != "npc"
-	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != npc_name
+	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != source_owner
 
 func transfer_selected(source: String) -> void:
 	var item := selected_item()
 	if item.is_empty() or selected_source != source or npc_inventory == null:
 		return
-	if source == "player" and item.owner != npc_name:
-		status.text = "Dieser Gegenstand gehoert nicht zu dieser Person."
+	if source == "player" and item.owner != source_owner:
+		status.text = "Dieser Gegenstand gehoert nicht zu diesem Inventar."
 		return
 	var origin: RefCounted = npc_inventory if source == "npc" else player_inventory
 	var destination: RefCounted = player_inventory if source == "npc" else npc_inventory
 	if origin.transfer_to(selected_id, destination):
-		status.text = item.name + (" uebernommen." if source == "npc" else " zurueckgegeben.")
+		status.text = item.name + ((" entnommen." if vehicle_mode else " uebernommen.") if source == "npc" else (" zurueckgelegt." if vehicle_mode else " zurueckgegeben."))
 		selected_source = "player" if source == "npc" else "npc"
+		contents_changed.emit()
 	else:
 		status.text = "Kein Platz im Zielinventar. Der Gegenstand bleibt an seinem Ort."
 	refresh()

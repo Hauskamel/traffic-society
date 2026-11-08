@@ -4,6 +4,11 @@ signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
 var inventory: RefCounted
+var cargo_inventory: RefCounted
+var cargo_search_active := false
+var cargo_props: Node3D
+const CargoZone = preload("res://scripts/cargo_zone.gd")
+var cargo_zone: CargoZone
 var driver_name := "Bobby Mayer"
 var plate_number := "TS BM 104"
 var model_name := "Limousine"
@@ -220,6 +225,7 @@ func _ready() -> void:
 	window_point.name = "DriverWindow"
 	window_point.position = Vector3(-1.2, cabin_y, cabin_z - 0.25)
 	add_child(window_point)
+	build_cargo()
 	new_test_drive()
 
 func set_route(points: Array[Vector3]) -> void:
@@ -261,7 +267,7 @@ func request_stop() -> bool:
 	return true
 
 func release() -> bool:
-	if state != State.PARKED or not driver.can_drive() or not all_parts_closed():
+	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active:
 		return false
 	state = State.LEAVING
 	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),
@@ -348,3 +354,75 @@ func panel_hinge(at: Vector3, size: Vector3, center: Vector3, mat: Material, lab
 	hit.position = center
 	hinge.add_child(hit)
 	return hinge
+
+
+func cargo_accessible() -> bool:
+	for part in parts:
+		if part.kind == "trunk" and absf(part.angle()) > 0.5:
+			return true
+	return false
+
+func build_cargo() -> void:
+	var rear := body_length / 2.0
+	var floor_y := 0.72
+	var center_y := 0.98
+	var depth := 0.6
+	var height := 0.45
+	if model_kind == "hatch":
+		depth = 0.85
+	elif model_kind == "van":
+		floor_y = 0.76
+		center_y = 1.25
+		depth = 2.1
+		height = 0.95
+	elif model_kind == "pickup":
+		floor_y = 1.09
+		center_y = 1.3
+		depth = 1.7
+	cargo_zone = CargoZone.new()
+	cargo_zone.vehicle = self
+	cargo_zone.pivot = self
+	cargo_zone.title = "Laderaum"
+	cargo_zone.kind = "cargo"
+	var hit := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(1.45, height, depth)
+	hit.shape = shape
+	hit.position.z = -depth / 2.0 + 0.1
+	cargo_zone.add_child(hit)
+	var floor := MeshInstance3D.new()
+	var pad := BoxMesh.new()
+	pad.size = Vector3(1.4, 0.018, depth)
+	floor.mesh = pad
+	floor.material_override = material("35434a")
+	cargo_zone.add_child(floor)
+	floor.position = Vector3(0, floor_y - center_y, -depth / 2.0 + 0.1)
+	cargo_zone.floor_mesh = floor
+	add_child(cargo_zone)
+	cargo_zone.position = Vector3(0, center_y, rear - 0.3)
+	cargo_props = Node3D.new()
+	cargo_props.name = "CargoItems"
+	add_child(cargo_props)
+	if cargo_inventory != null:
+		var catalog: RefCounted = preload("res://scripts/item_inventory.gd").for_vehicle(driver_name, plate_number)
+		for i in range(catalog.items.size()):
+			var prop := Node3D.new()
+			prop.set_meta("item_id", catalog.items[i].id)
+			cargo_props.add_child(prop)
+			prop.position = Vector3(-0.45 + float(i) * 0.45, floor_y, rear - 0.55 - float(i % 2) * minf(depth * 0.4, 0.4))
+			if catalog.items[i].icon == "receipt":
+				piece(Vector3(0, 0.025, 0), Vector3(0.23, 0.02, 0.3), material("e1ddbf"), prop)
+			else:
+				var color := "a78a64" if catalog.items[i].icon == "parcel" else "617b83"
+				piece(Vector3(0, 0.14, 0), Vector3(0.34, 0.27, 0.32), material(color), prop)
+				piece(Vector3(0, 0.29, 0), Vector3(0.16, 0.035, 0.05), material("d3bd87"), prop)
+	refresh_cargo_props()
+
+func refresh_cargo_props() -> void:
+	if cargo_props == null or cargo_inventory == null:
+		return
+	for prop in cargo_props.get_children():
+		prop.visible = false
+		for item in cargo_inventory.items:
+			if prop.get_meta("item_id") == item.id:
+				prop.visible = true

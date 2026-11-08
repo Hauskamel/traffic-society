@@ -221,6 +221,33 @@ Bestehende Fundament-, Verkehrs-, Fahrer- und Stellplatztests sind weiterhin bes
 
 Keine Speicherung über Spielneustarts, Gewicht, verschachtelten Taschen, Drag-and-drop oder 3D-Objektdrehung. Kein Beweis-/Bewertungssystem, keine Durchsuchung der Fahrzeuge und keine zusätzlichen Dialoge. Eine einzelne Durchsuchung gehört zur aktuell reservierten Kontrolle. `main` und `develop` bleiben unverändert.
 
+## Schritt 5 – Fahrzeugdurchsuchung · umgesetzt
+
+### Ablauf
+
+Bei einem angehaltenen Fahrzeug den hinteren Ladebereich öffnen und in den Innenraum schauen. Der Innenraum hat eine eigene gelbe Fadenkreuz-Markierung und den E-Hinweis **Laderaum durchsuchen**. Ein Blick auf den Türflügel bedient weiterhin die Tür. Beim Transporter reicht eine geöffnete Ladetür. Der Fahrer muss nicht aussteigen.
+
+E startet eine circa 1,4 Sekunden lange einfache Kamerabewegung. Danach öffnet sich die gemeinsame Inventarübersicht im Fahrzeugmodus: feste Fahrzeuggegenstände links, ausgewähltes Item in der Mitte und Spieler rechts. Eigene Aktionen **Entnehmen / Zurücklegen**; Esc beendet oder bricht die kurze Bewegung ab. Die Welt läuft weiter, Spielerbewegung und Blick bleiben währenddessen gesperrt.
+
+### Daten und Darstellung
+
+- `scripts/cargo_zone.gd`: eigener Innenraum-Trefferbereich auf Basis der bisherigen Hervorhebung; nur bei geöffnetem Ladebereich aktiv. Keine zusätzlichen Klicks auf einzelne Behälter nötig.
+- Fahrzeug-Inventare sind im Verkehrsmanager getrennt von NPC-Inventaren nach Kennzeichen gespeichert und bleiben innerhalb einer Sitzung erhalten.
+- Neun Plätze und drei feste Gegenstände pro Fahrzeug, eigene Quellenkennung für korrektes Zurücklegen. NPC-Taschen sind kein zulässiges Ziel für Fahrzeuggegenstände.
+- Bobby: Werkzeugkoffer, Ersatzteil, Werkstattbeleg. Nora: Einkaufstasche, Geschenk, Kassenbon. Erik: Paket, Arbeitsmaterial, Lieferschein. Mara: Seil, Werkzeugkoffer, Handschuhe.
+- Einfache sichtbare Platzhalter im Laderaum sind über die Gegenstandskennung mit den Daten verknüpft. Entnommene Items verschwinden, zurückgelegte erscheinen wieder. Auch nach einer vollständig leeren erneuten Durchfahrt wird beim Zurücklegen der richtige Platzhalter wiederhergestellt.
+- Geschlossene Ladebereiche oder fahrende Fahrzeuge lassen sich nicht durchsuchen. Während der Suche ist die Abfahrt gesperrt. Der Fahrerzustand wird beim Beenden nicht verändert.
+
+### Prüfung
+
+Mit Godot 4.6.3 unter Linux bestanden: neuer Datentest für alle vier festen Inventare, Trennung von Personen-/Fahrzeuginhalt, Entnehmen, korrekte Rückgabe, passende sichtbare Beladung sowie teilweise und vollständig leere Wiederkehr ohne Duplikate. Neuer grafischer Test für alle vier Modelle: verschlossener/geöffneter Zugang, eine einzelne offene Transportertür, Innenraum-Markierung, E, verzögerte Inventaransicht, sitzender Fahrer, Transfer und leere Darstellung, Schließen und Abbruch.
+
+Die bisherigen Fundament-, Verkehrs-, Fahrer-, Stellplatz-, Personeninventar- und grafischen Fahrzeugbereichstests sind weiterhin bestanden. Screenshots von Innenräumen und Fahrzeug-Inventar wurden visuell geprüft. Windows/Godot 4.7.2 ist noch vom Nutzer zu prüfen.
+
+### Grenzen
+
+Ein gemeinsames Ladeinventar je Fahrzeug. Keine Handschuhfächer, versteckten Fächer, verschachtelten Taschen, freie Gegenstandsplatzierung, rechtliche Bewertung oder Speicherung über Spielneustarts. Die Beladungsmodelle sind Platzhalter. Kein Merge nach `develop` oder `main`.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

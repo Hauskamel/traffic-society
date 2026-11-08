@@ -13,9 +13,9 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Auf `feature/fundamentals` sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche und eine einfache Personendurchsuchung mit Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
+Auf `feature/fundamentals` sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
-Dokumentenkontrolle, Befragungsdialoge und Fahrzeugdurchsuchung gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
+Dokumentenkontrolle und Befragungsdialoge gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
 Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Der Verkehr bis Schritt 2a wurde vom Nutzer unter Windows bestätigt. Der neue Fahrer-/Menüablauf benötigt noch einen Windows-Test unter Godot 4.7.2.
 
@@ -145,7 +145,7 @@ Am kontrollierten, geparkten Fahrzeug in die Ego-Ansicht wechseln. Mit dem Faden
 - Vor dem Weiterfahren alle geöffneten Bereiche schließen. Sonst bleibt der Wagen stehen und zeigt einen Hinweis.
 - Alle Modelle haben manuell bedienbare Fahrer- und Beifahrertüren.
 - Limousine: Kofferraumdeckel. Kleinwagen: obere Heckklappe. Weißer Transporter: zwei einzeln bedienbare hintere Ladetüren. Pickup: nach unten klappbare Ladeflächenklappe.
-- Die Ladebereiche sind leer und sichtbar geöffnet; noch keine Gegenstände oder Durchsuchungen.
+- Die Ladebereiche enthalten feste Gegenstände und lassen sich durchsuchen; siehe Fahrzeugdurchsuchung unten.
 
 Grafischer Test:
 
@@ -175,7 +175,7 @@ Die Welt und der Verkehr laufen weiter. Blick und Bewegung des Spielers sind wä
 
 Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand, vorerst ohne Benutzungsfunktion. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
 
-Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop, verschachtelte Taschen oder 3D-Drehen von Gegenständen. Fahrzeug-Ladebereiche haben noch kein Inventar.
+Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop, verschachtelte Taschen oder 3D-Drehen von Gegenständen. Fahrzeug-Ladebereiche haben eigene, getrennte Inventare; siehe unten.
 
 Tests:
 
@@ -185,3 +185,31 @@ godot --path . --script res://tests/search_interaction_test.gd
 ```
 
 Der grafische Test prüft den gesamten Menü-/Suchablauf, erst danach sichtbare Items, Anklicken ohne Wegnehmen, Übernehmen und Zurückgeben, gesperrte Bewegung und Mausblick bei weiterlaufendem Verkehr sowie Esc, Abbruch und das eigene Inventar.
+
+## Fahrzeugdurchsuchung
+
+1. Fahrzeug zur Kontrolle anhalten. Der Fahrer darf sitzen bleiben.
+2. Zum Heck gehen und Kofferraum/Heckklappe/Ladeflächenklappe öffnen. Beim Transporter genügt eine geöffnete Ladetür.
+3. Mit dem Fadenkreuz **in den Innenraum** schauen. Der Bodenbereich wird gelb markiert und zeigt **E – Laderaum durchsuchen**. Ein Blick auf die Klappe bedient weiterhin die Klappe.
+4. E startet eine kurze Suchbewegung (circa 1,4 Sekunden). Danach öffnet sich die bekannte Übersicht mit dem Fahrzeuginventar links und Spielerinventar rechts.
+5. Items ansehen, **Entnehmen** oder **Zurücklegen** wählen. Esc schließt die Übersicht oder bricht die kurze Suche ab.
+
+Personen- und Fahrzeuginventare sind getrennt. Zurücklegen funktioniert nur in das ursprüngliche Fahrzeug; ein Gegenstand aus dem Auto kann nicht in die Taschen des Fahrers zurückgegeben werden. Die Welt läuft weiter, während Blick und Bewegung gesperrt sind. Sichtbare Platzhaltergegenstände verschwinden beim Entnehmen und erscheinen beim Zurücklegen wieder. Leere Fahrzeuge bleiben innerhalb derselben Sitzung leer, auch bei einer erneuten Durchfahrt.
+
+| Fahrzeug | Fester Inhalt |
+| --- | --- |
+| Bobby | Werkzeugkoffer, Ersatzteil, Werkstattbeleg |
+| Nora | Einkaufstasche, Geschenk, Kassenbon |
+| Erik | Paket, Arbeitsmaterial, Lieferschein |
+| Mara | Seil, Werkzeugkoffer, Handschuhe |
+
+Ein gemeinsames Ladeinventar pro Fahrzeug mit neun Plätzen, keine einzeln durchsuchbaren Behälter. Noch keine versteckten Fächer, Handschuhfächer, Gewichtsberechnung oder Speicherung über Spielneustarts.
+
+Tests:
+
+```sh
+godot --headless --path . --script res://tests/cargo_test.gd
+godot --path . --script res://tests/cargo_interaction_test.gd
+```
+
+Der grafische Test durchläuft alle vier Modelle, einschließlich einer einzelnen geöffneten Transportertür, Fadenkreuz-Auswahl, verzögerter Ansicht, sitzendem Fahrer, Entnehmen/Zurücklegen, leerem Laderaum und Abbruch. Der Datentest prüft getrennte Inventare, korrektes Zurücklegen und erhaltene leere Fahrzeug-Inventare bei erneuter Durchfahrt.
