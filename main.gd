@@ -27,6 +27,9 @@ const InventoryView = preload("res://scripts/inventory_view.gd")
 var player_inventory: RefCounted = ItemInventory.for_player()
 const DocumentView = preload("res://scripts/document_view.gd")
 var document_view: DocumentView
+const DocumentMode = preload("res://scripts/document_mode.gd")
+var document_mode: DocumentMode
+var ui_layer: CanvasLayer
 var inventory_view: InventoryView
 var searching_driver: Node3D
 var searching_car: Node3D
@@ -209,6 +212,7 @@ func _ready() -> void:
 	add_child(patrol)
 
 	var layer := CanvasLayer.new()
+	ui_layer = layer
 	add_child(layer)
 	var panel := PanelContainer.new()
 	panel.position = Vector2(20, 20)
@@ -308,8 +312,16 @@ func _ready() -> void:
 	layer.add_child(inventory_view)
 	inventory_view.closed.connect(finish_search)
 	inventory_view.contents_changed.connect(refresh_cargo_visuals)
+	document_mode = DocumentMode.new()
+	document_mode.scene = self
+	add_child(document_mode)
+	var document_layer := CanvasLayer.new()
+	document_layer.layer = 2
+	add_child(document_layer)
 	document_view = DocumentView.new()
-	layer.add_child(document_view)
+	document_layer.add_child(document_view)
+	document_view.opened.connect(document_mode.enter)
+	document_view.closed.connect(document_mode.leave)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -330,6 +342,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if document_view.visible:
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 			document_view.close_view()
+		return
+	if document_mode.active:
 		return
 	if radio_open:
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_T, KEY_ESCAPE]:
@@ -423,7 +437,7 @@ func _physics_process(delta: float) -> void:
 		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
 		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
 	).normalized()
-	if document_view.visible or radio_open or interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
+	if document_mode.active or document_view.visible or radio_open or interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
 		move = Vector2.ZERO
 	if is_instance_valid(searching_driver) and searching_driver.search_ready and not inventory_view.visible:
 		inventory_view.open_view(player_inventory, searching_car.inventory, searching_car.driver_name)
@@ -464,7 +478,7 @@ func order_stop() -> void:
 
 func can_interact() -> bool:
 	var car := traffic.controlled_car
-	if document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+	if document_mode.active or document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
 		return false
 	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
 		return false

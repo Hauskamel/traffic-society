@@ -1,5 +1,6 @@
 extends Control
 signal closed
+signal opened(car: Node)
 const Data = preload("res://scripts/document_data.gd")
 var documents: Dictionary = {}
 var cards: Array[PanelContainer] = []
@@ -19,7 +20,9 @@ func text(value: String, size: int, parent: Node, color := Color("263b42")) -> L
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var background := ColorRect.new()
-	background.color = Color("17272d")
+	var filter_material := ShaderMaterial.new()
+	filter_material.shader = preload("res://shaders/document_world.gdshader")
+	background.material = filter_material
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 	var layout := VBoxContainer.new()
@@ -31,7 +34,7 @@ func _ready() -> void:
 	layout.add_theme_constant_override("separation", 12)
 	add_child(layout)
 	text("DOKUMENTENKONTROLLE", 28, layout, Color("e9e5d6"))
-	text("Dokumente an der Titelleiste ziehen und nebeneinander ansehen. Die Welt laeuft weiter.", 16, layout, Color("c3ceca"))
+	text("Dokumente an der Titelleiste ziehen und nebeneinander ansehen. Welt in Zeitlupe / 18 %.", 16, layout, Color("c3ceca"))
 	workspace = Control.new()
 	workspace.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(workspace)
@@ -131,7 +134,7 @@ func arrange() -> void:
 	factor = maxf(factor, 0.1)
 	for i in range(cards.size()):
 		cards[i].scale = Vector2.ONE * factor
-		move_card(cards[i], Vector2(i * 474 * factor, 0))
+		move_card(cards[i], Vector2((workspace.size.x - 924 * factor) * 0.5 + i * 474 * factor, 8))
 
 func open_view(car: Node) -> bool:
 	documents = Data.for_car(car)
@@ -146,6 +149,7 @@ func open_view(car: Node) -> bool:
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	arrange.call_deferred()
+	opened.emit(car)
 	return true
 
 func close_view() -> void:

@@ -277,3 +277,9 @@ Am Fahrerfenster oder beim ausgestiegenen Fahrer mit E das Menü öffnen und **D
 Alle vier Fahrer besitzen feste Namen, Geburtsdaten, Führerscheinnummern und Gültigkeitsangaben. Fahrzeugpapiere zeigen Kennzeichen, Halter, Typ, Farbe und Erstzulassung. Eriks Transporter gehört seiner Firma; ein abweichender Halter ist kein automatisch bewerteter Verstoß. Das Lichtbild ist vorläufig passend zum gemeinsamen Fahrer-Platzhalter gestaltet. Noch kein Vergleichsmodus, keine absichtlichen Dokumentenfehler und keine Dokumentendialoge.
 
 Grafischer Test: `tests/documents_test.gd` mit Godot 4.6.3 unter Linux; prüft alle vier Paare, Menüzugang innen/außen, Zuordnung, Kartenpositionen und Rückkehr zur Steuerung.
+
+### Dokumentenprüfung in Zeitlupe
+
+Beim Anfordern wechselt die Kamera sanft in eine nähere Vogelperspektive über dem kontrollierten Fahrzeug. Die Dokumente bleiben farbig im Vordergrund; dahinter läuft die sichtbare Spielwelt mit **18 % Geschwindigkeit**, entsättigt und leicht abgedunkelt. Das normale HUD ist ausgeblendet. Karten und Maus bleiben direkt bedienbar.
+
+Esc beziehungsweise „Dokumente zurückgeben“ stellt die vorherige Spielgeschwindigkeit wieder her und führt die Kamera zur Ego-Ansicht zurück. Während des kurzen Rückwegs bleibt die Steuerung gesperrt. Auch Streifen-Wartezeit und Animationen laufen während der Dokumentenprüfung langsamer. Der Prüfmodus verändert weder Position noch Blickrichtung des Spielers und lässt die normale Übersichtskamera unverändert.

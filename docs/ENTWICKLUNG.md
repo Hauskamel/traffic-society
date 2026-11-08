@@ -308,6 +308,16 @@ Grafisch mit Godot 4.6.3 unter Linux geprüft: alle vier Dokumentpaare, Zugang a
 
 Dieser Schritt enthält ausschließlich Anfordern und Ansehen. Vergleichsmodus, absichtliche Abweichungen, Dialoge und rechtliche Bewertung folgen getrennt. Dokumente sind keine übertragbaren Inventargegenstände. Arbeit bleibt auf `feature/fundamentals`.
 
+## Dokumentenprüfung mit Vogelperspektive und Slow Motion · umgesetzt
+
+`scripts/document_mode.gd` verwaltet einen eigenen Prüfmodus mit separater Kamera. Beim Anfordern gleitet diese in 0,55 Echtzeitsekunden vom Spieler zu einer erhöhten Ansicht über das kontrollierte Fahrzeug. Der Spieler bleibt sichtbar in der Welt. Das normale HUD wird ausgeblendet, die reguläre Übersichtskamera bleibt unverändert.
+
+Die globale Spielgeschwindigkeit wird auf 18 % des vorherigen Werts gesetzt. Verkehr, Fahreranimationen und Streifen-Wartezeit folgen dieser Zeit. Maus und Kartenverschieben sind ereignisgesteuert und bleiben direkt; die Kameraübergänge ignorieren die Zeitlupe. Bewegung, Blick und andere Aktionen sind während Prüfung und Rückweg gesperrt.
+
+Die Dokumente liegen auf einer eigenen Canvas-Ebene vor der Spielwelt. `shaders/document_world.gdshader` entsättigt und verdunkelt ausschließlich den dahinterliegenden Bildinhalt; Karten und Bedienung bleiben farbig. Die beiden verschiebbaren Karten starten zentriert nebeneinander. Esc oder Rückgabe stellt die vorherige Geschwindigkeit sofort wieder her, gleitet in 0,4 Sekunden zur Ego-Kamera zurück und aktiviert anschließend HUD und Steuerung. Beim Entfernen der Szene wird die Geschwindigkeit ebenfalls wiederhergestellt.
+
+Grafische Prüfung mit Godot 4.6.3 unter Linux: Dokumente aller vier Fahrer, aktive erhöhte Prüfkamera, verstecktes HUD, Zeitlupe mit weiterlaufender Weltzeit, Kartenbedienung, Rückkehr zur Ego-Ansicht und Wiederherstellung einer abweichenden vorherigen Geschwindigkeit sowie Szenenabbau. Darstellung anhand eines Screenshots geprüft. Windows/Godot 4.7.2 benötigt einen Praxistest. Kein Vergleichs- oder Dialogsystem ergänzt.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
