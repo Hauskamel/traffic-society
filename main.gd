@@ -379,13 +379,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_I and not aerial:
 			close_interaction()
 			inventory_view.open_view(player_inventory)
-		elif event.keycode == KEY_R:
-			close_interaction()
-			player.position = Vector3(7.5, 0.2, 8)
-			player.velocity = Vector3.ZERO
-			player.rotation.y = PI / 2
-			pitch = 0
-			eyes.rotation.x = 0
 	if event is InputEventMouseButton and event.pressed:
 		if interaction_open:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:

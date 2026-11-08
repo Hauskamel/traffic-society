@@ -133,6 +133,11 @@ func set_item(item: Dictionary) -> void:
 				for finger in range(4):
 					cube(Vector3(x - 0.12 + finger * 0.08, 0.34, 0), Vector3(0.065, 0.25, 0.1), "b99d6c")
 				cube(Vector3(x + 0.21, 0.06, 0), Vector3(0.16, 0.22, 0.1), "b99d6c").rotation.z = -0.5
+		"magazine":
+			cube(Vector3.ZERO, Vector3(0.28, 0.95, 0.38), "29333b").rotation.z = -0.18
+			cube(Vector3(0.08, -0.48, 0), Vector3(0.38, 0.08, 0.43), "18232b")
+			if int(item.get("rounds", 0)) > 0:
+				cube(Vector3(-0.08, 0.48, 0), Vector3(0.18, 0.08, 0.3), "bfa66c")
 		"pistol", "taser":
 			var weapon: Node3D = preload("res://scripts/weapon_visuals.gd").build(model, item.icon)
 			weapon.scale = Vector3.ONE * 7

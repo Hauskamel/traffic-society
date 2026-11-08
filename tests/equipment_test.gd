@@ -26,7 +26,7 @@ func run() -> void:
 	root.add_child(scene)
 	scene.set_physics_process(false)
 	var gear = scene.equipment
-	check(gear.available(0) and gear.available(1) and scene.player_inventory.items.size() == 4, "Both weapons must exist in player inventory")
+	check(gear.available(0) and gear.available(1) and scene.player_inventory.items.size() == 6, "Both weapons must exist in player inventory")
 	check(gear.belt_guns[0].visible and gear.belt_guns[1].visible, "Both weapons start in separate holsters")
 	await capture("holsters")
 	key(KEY_TAB)

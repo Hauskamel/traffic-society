@@ -35,7 +35,8 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Mausrad | Übersicht zoomen oder im offenen Interaktionsmenü die Aktion wählen |
 | Escape | Menü / Inventar schließen oder die kurze Durchsuchung abbrechen; sonst Maus freigeben |
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
-| R | Spielerposition zurücksetzen |
+| Linksklick beim Zielen | Glock-Einzelschuss |
+| R | Glock-Magazin wechseln; ersetzt den bisherigen Spieler-Reset |
 | Leertaste | Am offenen Heck von Transporter/Pickup hochklettern; auf der Ladefläche heruntersteigen |
 | T | Funkgerät öffnen / schließen; Streife für festgenommene Person anfordern |
 | I | Eigenes Inventar in der Ego-Ansicht öffnen; Esc schließt |
@@ -179,7 +180,7 @@ Prüft jedes bedienbare Teil an allen vier Modellen: Fadenkreuz-Markierung, bena
 
 Die Welt und der Verkehr laufen weiter. Blick und Bewegung des Spielers sind während der Animation und Ansicht gesperrt; Esc kann auch die kurze Animation abbrechen. Mit I lässt sich außerhalb einer Durchsuchung das eigene Inventar ohne NPC-Inhalt ansehen.
 
-Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand (vorerst ohne Benutzungsfunktion) und einem Funkgerät, das mit T geöffnet wird. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
+Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand (vorerst ohne Benutzungsfunktion) einem Funkgerät (T), einer Glock 19, einem Taser und zwei Ersatzmagazinen. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
 
 Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop oder verschachtelte Taschen. Fahrzeug-Ladebereiche haben eigene, getrennte Inventare; siehe unten.
 
@@ -242,7 +243,7 @@ Grafischer Test:
 godot --path . --script res://tests/item_inspection_test.gd
 ```
 
-Prüft alle zehn Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.
+Prüft alle 13 Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.
 
 ## Auf Ladeflächen klettern
 
@@ -295,6 +296,20 @@ Der Spieler trägt beide Waffen als echte Gegenstände im Inventar (I). In der E
 
 **Shift halten** führt die Hand zum Griff. Danach **Rechtsklick halten**, um die ausgewählte Waffe zu ziehen und zu zielen. Eine schnelle Kombination wird nach der kurzen Griffbewegung ausgeführt. Nach dem Ziehen darf Shift losgelassen werden; gehalten wird die Zielhaltung mit Rechtsklick. Rechtsklick loslassen bringt die Waffe wieder ins Holster; bleibt Shift gedrückt, bleibt die Hand am Griff. Waffenwechsel beendet die bisherige Haltung. **Sprinten liegt jetzt auf Strg**, damit Shift eindeutig zum Griff gehört. Während Griff/Zielen wird nicht gesprintet.
 
-Inventar, Funk, Dokumentenprüfung, Klettern und Perspektivwechsel beenden die Waffenhaltung. Beim Griff/Zielen sind E-Interaktionen gesperrt. Das Mausrad bedient in Menüs weiterhin die Menüauswahl und in der Vogelperspektive den Zoom. Es gibt noch keine Schüsse, Taserwirkung, Munition oder Reaktionen der NPCs auf Waffen. Die Glock 19 ist ein eigener vereinfachter Low-Poly-Nachbau, kein importiertes Detailmodell. Beide Waffen lassen sich in der Inventaransicht in 3D drehen.
+Inventar, Funk, Dokumentenprüfung, Klettern und Perspektivwechsel beenden die Waffenhaltung. Beim Griff/Zielen sind E-Interaktionen gesperrt. Das Mausrad bedient in Menüs weiterhin die Menüauswahl und in der Vogelperspektive den Zoom. Die Glock unterstützt Einzelschüsse und Magazinwechsel (siehe unten). Taserwirkung und Reaktionen der NPCs auf Waffen fehlen weiterhin. Die Glock 19 ist ein eigener vereinfachter Low-Poly-Nachbau, kein importiertes Detailmodell. Beide Waffen lassen sich in der Inventaransicht in 3D drehen.
 
 Geprüft unter Linux/Godot 4.6.3: `tests/equipment_test.gd`, Inventartransfers und 3D-Gegenstandsvorschau. Windows/Godot 4.7.2 bitte praktisch testen.
+
+## Schießen und Magazinwechsel testen
+
+Die Glock 19 startet mit **15 Patronen im eingesetzten Magazin**. Zusätzlich liegen **zwei volle 15er-Magazine** im Spielerinventar: insgesamt 45 Patronen. Die Waffenleiste zeigt den aktuellen Inhalt und die Anzahl der Ersatzmagazine; deren Füllstände stehen im Inventar.
+
+1. Glock mit **1** wählen, **Shift halten**, dann **Rechtsklick halten** zum Ziehen/Zielen.
+2. **Linksklick** gibt einen Einzelschuss ab. Gedrückthalten erzeugt kein Dauerfeuer. Knall, kurzer Mündungsblitz, Rückstoß, Schusslinie und kurz sichtbarer Auftreffeffekt dienen als Testfeedback.
+3. Mit gezogener Glock **R** drücken und für den etwa **1,8 Sekunden** langen Magazinwechsel Rechtsklick weiter halten. Währenddessen kann nicht geschossen werden.
+
+Beim Nachladen wird das Ersatzmagazin mit der meisten Munition gewählt. Es muss mehr Patronen enthalten als das eingesetzte Magazin. Das bisherige Magazin kommt mit seiner Restmunition ins Inventar; auch leere Magazine bleiben erhalten. Ein volles Magazin oder fehlende geeignete Ersatzmagazine verhindern den Wechsel. Holstern, Waffenwechsel oder ein Menü brechen das Nachladen ab, ohne Munition zu verlieren oder hinzuzufügen.
+
+**R setzt den Spieler nicht mehr zurück.** Kein Schaden, keine NPC-Reaktionen und keine Taserwirkung. Es gibt noch keine lose Munition, Magazinbefüllung oder separate Patrone im Patronenlager. Welt-Treffer werden nur für temporäre Effekte ermittelt. Ton und Modelle sind einfache eigene Platzhalter.
+
+Geprüft mit Godot 4.6.3 unter Linux: `tests/shooting_test.gd` (Schüsse, leeres Magazin, Nachladezeit, Teilladungen, Abbruch und Munitionserhaltung), Inventar-/Bedienungstests und 13 Kategorien in der 3D-Vorschau. Windows/Godot 4.7.2 bitte testen.

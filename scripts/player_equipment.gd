@@ -17,6 +17,8 @@ var hand_guns: Array[Node3D] = []
 var belt_guns: Array[Node3D] = []
 var buttons: Array[Button] = []
 var bar: HBoxContainer
+const PistolAction = preload("res://scripts/pistol_action.gd")
+var pistol_action: PistolAction
 var busy := false
 
 func _ready() -> void:
@@ -54,6 +56,11 @@ func _ready() -> void:
 		button.pressed.connect(select.bind(i))
 		bar.add_child(button)
 		buttons.append(button)
+	pistol_action = PistolAction.new()
+	pistol_action.scene = scene
+	pistol_action.equipment = self
+	add_child(pistol_action)
+	pistol_action.sync_descriptions()
 	tick(0)
 
 func available(index: int) -> bool:
@@ -66,6 +73,8 @@ func allowed() -> bool:
 	return not scene.aerial and not scene.interaction_open and not scene.radio_open and not scene.inventory_view.visible and not scene.document_mode.active and not scene.document_view.visible and not is_instance_valid(scene.searching_driver) and not is_instance_valid(scene.cargo_search_car) and not scene.climber.active and not is_instance_valid(scene.climber.car)
 
 func cancel() -> void:
+	if is_instance_valid(pistol_action):
+		pistol_action.cancel_reload()
 	state = State.HOLSTERED
 	shift_held = false
 	aim_held = false
@@ -94,6 +103,9 @@ func handle(event: InputEvent) -> bool:
 			if event.keycode in [KEY_1, KEY_2]:
 				select(0 if event.keycode == KEY_1 else 1)
 				return true
+			if event.keycode == KEY_R:
+				pistol_action.start_reload()
+				return true
 			if event.keycode == KEY_E and state != State.HOLSTERED:
 				return true
 			if event.keycode in [KEY_TAB, KEY_T, KEY_I, KEY_SPACE, KEY_ESCAPE]:
@@ -113,7 +125,9 @@ func handle(event: InputEvent) -> bool:
 			select(1 - selected)
 			return true
 		if event.button_index == MOUSE_BUTTON_LEFT and state != State.HOLSTERED:
-			return true # Firing is intentionally outside this step.
+			if event.pressed:
+				pistol_action.fire()
+			return true
 	return false
 
 func tick(delta: float) -> void:
@@ -123,9 +137,17 @@ func tick(delta: float) -> void:
 	if state == State.REACHING and reach >= 0.9 and aim_held and shift_held:
 		state = State.AIMING
 	draw = move_toward(draw, 1.0 if state == State.AIMING else 0.0, delta * 4)
+	pistol_action.tick(delta)
 	hand.visible = allowed() and (reach > 0.01 or draw > 0.01)
 	hand.position = Vector3(0.31, -0.31, -0.46).lerp(Vector3(0, -0.05, -0.48), draw)
-	hand.rotation.x = lerpf(-0.65, 0.0, draw)
+	hand.rotation.x = lerpf(-0.65, 0.0, draw) + pistol_action.recoil * 0.1
+	hand.position.z += pistol_action.recoil * 0.035
+	if pistol_action.reloading:
+		var dip := sin(clampf(pistol_action.reload_clock / pistol_action.RELOAD_SECONDS, 0, 1) * PI)
+		hand.position.y -= dip * 0.18
+		hand.rotation.z = dip * -0.5
+	else:
+		hand.rotation.z = 0
 	for i in range(2):
 		hand_guns[i].visible = i == selected and draw > 0.01
 		belt_guns[i].visible = available(i) and not (i == selected and draw > 0.01)
@@ -133,6 +155,8 @@ func tick(delta: float) -> void:
 		arm.rotation.x = -1.3 * draw - 0.22 * reach if i == 1 else -0.6 * draw
 		arm.rotation.z = -0.30 * reach if i == 1 and selected == 1 else 0.0
 		buttons[i].text = str(i + 1) + "  " + NAMES[i] + ("\nZielen" if i == selected and state == State.AIMING else "\nGriff" if i == selected and state == State.REACHING else "\nHolster")
+		if i == 0:
+			buttons[i].text = "1  Glock 19\n" + ("Nachladen ..." if pistol_action.reloading else "%d/15 | %d Mag." % [pistol_action.rounds(), pistol_action.spare_count()])
 		buttons[i].modulate = Color("efd58b") if i == selected else Color("b5c0c5")
 		buttons[i].disabled = not available(i)
 	bar.visible = not scene.aerial and not scene.inventory_view.visible and not scene.radio_open and not scene.interaction_open and not scene.document_mode.active

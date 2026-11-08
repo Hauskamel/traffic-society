@@ -340,6 +340,26 @@ Waffenbedienung steht nur in freier Ego-Ansicht zur Verfügung. Menüs, Funk, Do
 
 Godot 4.6.3 unter Linux: neuer grafischer Test für beide Inventargegenstände, getrennte Holster, Auswahl, Griff ohne Ziehen, Rechtsklick ohne Griff, reguläre und schnelle Eingabefolge, Loslassen, Wechsel sowie Wechsel zu Inventar, Funk und Übersicht. Vorhandene Inventartests an vier Startgegenstände angepasst; die 3D-Vorschau deckt jetzt zwölf Kategorien ab. Screenshots der Ego-Haltung und Leiste geprüft. Windows/Godot 4.7.2 benötigt einen Praxistest.
 
+## Glock-Schusssystem und Ersatzmagazine · umgesetzt
+
+### Bedienung
+
+Linksklick bei vollständig gezogener und zielender Glock erzeugt genau einen Schuss mit 0,16 Sekunden Mindestabstand. Gedrückthalten erzeugt kein Dauerfeuer. R ersetzt den Spieler-Reset vollständig und wechselt bei gezogener Waffe in etwa 1,8 Sekunden das Magazin. Während des Wechsels wird die Waffe abgesenkt, seitlich gehalten und durch eine zweite Hand ergänzt; ein zusätzlicher Ladebalken erscheint nicht. Rechtsklick bleibt während des Nachladens gehalten.
+
+### Munition und Daten
+
+Ein eingesetztes 15er-Magazin und zwei zusätzliche volle Magazine ergeben 45 Startpatronen. Die zwei Ersatzmagazine sind normale Spieler-Inventargegenstände, das eingesetzte Magazin ist in den Daten der Glock enthalten. Jedes Magazin hat eine eigene Kennung und einen veränderlichen Füllstand. Das vollste geeignete Ersatzmagazin muss mehr Patronen als das eingesetzte besitzen; volle Magazine werden nicht gewechselt. Erst nach Ablauf der Zeit werden die beiden Magazin-Datensätze ausgetauscht. Teilvolle und leere Magazine bleiben erhalten, ohne Verluste oder Duplikate. Abbruch durch Holstern, Auswahlwechsel, Menüs oder Fokusverlust verändert keine Füllstände. Beschreibungen und Leiste zeigen den Zustand an; Magazine besitzen Symbol und 3D-Vorschau.
+
+### Feedback und Grenzen
+
+`scripts/pistol_action.gd` kapselt Schussabstand, Magazine, Nachladezeit und Effekte. Ein Kamera-Strahl gegen Welt, Fahrzeuge und Personen ermittelt nur den Auftreffpunkt. Kurzer Mündungsblitz mit Licht, Handrückstoß, temporäre Schusslinie und kurz schrumpfender Auftreffpunkt machen den Schuss sichtbar. Eigene synthetische WAV-Dateien liefern Knall und mechanisches Klicken. Es werden keine Schadensmethoden aufgerufen und keine NPC-Zustände verändert.
+
+Kein Schadensmodell, keine Taserwirkung, Trefferwertung, Patronenlager-Simulation, lose Munition oder Magazinbefüllung. Die Effekte sind Test-Platzhalter. Die Munitionsdaten gelten wie das bisherige Inventar nur während der Sitzung.
+
+### Prüfung
+
+Grafischer Test mit Godot 4.6.3 unter Linux: Startmunition, R ohne Positionsreset, Schießen ausschließlich beim Zielen, Einzelschuss und Mindestabstand, Welt-Treffer, Blitz/Rückstoß, leeres Magazin, zeitversetzter Magazinwechsel, Erhaltung von Restmunition, Abbruch durch Waffenwechsel, getrennte Taser-/Glock-Daten und fehlende Ersatzmunition. Screenshots von Schuss und Nachladehaltung geprüft. Inventartests auf sechs Startgegenstände und 3D-Vorschautest auf 13 Kategorien angepasst. Windows/Godot 4.7.2 benötigt einen Praxistest.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

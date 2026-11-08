@@ -38,7 +38,15 @@ static func for_player() -> RefCounted:
 	inventory.items.append({"id": "player:radio", "name": "Funkgeraet", "icon": "radio", "owner": "Spieler", "description": "Dienstliches Walkie-Talkie mit Display.\nT: Funkgeraet oeffnen und Abholung anfordern."})
 	inventory.items.append({"id": "player:pistol", "name": "Glock 19", "icon": "pistol", "owner": "Spieler", "description": "Dienstpistole im rechten Holster.\n1: auswaehlen. Shift halten: Griff. Rechtsklick halten: ziehen und zielen."})
 	inventory.items.append({"id": "player:taser", "name": "Taser", "icon": "taser", "owner": "Spieler", "description": "Dienstlicher Taser im linken Holster.\n2: auswaehlen. Shift halten: Griff. Rechtsklick halten: ziehen und zielen."})
+	for item in inventory.items:
+		if item.id == "player:pistol":
+			item.loaded_magazine = magazine(0)
+	for index in [1, 2]:
+		inventory.items.append(magazine(index))
 	return inventory
+
+static func magazine(index: int) -> Dictionary:
+	return {"id": "player:magazine:" + str(index), "name": "G19-Magazin (15/15)", "icon": "magazine", "owner": "Spieler", "rounds": 15, "description": "Ersatzmagazin fuer die Glock 19.\nEnthaelt 15 von 15 Patronen."}
 
 
 static func for_vehicle(driver_name: String, plate: String) -> RefCounted:
