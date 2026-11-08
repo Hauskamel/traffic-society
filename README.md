@@ -269,3 +269,11 @@ Beim ausgestiegenen Fahrer stehen **Einsteigen lassen** (Auto bleibt stehen) und
 Die Person kehrt während dieser Sitzung nicht in den Verkehr zurück. Das zurückgelassene Fahrzeug wird nach dem Transport vorläufig entfernt und der Kontrollplatz freigegeben. Abschleppen, rechtliche Festnahmeprüfung und dauerhafte Speicherung sind noch nicht umgesetzt. Die Abholung nutzt feste Wege für diesen Kontrollplatz; sie ist kein allgemeines Navigationssystem. Das Funkgerät besitzt auch eine drehbare Inventarvorschau.
 
 Neue Ablaufprüfungen: `tests/departure_test.gd`, `tests/patrol_test.gd` (alle vier Fahrer) und `tests/police_interaction_test.gd` (grafische Bedienung und Abholung). Geprüft unter Linux/Godot 4.6.3; Windows/Godot 4.7.2 benötigt einen Praxistest.
+
+## Dokumente ansehen
+
+Am Fahrerfenster oder beim ausgestiegenen Fahrer mit E das Menü öffnen und **Dokumente anfordern** wählen. Führerschein und Fahrzeugpapier erscheinen gemeinsam. Beide lassen sich an ihrer Titelleiste ziehen; **Dokumente anordnen** stellt die Ansicht wieder her. **Esc** oder **Dokumente zurückgeben** schließt sie. Die Welt läuft währenddessen weiter, Bewegung und Blick sind gesperrt.
+
+Alle vier Fahrer besitzen feste Namen, Geburtsdaten, Führerscheinnummern und Gültigkeitsangaben. Fahrzeugpapiere zeigen Kennzeichen, Halter, Typ, Farbe und Erstzulassung. Eriks Transporter gehört seiner Firma; ein abweichender Halter ist kein automatisch bewerteter Verstoß. Das Lichtbild ist vorläufig passend zum gemeinsamen Fahrer-Platzhalter gestaltet. Noch kein Vergleichsmodus, keine absichtlichen Dokumentenfehler und keine Dokumentendialoge.
+
+Grafischer Test: `tests/documents_test.gd` mit Godot 4.6.3 unter Linux; prüft alle vier Paare, Menüzugang innen/außen, Zuordnung, Kartenpositionen und Rückkehr zur Steuerung.

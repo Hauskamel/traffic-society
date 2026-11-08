@@ -25,6 +25,8 @@ var hovered_part: VehiclePart
 const ItemInventory = preload("res://scripts/item_inventory.gd")
 const InventoryView = preload("res://scripts/inventory_view.gd")
 var player_inventory: RefCounted = ItemInventory.for_player()
+const DocumentView = preload("res://scripts/document_view.gd")
+var document_view: DocumentView
 var inventory_view: InventoryView
 var searching_driver: Node3D
 var searching_car: Node3D
@@ -306,6 +308,8 @@ func _ready() -> void:
 	layer.add_child(inventory_view)
 	inventory_view.closed.connect(finish_search)
 	inventory_view.contents_changed.connect(refresh_cargo_visuals)
+	document_view = DocumentView.new()
+	layer.add_child(document_view)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -322,6 +326,10 @@ func update_camera() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if climber.active:
+		return
+	if document_view.visible:
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+			document_view.close_view()
 		return
 	if radio_open:
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_T, KEY_ESCAPE]:
@@ -415,7 +423,7 @@ func _physics_process(delta: float) -> void:
 		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
 		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
 	).normalized()
-	if radio_open or interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
+	if document_view.visible or radio_open or interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
 		move = Vector2.ZERO
 	if is_instance_valid(searching_driver) and searching_driver.search_ready and not inventory_view.visible:
 		inventory_view.open_view(player_inventory, searching_car.inventory, searching_car.driver_name)
@@ -456,7 +464,7 @@ func order_stop() -> void:
 
 func can_interact() -> bool:
 	var car := traffic.controlled_car
-	if radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+	if document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
 		return false
 	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
 		return false
@@ -473,7 +481,7 @@ func refresh_encounter_ui() -> void:
 	var searching := (is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car)) and not inventory_view.visible
 	search_progress.visible = searching
 	search_progress.size = Vector2(120, 8)
-	crosshair.visible = not searching and not inventory_view.visible and not radio_open and not aerial
+	crosshair.visible = not searching and not inventory_view.visible and not radio_open and not document_view.visible and not aerial
 	if searching:
 		search_progress.value = (searching_driver.search_clock / searching_driver.SEARCH_DURATION if is_instance_valid(searching_driver) else cargo_search_clock / Timings.VEHICLE_SEARCH) * 100.0
 	var selected := traffic.selected_car
@@ -519,6 +527,8 @@ func open_interaction() -> void:
 		interaction_actions.assign(["Gespraech beenden"] if traffic.controlled_car.pickup_reserved else ["Person durchsuchen", "Festnahme aufheben", "Gespraech beenden", "Streife anfordern"])
 	else:
 		interaction_actions.assign(["Person durchsuchen", "Einsteigen lassen", "Gespraech beenden", "Weiterfahren lassen", "Festnehmen"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
+	if not traffic.controlled_car.pickup_reserved:
+		interaction_actions.append("Dokumente anfordern")
 	interaction_index = 0
 	interaction_open = true
 	interaction_panel.visible = true
@@ -544,6 +554,8 @@ func confirm_interaction() -> void:
 	var action := interaction_actions[interaction_index]
 	var succeeded := true
 	match action:
+		"Dokumente anfordern":
+			succeeded = document_view.open_view(car)
 		"Aussteigen lassen":
 			succeeded = car.driver.request_exit()
 		"Einsteigen lassen":

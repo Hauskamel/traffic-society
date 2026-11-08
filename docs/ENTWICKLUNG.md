@@ -292,6 +292,22 @@ Godot 4.6.3 unter Linux: Getrennter Einsteige-/Abfahrttest für alle vier Fahrze
 
 Die Festnahme ist eine manuelle Testaktion ohne rechtliche Bewertung. Feste Wege statt allgemeiner Navigation; ein Streifenauftrag gleichzeitig. Nach dem Transport wird das leere Ursprungsfahrzeug vorläufig entfernt, ohne Abschleppanimation. Keine Speicherung von Haftstatus über einen Spielneustart. `main` und `develop` bleiben unverändert.
 
+## Dokumentenansicht · erster Schritt umgesetzt
+
+### Verhalten
+
+Die neue Aktion „Dokumente anfordern“ steht am Fenster und beim ausgestiegenen Fahrer zur Verfügung, solange keine Streifenabholung reserviert ist. Zwei farblich getrennte Karten zeigen Führerschein und Fahrzeugpapier nebeneinander. Ziehen an der Titelleiste verschiebt eine Karte und holt sie nach vorne; Begrenzungen halten die Karten erreichbar. „Dokumente anordnen“ setzt die Positionen zurück. Esc beziehungsweise „Dokumente zurückgeben“ schließt die Ansicht und aktiviert wieder die Maussteuerung. Die Simulation läuft weiter, Spielerbewegung und andere Interaktionen sind gesperrt.
+
+### Daten und Darstellung
+
+`scripts/document_data.gd` enthält feste Identitäten für alle vier Fahrer. Kennzeichen und Fahrzeugtyp stammen aus dem kontrollierten Fahrzeug. Die Papiere zeigen Name, Geburtsdatum, Führerscheinnummer, Klasse, Ausstellungsdatum und Gültigkeit sowie Kennzeichen, Halter, Typ, Farbe und Erstzulassung. Eriks Halter ist „Sommer Logistik“; daraus entsteht keine automatische Bewertung. `scripts/document_view.gd` baut die skalierbare Ansicht mit verschiebbaren Karten. Das Lichtbild bleibt ein gemeinsamer Platzhalter passend zum derzeitigen Fahrer-Modell.
+
+### Prüfung und Umfang
+
+Grafisch mit Godot 4.6.3 unter Linux geprüft: alle vier Dokumentpaare, Zugang am Fenster und beim ausgestiegenen Fahrer, korrekte Namen und Kennzeichen, zwei gleichzeitige Karten, Verschieben und Begrenzung, freier Mauszeiger, gesperrte Weltinteraktion und Schließen mit Esc. Screenshot auf Lesbarkeit geprüft. Bestehender Fahrer-Menütest an die zusätzliche Aktion angepasst. Windows/Godot 4.7.2 benötigt einen Praxistest.
+
+Dieser Schritt enthält ausschließlich Anfordern und Ansehen. Vergleichsmodus, absichtliche Abweichungen, Dialoge und rechtliche Bewertung folgen getrennt. Dokumente sind keine übertragbaren Inventargegenstände. Arbeit bleibt auf `feature/fundamentals`.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

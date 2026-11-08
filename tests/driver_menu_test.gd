@@ -48,7 +48,7 @@ func run() -> void:
 	check(scene.interaction_open, "E must open menu")
 	var zoom: float = scene.overview.size
 	wheel(scene, MOUSE_BUTTON_WHEEL_UP)
-	check(scene.interaction_index == 1, "Wheel up wraps to last action")
+	check(scene.interaction_index == scene.interaction_actions.size() - 1, "Wheel up wraps to last action")
 	wheel(scene, MOUSE_BUTTON_WHEEL_DOWN)
 	check(scene.interaction_index == 0, "Wheel down wraps to first action")
 	check(scene.overview.size == zoom, "Menu scrolling must not change overview zoom")
