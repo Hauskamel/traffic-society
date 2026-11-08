@@ -360,6 +360,26 @@ Kein Schadensmodell, keine Taserwirkung, Trefferwertung, Patronenlager-Simulatio
 
 Grafischer Test mit Godot 4.6.3 unter Linux: Startmunition, R ohne Positionsreset, Schießen ausschließlich beim Zielen, Einzelschuss und Mindestabstand, Welt-Treffer, Blitz/Rückstoß, leeres Magazin, zeitversetzter Magazinwechsel, Erhaltung von Restmunition, Abbruch durch Waffenwechsel, getrennte Taser-/Glock-Daten und fehlende Ersatzmunition. Screenshots von Schuss und Nachladehaltung geprüft. Inventartests auf sechs Startgegenstände und 3D-Vorschautest auf 13 Kategorien angepasst. Windows/Godot 4.7.2 benötigt einen Praxistest.
 
+## Mit Glock zur Aufgabe zwingen und direkt Handschellen anlegen · umgesetzt
+
+### Erkennung und Verhalten
+
+`scripts/npc_compliance.gd` erkennt Kopf/Oberkörper im Zielstrahl der vollständig gezogenen Glock. Eine kurze Zielzeit von 0,25 Sekunden und maximal 25 Meter Entfernung verhindern eine Aufgabe beim bloßen Vorbeischwenken. Freie Ego-Bedienung ist erforderlich; Holster, Griff allein, Taser, Nachladen und bereits verhaftete Personen lösen keine neue Aufgabe aus. Die Munition spielt keine Rolle. Sichtstrahlen respektieren Welt und fremde Fahrzeuge; die gesamte Ziel-Fahrzeugkollision wird wegen ihrer bisher groben Kabinenform ausgenommen.
+
+Der Fahrer erhält einen eigenen persistenten Aufgabestatus, getrennt von der Festnahme. Die Arme bleiben in Sitz-, Aussteige- und Außenpose oben, auch wenn die Waffe anschließend gesenkt wird. Ein fahrendes Auto bremst mit 4 m/s² bis zum Stillstand, bevor der Fahrer aussteigt. Ein bereits stehender Fahrer steigt unmittelbar über die vorhandene Aussteigeanimation aus. Erneutes Zielen startet die Animation nicht neu. Ein gerade einsteigender Fahrer kehrt die Bewegung um. Eine automatische Abfahrt wird abgebrochen; solange die Hände oben sind, sind Einsteigen und Weiterfahren gesperrt.
+
+### Festnahme und Folgeaktionen
+
+In etwa zwei Metern Reichweite und mit Blick auf den ausgestiegenen NPC zeigt das HUD „E: Handschellen anlegen“. E führt die Festnahme direkt aus, auch bei gezogener Waffe. Der Spieler holstert, der NPC wechselt von erhobenen Händen zur bestehenden Handschellenpose. Die Aufgabe selbst gilt noch nicht als Festnahme. Nach Aufheben der Festnahme können Einsteigen und Weiterfahren wieder normal genutzt werden.
+
+Das Interaktionsziel kann jetzt auch eine an der Straße angehaltene Person sein; ein geöffnetes Menü behält seinen ursprünglichen Gesprächspartner. Funkanforderungen merken sich diesen Partner, statt immer die Person am Kontrollstellplatz zu verwenden. Eine parallel laufende Kontrolle wird bei der Abholung nicht gelöscht. Der Streifenpolizist nutzt bei Straßenstopps einen Weg um das Fahrzeugheck zum tatsächlichen NPC-Standort. Bei Rückstau bis zum üblichen Spawn fährt die Streife für diesen Fall seitlich an und nutzt weiter Stellplatz zwei.
+
+### Prüfung und Grenzen
+
+Grafisch unter Godot 4.6.3/Linux: alle vier Kabinen/Fahrer, Arme bereits vor dem Bremsende oben, verzögertes Anhalten statt Sofortstopp, Aussteigen mit erhobenen Händen, Aufgabe nach Holstern, Nähe für Handschellen, direkte E-Festnahme bei gezogener Glock und Funk-/Menüfolge. Zusätzliche Fälle für bereits ausgestiegene/verhaftete NPCs, Blick neben die Person, Taser und Sichtblockade durch eine Wand. Abholtest für die vier bisherigen Fälle plus Straßenabholung bei anderer belegter Kontrollbucht bestanden. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz-, Abfahrts- und Inventartests bestanden. Screenshots der Aufgabe geprüft; Windows/Godot 4.7.2 bleibt praktisch zu testen.
+
+Feste, kooperative Reaktion ohne Flucht-/Kampf-KI oder rechtliche Bewertung. Fahrzeuge halten auf ihrer aktuellen Strecke; noch kein allgemeines Ausweichen oder sicheres Heranfahren an den Straßenrand. Schaden und Taserwirkung bleiben unverändert außerhalb dieses Schritts.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

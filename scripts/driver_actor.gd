@@ -5,6 +5,7 @@ const Timings = preload("res://scripts/interaction_timings.gd")
 const DURATION := Timings.DRIVER_TRANSITION
 const SEARCH_DURATION := Timings.PERSON_SEARCH
 var arrested := false
+var surrendered := false
 var search_clock := 0.0
 var search_ready := false
 var state: State = State.SEATED
@@ -71,6 +72,9 @@ func _ready() -> void:
 	reset()
 
 func reset() -> void:
+	surrendered = false
+	arrested = false
+	handcuffs.visible = false
 	search_clock = 0
 	search_ready = false
 	for limb in limbs:
@@ -93,7 +97,7 @@ func request_exit() -> bool:
 	return true
 
 func request_enter() -> bool:
-	if state != State.OUTSIDE or arrested:
+	if state != State.OUTSIDE or arrested or surrendered:
 		return false
 	collider.disabled = true
 	initial_door_angle = door.rotation.y
@@ -106,7 +110,7 @@ func is_busy() -> bool:
 	return state == State.EXITING or state == State.ENTERING or state == State.SEARCHING
 
 func can_drive() -> bool:
-	return state == State.SEATED and absf(door.rotation.y) < 0.01
+	return not surrendered and not arrested and state == State.SEATED and absf(door.rotation.y) < 0.01
 
 func interaction_point() -> Vector3:
 	return global_position + Vector3(0, 1.35, 0)
@@ -127,6 +131,8 @@ func apply_pose(t: float) -> void:
 		var sway := sin(movement * TAU * 2) * 0.2 * sin(movement * PI)
 		limbs[i].rotation.x = lerpf(seated_angle, 0, movement) + sway * (1 if i % 2 == 0 else -1)
 	body.global_position = global_position
+	if surrendered and not arrested:
+		raise_hands()
 
 func begin_search() -> bool:
 	if state != State.OUTSIDE:
@@ -146,6 +152,8 @@ func end_search() -> void:
 	torso.rotation.x = 0
 
 func _physics_process(delta: float) -> void:
+	if surrendered and not arrested and state != State.SEARCHING:
+		raise_hands()
 	if arrested and state in [State.OUTSIDE, State.IN_CUSTODY]:
 		limbs[2].rotation.x = -0.7
 		limbs[3].rotation.x = -0.7
@@ -173,8 +181,24 @@ func set_arrested(value: bool) -> bool:
 	if state != State.OUTSIDE:
 		return false
 	arrested = value
+	surrendered = false
 	handcuffs.visible = value
 	for i in [2, 3]:
 		limbs[i].rotation.x = 0
 		limbs[i].rotation.z = 0
+	return true
+
+func raise_hands() -> void:
+	for i in [2, 3]:
+		limbs[i].rotation.x = -0.15
+		limbs[i].rotation.z = -2.65 if i == 2 else 2.65
+
+func request_surrender() -> bool:
+	if arrested or state in [State.SEARCHING, State.IN_CUSTODY]:
+		return false
+	surrendered = true
+	if state == State.ENTERING:
+		state = State.EXITING
+		progress = 1.0 - progress
+	raise_hands()
 	return true

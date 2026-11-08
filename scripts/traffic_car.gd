@@ -4,6 +4,7 @@ signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
 var is_patrol := false
+var surrender_stop := false
 var pickup_reserved := false
 var depart_after_entry := false
 var inventory: RefCounted
@@ -276,7 +277,7 @@ func new_test_drive() -> void:
 	state_changed.emit()
 
 func can_stop() -> bool:
-	return state == State.DRIVING and position.z > 28.0
+	return not driver.surrendered and state == State.DRIVING and position.z > 28.0
 
 func request_stop() -> bool:
 	if not can_stop():
@@ -292,12 +293,19 @@ func release() -> bool:
 	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active or officer_aboard or driver.arrested:
 		return false
 	state = State.LEAVING
+	if surrender_stop:
+		set_route([position, position + Vector3(0, 0, -6), Vector3(2, 0.08, minf(position.z - 14, -40)), Vector3(2, 0.08, minf(position.z - 24, -64))])
+		surrender_stop = false
+		state_changed.emit()
+		return true
 	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),
 		Vector3(4, 0.08, -22), Vector3(2, 0.08, -28), Vector3(2, 0.08, -64)])
 	state_changed.emit()
 	return true
 
 func _physics_process(delta: float) -> void:
+	if driver.surrendered and state == State.PARKED and driver.state == driver.State.SEATED:
+		driver.request_exit()
 	if depart_after_entry and driver.can_drive() and all_parts_closed():
 		depart_after_entry = false
 		release()
@@ -310,7 +318,15 @@ func _physics_process(delta: float) -> void:
 	elif state == State.LEAVING and position.z > -26:
 		target = EXIT_SPEED
 	target = minf(target, speed_limit)
-	speed = move_toward(speed, target, 1.6 * delta)
+	if driver.surrendered:
+		target = 0
+	speed = move_toward(speed, target, (4.0 if driver.surrendered else 1.6) * delta)
+	if driver.surrendered and speed <= 0.05:
+		speed = 0
+		state = State.PARKED
+		driver.request_exit()
+		state_changed.emit()
+		return
 	var travel := minf(speed * delta, remaining)
 	distance += travel
 	var next := route.sample_baked(distance, true)
@@ -324,11 +340,11 @@ func _physics_process(delta: float) -> void:
 		wheel.rotation.x -= travel / 0.35
 	for wheel in front_wheels:
 		wheel.rotation.y = clampf(angle_difference(old_yaw, rotation.y) * 15.0, -0.35, 0.35)
-	brake_material.albedo_color = Color("ff5646") if state == State.PULLING_OVER else Color("862c2b")
+	brake_material.albedo_color = Color("ff5646") if driver.surrendered or state == State.PULLING_OVER else Color("862c2b")
 	if remaining <= 0.025:
 		position = route.sample_baked(route.get_baked_length())
 		speed = 0
-		if state == State.PULLING_OVER:
+		if state == State.PULLING_OVER or driver.surrendered:
 			state = State.PARKED
 			rotation.y = 0
 			for wheel in front_wheels:
@@ -474,3 +490,11 @@ func request_departure() -> bool:
 		depart_after_entry = true
 		return true
 	return false
+
+func request_surrender() -> bool:
+	if is_patrol or state == State.FINISHED or not driver.request_surrender():
+		return false
+	depart_after_entry = false
+	if state != State.PARKED:
+		surrender_stop = true
+	return true

@@ -24,7 +24,7 @@ func step() -> void:
 	scene.patrol._physics_process(1.0 / 60.0)
 	stages[scene.patrol.stage] = true
 
-func scenario(index: int) -> void:
+func scenario(index: int, roadside := false) -> void:
 	stages.clear()
 	scene = load("res://main.tscn").instantiate()
 	root.add_child(scene)
@@ -35,10 +35,15 @@ func scenario(index: int) -> void:
 	for car in scene.traffic.cars:
 		car.set_physics_process(false)
 		car.driver.set_physics_process(false)
-	source.position = Vector3(7.1, 0.08, 5)
+	source.position = Vector3(2 if roadside else 7.1, 0.08, 5)
+	source.surrender_stop = roadside
 	source.state = source.State.PARKED
 	source.speed = 0
-	scene.traffic.controlled_car = source
+	var bay_car = scene.traffic.cars[1] if roadside else null
+	if roadside:
+		bay_car.position = Vector3(7.1, 0.08, 5)
+		bay_car.state = bay_car.State.PARKED
+	scene.traffic.controlled_car = bay_car if roadside else source
 	check(not scene.patrol.request_pickup(source), "Non-arrested person cannot be collected")
 	check(source.driver.request_exit(), "Source driver must exit")
 	for i in range(300):
@@ -69,7 +74,7 @@ func scenario(index: int) -> void:
 	check(stages.has(scene.PatrolDispatch.Stage.DEPARTING), "Patrol must depart with the suspect")
 	check(scene.patrol.stage == scene.PatrolDispatch.Stage.COMPLETE, "Pickup must finish without getting stuck")
 	check(scene.traffic.in_custody.has(arrested_name), "Collected driver must be recorded in custody")
-	check(scene.traffic.controlled_car == null, "Prototype cleanup must free the control space")
+	check(scene.traffic.controlled_car == (bay_car if roadside else null), "Pickup cleanup preserves any other ongoing bay control")
 	for i in range(3000):
 		step()
 	for car in scene.traffic.cars:
@@ -80,6 +85,7 @@ func scenario(index: int) -> void:
 func run() -> void:
 	for index in range(4):
 		await scenario(index)
+	await scenario(0, true)
 	if failures.is_empty():
 		print("PASS: arrest, duplicate/cancel guards, 20-second spawn delay, second space, officer exit/escort/boarding/return, departure and custody cleanup")
 	quit(0 if failures.is_empty() else 1)

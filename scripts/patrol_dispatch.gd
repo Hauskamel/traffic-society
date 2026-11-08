@@ -61,7 +61,10 @@ func display_text() -> String:
 
 func spawn_patrol() -> bool:
 	for car in scene.traffic.cars:
-		if car.position.x < 4 and car.position.z > 40:
+		if source.surrender_stop:
+			if absf(car.position.x - 9.05) < 2 and absf(car.position.z - 56) < 8:
+				return false
+		elif car.position.x < 4 and car.position.z > 40:
 			return false
 	patrol = TrafficCar.new()
 	patrol.is_patrol = true
@@ -73,8 +76,14 @@ func spawn_patrol() -> bool:
 	scene.traffic.add_child(patrol)
 	scene.traffic.cars.append(patrol)
 	patrol.state = TrafficCar.State.PULLING_OVER
+	# Roadside stops can queue traffic back to the normal spawn. Approach along
+	# the curb instead, keeping the existing second-space destination.
+	if source.surrender_stop:
+		patrol.position.x = 9.05
 	# Pass the occupied first space on its curb side, away from the driver.
 	patrol.set_route([patrol.position, Vector3(2, 0.08, 28), Vector3(4, 0.08, 22), Vector3(9.05, 0.08, 15), Vector3(9.05, 0.08, 0), Vector3(7.1, 0.08, -5)])
+	if source.surrender_stop:
+		patrol.set_route([patrol.position, Vector3(9.05, 0.08, 30), Vector3(9.05, 0.08, 0), Vector3(7.1, 0.08, -5)])
 	for i in range(patrol.route.point_count):
 		if patrol.route.get_point_position(i).x > 9:
 			patrol.route.set_point_in(i, Vector3(0, 0, 1.2))
@@ -132,13 +141,13 @@ func _physics_process(delta: float) -> void:
 				stage = Stage.EXITING
 		Stage.EXITING:
 			if officer.state == officer.State.OUTSIDE:
-				set_walk([Vector3(5, 0, -1), Vector3(5, 0, suspect.global_position.z)])
+				set_walk(approach_suspect())
 				stage = Stage.WALKING
 		Stage.WALKING:
 			if walk(officer, delta):
 				suspect.reparent(scene, true)
 				suspect.collider.disabled = true
-				set_walk([Vector3(5, 0, suspect.global_position.z), Vector3(5, 0, -1), Vector3(8.6, 0, -1), Vector3(8.6, 0, -5)])
+				set_walk(escort_suspect())
 				stage = Stage.ESCORTING
 		Stage.ESCORTING:
 			var done := walk(suspect, delta, 1.35)
@@ -186,4 +195,25 @@ func _physics_process(delta: float) -> void:
 				source.visible = false
 				stage = Stage.COMPLETE
 				report = "Transport abgeschlossen. Fahrzeug vorlaeufig verwahrt."
-				scene.traffic.controlled_car = null
+				if scene.traffic.controlled_car == source:
+					scene.traffic.controlled_car = null
+
+func approach_suspect() -> Array[Vector3]:
+	var at: Vector3 = suspect.global_position
+	var points: Array[Vector3] = [Vector3(5, 0, -1)]
+	if absf(at.x - 5) > 0.5:
+		var rear_z: float = source.global_position.z + source.body_length / 2 + 2
+		points.append(Vector3(5, 0, rear_z))
+		points.append(Vector3(at.x, 0, rear_z))
+	points.append(Vector3(at.x, 0, at.z))
+	return points
+
+func escort_suspect() -> Array[Vector3]:
+	var at: Vector3 = suspect.global_position
+	var points: Array[Vector3] = []
+	if absf(at.x - 5) > 0.5:
+		var rear_z: float = source.global_position.z + source.body_length / 2 + 2
+		points.append(Vector3(at.x, 0, rear_z))
+		points.append(Vector3(5, 0, rear_z))
+	points.append_array([Vector3(5, 0, -1), Vector3(8.6, 0, -1), Vector3(8.6, 0, -5)])
+	return points

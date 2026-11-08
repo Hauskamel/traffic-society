@@ -296,7 +296,7 @@ Der Spieler trägt beide Waffen als echte Gegenstände im Inventar (I). In der E
 
 **Shift halten** führt die Hand zum Griff. Danach **Rechtsklick halten**, um die ausgewählte Waffe zu ziehen und zu zielen. Eine schnelle Kombination wird nach der kurzen Griffbewegung ausgeführt. Nach dem Ziehen darf Shift losgelassen werden; gehalten wird die Zielhaltung mit Rechtsklick. Rechtsklick loslassen bringt die Waffe wieder ins Holster; bleibt Shift gedrückt, bleibt die Hand am Griff. Waffenwechsel beendet die bisherige Haltung. **Sprinten liegt jetzt auf Strg**, damit Shift eindeutig zum Griff gehört. Während Griff/Zielen wird nicht gesprintet.
 
-Inventar, Funk, Dokumentenprüfung, Klettern und Perspektivwechsel beenden die Waffenhaltung. Beim Griff/Zielen sind E-Interaktionen gesperrt. Das Mausrad bedient in Menüs weiterhin die Menüauswahl und in der Vogelperspektive den Zoom. Die Glock unterstützt Einzelschüsse und Magazinwechsel (siehe unten). Taserwirkung und Reaktionen der NPCs auf Waffen fehlen weiterhin. Die Glock 19 ist ein eigener vereinfachter Low-Poly-Nachbau, kein importiertes Detailmodell. Beide Waffen lassen sich in der Inventaransicht in 3D drehen.
+Inventar, Funk, Dokumentenprüfung, Klettern und Perspektivwechsel beenden die Waffenhaltung. Beim Griff/Zielen sind E-Interaktionen gesperrt. Das Mausrad bedient in Menüs weiterhin die Menüauswahl und in der Vogelperspektive den Zoom. Die Glock unterstützt Einzelschüsse und Magazinwechsel (siehe unten). Der Taser bleibt ohne Wirkung; die Glock kann NPCs zur Aufgabe zwingen (siehe unten). Die Glock 19 ist ein eigener vereinfachter Low-Poly-Nachbau, kein importiertes Detailmodell. Beide Waffen lassen sich in der Inventaransicht in 3D drehen.
 
 Geprüft unter Linux/Godot 4.6.3: `tests/equipment_test.gd`, Inventartransfers und 3D-Gegenstandsvorschau. Windows/Godot 4.7.2 bitte praktisch testen.
 
@@ -310,6 +310,18 @@ Die Glock 19 startet mit **15 Patronen im eingesetzten Magazin**. Zusätzlich li
 
 Beim Nachladen wird das Ersatzmagazin mit der meisten Munition gewählt. Es muss mehr Patronen enthalten als das eingesetzte Magazin. Das bisherige Magazin kommt mit seiner Restmunition ins Inventar; auch leere Magazine bleiben erhalten. Ein volles Magazin oder fehlende geeignete Ersatzmagazine verhindern den Wechsel. Holstern, Waffenwechsel oder ein Menü brechen das Nachladen ab, ohne Munition zu verlieren oder hinzuzufügen.
 
-**R setzt den Spieler nicht mehr zurück.** Kein Schaden, keine NPC-Reaktionen und keine Taserwirkung. Es gibt noch keine lose Munition, Magazinbefüllung oder separate Patrone im Patronenlager. Welt-Treffer werden nur für temporäre Effekte ermittelt. Ton und Modelle sind einfache eigene Platzhalter.
+**R setzt den Spieler nicht mehr zurück.** Kein Schaden und keine Taserwirkung. Das Erzwingen der Aufgabe durch Zielen ist separat beschrieben. Es gibt noch keine lose Munition, Magazinbefüllung oder separate Patrone im Patronenlager. Welt-Treffer werden nur für temporäre Effekte ermittelt. Ton und Modelle sind einfache eigene Platzhalter.
 
 Geprüft mit Godot 4.6.3 unter Linux: `tests/shooting_test.gd` (Schüsse, leeres Magazin, Nachladezeit, Teilladungen, Abbruch und Munitionserhaltung), Inventar-/Bedienungstests und 13 Kategorien in der 3D-Vorschau. Windows/Godot 4.7.2 bitte testen.
+
+## NPCs mit der Glock zur Aufgabe zwingen
+
+Mit vollständig gezogener Glock kurz auf Kopf oder Oberkörper eines noch nicht verhafteten Fahrers zielen. Nach etwa **0,25 Sekunden** bei freier Sicht und höchstens **25 Metern** Abstand hebt er die Hände. Ein Schuss ist nicht erforderlich; auch eine leere Glock wird als Bedrohung erkannt. Der Taser löst diesen Ablauf noch nicht aus.
+
+Ein sitzender Fahrer hebt bereits im Führerhaus die Hände. Falls das Auto fährt, bremst es bis zum Stillstand und der Fahrer steigt anschließend mit erhobenen Händen aus. Das Auto hält dabei an seiner aktuellen Fahrstrecke; es fährt durch diese Aktion nicht automatisch in die Kontrollbucht. Nachfolgender Verkehr wartet entsprechend.
+
+Die Aufgabe bleibt beim Senken der Waffe bestehen. Aus der Nähe (etwa zwei Meter), mit Blick auf die Person, erscheint **[E] Handschellen anlegen**. E führt dies direkt aus und holstert die Waffe. Anschließend stehen Durchsuchung, Aufheben der Festnahme und Streifenanforderung wie bisher zur Verfügung – auch bei einer Person außerhalb der Kontrollbucht. Dafür am Verhafteten das Menü öffnen oder mit Blick auf ihn T für das Funkgerät drücken. Eine andere laufende Kontrolle wird nicht ersetzt.
+
+Die Streife kann bei einer blockierten Fahrbahn seitlich anfahren; ihre Abholwege berücksichtigen den tatsächlichen Standort des Verhafteten. Es bleibt ein einfacher Ablauf für diesen Kontrollplatz, kein allgemeines Verkehrs- oder Navigationssystem. Die groben Fahrzeugkollisionen schließen die transparenten Kabinen ein; deshalb wird das anvisierte Fahrzeug bei der Sichtprüfung ausgenommen. Andere Fahrzeuge und feste Hindernisse blockieren die Erkennung.
+
+Geprüft: `tests/compliance_test.gd` grafisch für alle vier Modelle, Aufgabe außerhalb des Autos, Glock/Taser-Abgrenzung, blockierte Sicht, Bremsen vor Aussteigen, Hände oben, direkte Handschellen und Folgeaktionen. `tests/patrol_test.gd` prüft zusätzlich die Straßenabholung bei weiterhin belegter Kontrollbucht. Linux/Godot 4.6.3; Windows/Godot 4.7.2 bitte testen.

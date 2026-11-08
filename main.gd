@@ -29,6 +29,10 @@ var document_mode: DocumentMode
 var ui_layer: CanvasLayer
 const PlayerEquipment = preload("res://scripts/player_equipment.gd")
 var equipment: PlayerEquipment
+const NpcCompliance = preload("res://scripts/npc_compliance.gd")
+var compliance: NpcCompliance
+var radio_car: Node3D
+var menu_car: Node3D
 var inventory_view: InventoryView
 var searching_driver: Node3D
 var searching_car: Node3D
@@ -317,6 +321,9 @@ func _ready() -> void:
 	equipment = PlayerEquipment.new()
 	equipment.scene = self
 	add_child(equipment)
+	compliance = NpcCompliance.new()
+	compliance.scene = self
+	add_child(compliance)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -347,6 +354,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				inventory_view.close_view()
 			else:
 				finish_search()
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E and compliance.handcuff():
 		return
 	if equipment.handle(event):
 		return
@@ -411,6 +420,7 @@ func held(a: int, b: int) -> float:
 
 func _physics_process(delta: float) -> void:
 	equipment.tick(delta)
+	compliance.tick(delta)
 	avatar_clock += delta
 	var walking := Vector2(player.velocity.x, player.velocity.z).length() > 0.1
 	for i in range(2):
@@ -464,8 +474,15 @@ func order_stop() -> void:
 	if aerial:
 		traffic.request_control()
 
+func interaction_car() -> Node3D:
+	# While a menu is open, retain its original subject.
+	if interaction_open and is_instance_valid(menu_car):
+		return menu_car
+	var nearby := compliance.nearby_car()
+	return nearby if is_instance_valid(nearby) else traffic.controlled_car
+
 func can_interact() -> bool:
-	var car := traffic.controlled_car
+	var car := interaction_car()
 	if equipment.state != equipment.State.HOLSTERED or document_mode.active or document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
 		return false
 	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
@@ -473,8 +490,8 @@ func can_interact() -> bool:
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy():
 		return false
 	var outside: bool = car.driver.state == car.driver.State.OUTSIDE
-	var target := car.driver.interaction_point() if outside else car.window_point.global_position
-	var difference := target - eyes.global_position
+	var target: Vector3 = car.driver.interaction_point() if outside else car.window_point.global_position
+	var difference: Vector3 = target - eyes.global_position
 	var facing := -eyes.global_basis.z
 	return difference.length() < 2.2 and facing.dot(difference.normalized()) > 0.72 and (outside or car.to_local(player.global_position).x < -0.9)
 
@@ -490,12 +507,14 @@ func refresh_encounter_ui() -> void:
 	var controlled := traffic.controlled_car
 	stop_button.visible = aerial and is_instance_valid(selected)
 	stop_button.disabled = is_instance_valid(controlled) or not is_instance_valid(selected) or not selected.can_stop()
-	interact_hint.text = "[E] Mit %s sprechen" % controlled.driver_name if can_interact() and not interaction_open else ""
+	interact_hint.text = "[E] Mit %s sprechen" % interaction_car().driver_name if can_interact() and not interaction_open else ""
 	if is_instance_valid(hovered_part):
 		interact_hint.text = "[E] Laderaum durchsuchen" if hovered_part.kind == "cargo" else "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
 	if climber.available():
 		interact_hint.text += "\n[Leertaste] " + ("Heruntersteigen" if is_instance_valid(climber.car) else "Auf Ladeflaeche klettern")
 
+	if is_instance_valid(compliance.nearby_car(true)):
+		interact_hint.text = "[E] Handschellen anlegen"
 	if feedback_time > 0:
 		interact_hint.text += ("\n" if not interact_hint.text.is_empty() else "") + feedback
 
@@ -503,12 +522,15 @@ func refresh_encounter_ui() -> void:
 func open_interaction() -> void:
 	if not can_interact():
 		return
-	var driver := traffic.controlled_car.driver
+	menu_car = interaction_car()
+	var driver = menu_car.driver
 	if driver.arrested:
-		interaction_actions.assign(["Gespraech beenden"] if traffic.controlled_car.pickup_reserved else ["Person durchsuchen", "Festnahme aufheben", "Gespraech beenden", "Streife anfordern"])
+		interaction_actions.assign(["Gespraech beenden"] if menu_car.pickup_reserved else ["Person durchsuchen", "Festnahme aufheben", "Gespraech beenden", "Streife anfordern"])
 	else:
 		interaction_actions.assign(["Person durchsuchen", "Einsteigen lassen", "Gespraech beenden", "Weiterfahren lassen", "Festnehmen"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
-	if not traffic.controlled_car.pickup_reserved:
+	if driver.surrendered:
+		interaction_actions.assign(["Handschellen anlegen", "Person durchsuchen", "Gespraech beenden"])
+	if not menu_car.pickup_reserved:
 		interaction_actions.append("Dokumente anfordern")
 	interaction_index = 0
 	interaction_open = true
@@ -531,7 +553,7 @@ func confirm_interaction() -> void:
 	if not interaction_open or not can_interact():
 		close_interaction()
 		return
-	var car := traffic.controlled_car
+	var car := interaction_car()
 	var action := interaction_actions[interaction_index]
 	var succeeded := true
 	match action:
@@ -544,6 +566,8 @@ func confirm_interaction() -> void:
 			succeeded = car.driver.request_enter()
 		"Weiterfahren lassen":
 			succeeded = car.request_departure()
+		"Handschellen anlegen":
+			succeeded = car.driver.set_arrested(true)
 		"Festnehmen":
 			succeeded = car.driver.set_arrested(true)
 			car.depart_after_entry = false
@@ -620,6 +644,8 @@ func refresh_cargo_visuals() -> void:
 
 
 func set_radio_open(value: bool) -> void:
+	if value:
+		radio_car = interaction_car()
 	radio_open = value
 	if is_instance_valid(radio_panel):
 		radio_panel.visible = value
@@ -634,10 +660,10 @@ func update_radio() -> void:
 		return
 	radio_status.text = patrol.report + "\n" + patrol.display_text().replace("\n", " / ")
 	radio_model.get_meta("screen").text = patrol.display_text()
-	var car := traffic.controlled_car
+	var car := radio_car if radio_open and is_instance_valid(radio_car) else interaction_car()
 	radio_call_button.disabled = patrol.active() or not is_instance_valid(car) or not car.driver.arrested or car.driver.state != car.driver.State.OUTSIDE or car.officer_aboard or car.cargo_search_active
 	radio_cancel_button.visible = patrol.stage == PatrolDispatch.Stage.WAITING
 
 func call_patrol() -> void:
-	patrol.request_pickup(traffic.controlled_car)
+	patrol.request_pickup(radio_car if is_instance_valid(radio_car) else interaction_car())
 	update_radio()
