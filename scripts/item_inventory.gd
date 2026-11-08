@@ -36,6 +36,8 @@ static func for_player() -> RefCounted:
 	var inventory := new()
 	inventory.items.append({"id": "player:flashlight", "name": "Taschenlampe", "icon": "flashlight", "owner": "Spieler", "description": "Deine dienstliche Taschenlampe.\nNoch ohne eigene Benutzungsfunktion."})
 	inventory.items.append({"id": "player:radio", "name": "Funkgeraet", "icon": "radio", "owner": "Spieler", "description": "Dienstliches Walkie-Talkie mit Display.\nT: Funkgeraet oeffnen und Abholung anfordern."})
+	inventory.items.append({"id": "player:pistol", "name": "Glock 19", "icon": "pistol", "owner": "Spieler", "description": "Dienstpistole im rechten Holster.\n1: auswaehlen. Shift halten: Griff. Rechtsklick halten: ziehen und zielen."})
+	inventory.items.append({"id": "player:taser", "name": "Taser", "icon": "taser", "owner": "Spieler", "description": "Dienstlicher Taser im linken Holster.\n2: auswaehlen. Shift halten: Griff. Rechtsklick halten: ziehen und zielen."})
 	return inventory
 
 

@@ -322,6 +322,24 @@ Grafische Prüfung mit Godot 4.6.3 unter Linux: Dokumente aller vier Fahrer, akt
 
 Der dauerhafte Kasten mit Perspektiventitel, Tastaturübersicht, Fahrzeugzähler und Kontrollstatus wurde vollständig entfernt. Situative E-/Kletterhinweise und kurze Aktionsrückmeldungen erscheinen unten mittig. Der Anhalteknopf bleibt bei ausgewähltem Fahrzeug in der Vogelperspektive verfügbar und steht nun ebenfalls unten mittig. Keine neue Debug-Ansicht ergänzt.
 
+## Spieler-Waffenleiste und Holsterbedienung · umgesetzt
+
+### Verhalten
+
+Glock 19 und Taser sind zusätzliche Spieler-Inventargegenstände mit eigenen Symbolen und drehbaren 3D-Vorschauen. Zwei Schnellplätze unten zeigen Auswahl und Zustand (Holster, Griff, Zielen). Tasten 1/2, Mausrad außerhalb von Menüs und die Schaltflächen wählen den Platz. Beide Waffen starten in getrennten Gürtelholstern.
+
+Shift halten startet den Griff; Rechtsklick halten zieht anschließend die ausgewählte Waffe in die Zielhaltung. Auch direkt aufeinanderfolgende Eingaben funktionieren: die Zielhaltung wartet auf den kurzen Griff. Beim Zielen darf Shift losgelassen werden; Rechtsklick hält die Waffe gezogen. Nach Loslassen der rechten Taste wird geholstert beziehungsweise bei weiter gehaltenem Shift zum Griff zurückgekehrt. Ein Wechsel setzt die Haltung zurück. Strg übernimmt das bisherige Sprinten, solange keine Waffe gegriffen oder gezogen ist.
+
+### Technik und Grenzen
+
+`scripts/player_equipment.gd` steuert Holster-/Griff-/Zielzustand, Auswahl, Eingaben, Schnellleiste, Ego-Hand und Holsterdarstellung. Die Armknoten der Spielerfigur sind nun bewegliche Pivots. `scripts/weapon_visuals.gd` erzeugt eine Glock-19-Silhouette mit kompaktem Schlitten, Griff, offenem Abzugsbügel und Visierung sowie einen gelb abgesetzten Taser. Beide Modelle werden für Gürtel, Ego-Ansicht und Inventar wiederverwendet. Es handelt sich um eigene vereinfachte Low-Poly-Modelle.
+
+Waffenbedienung steht nur in freier Ego-Ansicht zur Verfügung. Menüs, Funk, Dokumentenmodus, Klettern, Fokusverlust und Perspektivwechsel setzen die Haltung zurück. Während der Waffenhaltung sind E-Interaktionen gesperrt. Die bestehende Mausradbedienung von Menüs und Übersicht bleibt erhalten. Schießen, Taserwirkung, Munition, Treffer und NPC-Reaktionen gehören nicht zu diesem Schritt.
+
+### Prüfung
+
+Godot 4.6.3 unter Linux: neuer grafischer Test für beide Inventargegenstände, getrennte Holster, Auswahl, Griff ohne Ziehen, Rechtsklick ohne Griff, reguläre und schnelle Eingabefolge, Loslassen, Wechsel sowie Wechsel zu Inventar, Funk und Übersicht. Vorhandene Inventartests an vier Startgegenstände angepasst; die 3D-Vorschau deckt jetzt zwölf Kategorien ab. Screenshots der Ego-Haltung und Leiste geprüft. Windows/Godot 4.7.2 benötigt einen Praxistest.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

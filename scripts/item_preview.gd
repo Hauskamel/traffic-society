@@ -133,6 +133,9 @@ func set_item(item: Dictionary) -> void:
 				for finger in range(4):
 					cube(Vector3(x - 0.12 + finger * 0.08, 0.34, 0), Vector3(0.065, 0.25, 0.1), "b99d6c")
 				cube(Vector3(x + 0.21, 0.06, 0), Vector3(0.16, 0.22, 0.1), "b99d6c").rotation.z = -0.5
+		"pistol", "taser":
+			var weapon: Node3D = preload("res://scripts/weapon_visuals.gd").build(model, item.icon)
+			weapon.scale = Vector3.ONE * 7
 		"radio":
 			var handset: Node3D = preload("res://scripts/police_visuals.gd").radio(model)
 			handset.scale = Vector3.ONE * 1.8

@@ -20,9 +20,13 @@ static func avatar(parent: Node3D) -> Node3D:
 	box(rig, Vector3(0, 1.62, 0), Vector3(0.29, 0.32, 0.28), "d7b49a")
 	box(rig, Vector3(0, 1.81, -0.01), Vector3(0.34, 0.08, 0.37), "d9e0df")
 	box(rig, Vector3(0.12, 1.28, -0.155), Vector3(0.08, 0.1, 0.02), "efd58b")
-	for x in [-0.31, 0.31]:
-		box(rig, Vector3(x, 1.07, 0), Vector3(0.15, 0.55, 0.18), "365a78")
-		box(rig, Vector3(x, 0.75, 0), Vector3(0.14, 0.15, 0.15), "d7b49a")
+	for i in range(2):
+		var arm := Node3D.new()
+		arm.name = "Arm" + str(i)
+		rig.add_child(arm)
+		arm.position = Vector3(-0.31 if i == 0 else 0.31, 1.34, 0)
+		box(arm, Vector3(0, -0.27, 0), Vector3(0.15, 0.55, 0.18), "365a78")
+		box(arm, Vector3(0, -0.59, 0), Vector3(0.14, 0.15, 0.15), "d7b49a")
 	for i in range(2):
 		var leg := Node3D.new()
 		leg.name = "Leg" + str(i)

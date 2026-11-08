@@ -18,10 +18,10 @@ func run() -> void:
 	check(not npc.transfer_to(id, player) and npc.items.size() == 3, "Full inventory must preserve the original item")
 	player.capacity = 12
 	check(npc.transfer_to(id, player), "Taking an item must work")
-	check(npc.items.size() == 2 and player.items.size() == 3, "Transfer must move, not duplicate")
+	check(npc.items.size() == 2 and player.items.size() == 5, "Transfer must move, not duplicate")
 	check(not npc.transfer_to(id, player), "Duplicate take must fail")
 	check(player.transfer_to(id, npc), "Returning must restore original item")
-	check(npc.items.size() == 3 and player.items.size() == 2, "Return must preserve total item count")
+	check(npc.items.size() == 3 and player.items.size() == 4, "Return must preserve total item count")
 	var scene = load("res://main.tscn").instantiate()
 	root.add_child(scene)
 	scene.set_physics_process(false)
@@ -56,7 +56,7 @@ func run() -> void:
 	scene.inventory_view.select_item("player:flashlight", "player")
 	check(scene.inventory_view.return_button.disabled, "Player equipment must not be returnable to an NPC")
 	scene.inventory_view.transfer_selected("player")
-	check(scene.player_inventory.items.size() == 3, "Wrong-owner return must not remove player equipment")
+	check(scene.player_inventory.items.size() == 5, "Wrong-owner return must not remove player equipment")
 	scene.inventory_view.close_view()
 	scene.queue_free()
 	await process_frame

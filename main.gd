@@ -27,6 +27,8 @@ var document_view: DocumentView
 const DocumentMode = preload("res://scripts/document_mode.gd")
 var document_mode: DocumentMode
 var ui_layer: CanvasLayer
+const PlayerEquipment = preload("res://scripts/player_equipment.gd")
+var equipment: PlayerEquipment
 var inventory_view: InventoryView
 var searching_driver: Node3D
 var searching_car: Node3D
@@ -224,8 +226,8 @@ func _ready() -> void:
 	layer.add_child(stop_button)
 	interact_hint = Label.new()
 	interact_hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	interact_hint.offset_top = -58
-	interact_hint.offset_bottom = -18
+	interact_hint.offset_top = -116
+	interact_hint.offset_bottom = -76
 	interact_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	interact_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(interact_hint)
@@ -312,6 +314,9 @@ func _ready() -> void:
 	document_layer.add_child(document_view)
 	document_view.opened.connect(document_mode.enter)
 	document_view.closed.connect(document_mode.leave)
+	equipment = PlayerEquipment.new()
+	equipment.scene = self
+	add_child(equipment)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -342,6 +347,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				inventory_view.close_view()
 			else:
 				finish_search()
+		return
+	if equipment.handle(event):
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
@@ -410,6 +417,7 @@ func held(a: int, b: int) -> float:
 	return 1.0 if Input.is_physical_key_pressed(a) or Input.is_physical_key_pressed(b) else 0.0
 
 func _physics_process(delta: float) -> void:
+	equipment.tick(delta)
 	avatar_clock += delta
 	var walking := Vector2(player.velocity.x, player.velocity.z).length() > 0.1
 	for i in range(2):
@@ -447,7 +455,7 @@ func _physics_process(delta: float) -> void:
 		player.velocity.z = 0
 	else:
 		var direction := player.basis * Vector3(move.x, 0, move.y)
-		var speed := (SpeedSettings.SPRINT_SPEED_KMH if Input.is_physical_key_pressed(KEY_SHIFT) else SpeedSettings.WALK_SPEED_KMH) / 3.6
+		var speed := (SpeedSettings.SPRINT_SPEED_KMH if Input.is_physical_key_pressed(KEY_CTRL) and equipment.state == equipment.State.HOLSTERED else SpeedSettings.WALK_SPEED_KMH) / 3.6
 		player.velocity.x = direction.x * speed
 		player.velocity.z = direction.z * speed
 	if not player.is_on_floor():
@@ -465,7 +473,7 @@ func order_stop() -> void:
 
 func can_interact() -> bool:
 	var car := traffic.controlled_car
-	if document_mode.active or document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+	if equipment.state != equipment.State.HOLSTERED or document_mode.active or document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
 		return false
 	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
 		return false
@@ -564,7 +572,7 @@ func confirm_interaction() -> void:
 func update_part_focus() -> void:
 	var target: VehiclePart
 	var car := traffic.controlled_car
-	if not aerial and not interaction_open and not inventory_view.visible and not is_instance_valid(searching_driver) and not is_instance_valid(cargo_search_car) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_instance_valid(car) and car.state == TrafficCar.State.PARKED and not car.driver.is_busy():
+	if equipment.state == equipment.State.HOLSTERED and not aerial and not interaction_open and not inventory_view.visible and not is_instance_valid(searching_driver) and not is_instance_valid(cargo_search_car) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_instance_valid(car) and car.state == TrafficCar.State.PARKED and not car.driver.is_busy():
 		var origin := eyes.global_position
 		var end := origin - eyes.global_basis.z * 2.8
 		var query := PhysicsRayQueryParameters3D.create(origin, end, 8)

@@ -46,7 +46,7 @@ func run() -> void:
 		check(preview.distance < 3.0, "Wheel must zoom the 3D preview")
 		preview.reset_view()
 		check(preview.distance == 3.0 and preview.model.rotation.is_equal_approx(before), "Reset must restore angle and zoom")
-	check(seen.size() == 10, "All ten item categories must be covered")
+	check(seen.size() == 12, "All twelve item categories must be covered")
 	ui.select_item("Bobby Mayer:receipt", "npc")
 	check(not ui.detail.text.contains("Besitzer"), "Inventory description must omit owner line")
 	check(ui.preview.model.get_child_count() >= 3, "Paper needs geometry and text on both sides")
@@ -57,8 +57,8 @@ func run() -> void:
 	await process_frame
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("user://item-inspection-back.png")
-	check(scene.player_inventory.items.size() == 2 and scene.traffic.cars[0].inventory.items.size() == 3, "Inspection must not change inventories")
+	check(scene.player_inventory.items.size() == 4 and scene.traffic.cars[0].inventory.items.size() == 3, "Inspection must not change inventories")
 	check(ui.get_global_rect().end.y <= root.get_visible_rect().end.y + 1, "Inventory must fit the viewport")
 	if failures.is_empty():
-		print("PASS: ten 3D models, two-axis dragging, zoom, reset, front/back text, hidden owner line and inventory preservation")
+		print("PASS: twelve 3D models, two-axis dragging, zoom, reset, front/back text, hidden owner line and inventory preservation")
 	quit(0 if failures.is_empty() else 1)

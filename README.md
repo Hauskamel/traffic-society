@@ -15,7 +15,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 Auf `feature/fundamentals` sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` und `develop` bleiben bis zur Übernahme auf dem Ausgangsstand von Schritt 1.
 
-Dokumentenkontrolle und Befragungsdialoge gehören noch nicht zu dieser Version. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
+Die Dokumentenansicht ist verfügbar; ein Vergleichsmodus und Befragungsdialoge folgen später. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
 Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. Für Schritt 2 gibt es einen wiederholbaren Ablauf-Test; Prüfungen und Einschränkungen stehen in der Entwicklungsdokumentation. Der Verkehr bis Schritt 2a wurde vom Nutzer unter Windows bestätigt. Der neue Fahrer-/Menüablauf benötigt noch einen Windows-Test unter Godot 4.7.2.
 
@@ -28,7 +28,10 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Tab | Vogelperspektive / Ego-Ansicht |
 | WASD oder Pfeiltasten | Bewegen |
 | Maus | In der Ego-Ansicht umsehen; pausiert während der Menüauswahl |
-| Shift | Schneller gehen |
+| Strg | Schneller gehen (bei geholsterter Waffe) |
+| 1 / 2 oder Mausrad | Glock 19 / Taser in der Waffenleiste auswählen |
+| Shift halten | Zur ausgewählten Waffe greifen |
+| Rechte Maustaste halten | Nach dem Griff ziehen und zielen |
 | Mausrad | Übersicht zoomen oder im offenen Interaktionsmenü die Aktion wählen |
 | Escape | Menü / Inventar schließen oder die kurze Durchsuchung abbrechen; sonst Maus freigeben |
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
@@ -285,3 +288,13 @@ Beim Anfordern wechselt die Kamera sanft in eine nähere Vogelperspektive über 
 Esc beziehungsweise „Dokumente zurückgeben“ stellt die vorherige Spielgeschwindigkeit wieder her und führt die Kamera zur Ego-Ansicht zurück. Während des kurzen Rückwegs bleibt die Steuerung gesperrt. Auch Streifen-Wartezeit und Animationen laufen während der Dokumentenprüfung langsamer. Der Prüfmodus verändert weder Position noch Blickrichtung des Spielers und lässt die normale Übersichtskamera unverändert.
 
 Die dauerhafte Bedienungs-/Statusanzeige links oben ist entfernt. Situative Interaktionshinweise und Rückmeldungen stehen unten mittig; bei Fahrzeugauswahl erscheint dort auch der Anhalteknopf.
+
+## Waffenleiste, Glock 19 und Taser
+
+Der Spieler trägt beide Waffen als echte Gegenstände im Inventar (I). In der Ego-Ansicht stehen zwei Schnellplätze unten bereit: **1** wählt die Glock 19, **2** den Taser; außerhalb von Menüs wechselt auch das Mausrad. Der gewählte Platz ist gelb markiert. In der Vogelperspektive sind beide Waffen am Gürtel in getrennten Holstern sichtbar.
+
+**Shift halten** führt die Hand zum Griff. Danach **Rechtsklick halten**, um die ausgewählte Waffe zu ziehen und zu zielen. Eine schnelle Kombination wird nach der kurzen Griffbewegung ausgeführt. Nach dem Ziehen darf Shift losgelassen werden; gehalten wird die Zielhaltung mit Rechtsklick. Rechtsklick loslassen bringt die Waffe wieder ins Holster; bleibt Shift gedrückt, bleibt die Hand am Griff. Waffenwechsel beendet die bisherige Haltung. **Sprinten liegt jetzt auf Strg**, damit Shift eindeutig zum Griff gehört. Während Griff/Zielen wird nicht gesprintet.
+
+Inventar, Funk, Dokumentenprüfung, Klettern und Perspektivwechsel beenden die Waffenhaltung. Beim Griff/Zielen sind E-Interaktionen gesperrt. Das Mausrad bedient in Menüs weiterhin die Menüauswahl und in der Vogelperspektive den Zoom. Es gibt noch keine Schüsse, Taserwirkung, Munition oder Reaktionen der NPCs auf Waffen. Die Glock 19 ist ein eigener vereinfachter Low-Poly-Nachbau, kein importiertes Detailmodell. Beide Waffen lassen sich in der Inventaransicht in 3D drehen.
+
+Geprüft unter Linux/Godot 4.6.3: `tests/equipment_test.gd`, Inventartransfers und 3D-Gegenstandsvorschau. Windows/Godot 4.7.2 bitte praktisch testen.
