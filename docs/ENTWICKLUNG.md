@@ -258,6 +258,18 @@ Zeitabstimmung in `scripts/interaction_timings.gd`: Aus-/Einsteigen von 2,4 auf 
 
 Mit Godot 4.6.3 unter Linux geprüft: Fundament-, Verkehrs-, Fahrer-, Stellplatz-, Personeninventar- und Fahrzeuginventartests mit den angepassten Zeiten weiterhin bestanden. Neuer grafischer Test für neun echte 3D-Modellkategorien, Rotation, Zoom, Rücksetzen, Papierseiten, entfernte Besitzerzeile und unveränderte Gegenstände. Die grafischen Personen-/Fahrzeugsuchtests prüfen die längeren Abläufe, der Personentest zusätzlich den kompakten Fortschrittsbalken. Der bestehende Fahrzeugbereichstest für Türbedienung und Übergabe an die Fahreranimation ist mit den längeren Zeiten ebenfalls bestanden. Vorschau und Balken wurden anhand von Screenshots geprüft. Windows/Godot 4.7.2 ist noch vom Nutzer zu testen.
 
+## Ladebalken auf Durchsuchungen begrenzen und Ladeflächen betreten · umgesetzt
+
+Der Fortschrittsbalken erscheint nur noch bei Personen- und Fahrzeugdurchsuchungen. Aus-/Einsteigen des Fahrers und die neue Kletterbewegung laufen ohne Balken.
+
+Am offenen Heck eines geparkten Pickups oder Transporters bietet die Leertaste das Hochklettern an. Die Bewegung hebt den Spieler zunächst über die Kante und setzt ihn auf dem tatsächlichen Ladeboden ab. Anschließend ist normale Bewegung auf der Ladefläche möglich. Leertaste führt wieder hinter das Fahrzeug auf den Boden. Es handelt sich um eine gezielte Fahrzeuginteraktion, noch kein allgemeines Parkour-System.
+
+`scripts/vehicle_climb.gd` prüft Fahrzeug, Blickrichtung, geöffneten Zugang und freien Zielpunkt. Bei einem Hindernis während der Bewegung wird zum Ausgangspunkt zurückgekehrt. Beim Transporter wird eine geöffnete Türseite gewählt und automatisch eine niedrigere Kollisionskapsel mit angepasster Augenhöhe verwendet. Nach dem Verlassen wird die normale Höhe wiederhergestellt.
+
+Transporter und Pickup haben getrennte Kollisionen für Kabine, Ladeboden und Begrenzungen, der Transporter zusätzlich für das Dach. Während der Spieler an Bord ist, bleiben Abfahrt und Schließen der hinteren Öffnung gesperrt. Die Fahrzeugdurchsuchung ist auch von innen möglich und beendet den Zustand an Bord nicht.
+
+Mit Godot 4.6.3 unter Linux geprüft: grafischer Test für beide Modelle, blockierte/geschlossene Zugänge, Klettern, begehbaren Boden, Duckhöhe, Heruntersteigen, Interaktion von innen und fehlenden Balken beim Klettern beziehungsweise Aussteigen. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 ist noch vom Nutzer zu prüfen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

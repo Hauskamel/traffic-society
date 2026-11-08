@@ -33,6 +33,8 @@ const Timings = preload("res://scripts/interaction_timings.gd")
 var crosshair: Label
 var search_progress: ProgressBar
 var cargo_search_clock := 0.0
+const VehicleClimb = preload("res://scripts/vehicle_climb.gd")
+var climber: VehicleClimb
 var cargo_start_pitch := 0.0
 var feedback := ""
 var feedback_time := 0.0
@@ -157,6 +159,8 @@ func _ready() -> void:
 		tree.position = Vector3(x, 5, z)
 		add_child(tree)
 
+	climber = VehicleClimb.new()
+	climber.scene = self
 	player = CharacterBody3D.new()
 	player.collision_mask = 7
 	player.position = Vector3(7.5, 0.2, 8)
@@ -266,6 +270,8 @@ func update_camera() -> void:
 	instructions.text += "Auto auswaehlen, dann Anhalten | Mausrad: Zoom\nR: Spieler zuruecksetzen" if aerial else "Maus: umsehen | Shift: schneller | E: interagieren\nEsc: Maus freigeben | R: Spieler zuruecksetzen"
 
 func _unhandled_input(event: InputEvent) -> void:
+	if climber.active:
+		return
 	if inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 			if inventory_view.visible:
@@ -277,6 +283,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_TAB:
 			aerial = not aerial
 			update_camera()
+		elif event.keycode == KEY_SPACE:
+			climber.begin()
 		elif event.keycode == KEY_E:
 			update_part_focus()
 			if interaction_open:
@@ -285,7 +293,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				if hovered_part.kind == "cargo":
 					begin_cargo_search(hovered_part.vehicle)
 				else:
-					hovered_part.toggle()
+					if not hovered_part.toggle() and hovered_part.vehicle.officer_aboard:
+						feedback = "Bitte zuerst die Ladeflaeche verlassen."
+						feedback_time = 4
 			elif can_interact():
 				open_interaction()
 		elif event.keycode == KEY_ESCAPE:
@@ -334,6 +344,10 @@ func held(a: int, b: int) -> float:
 	return 1.0 if Input.is_physical_key_pressed(a) or Input.is_physical_key_pressed(b) else 0.0
 
 func _physics_process(delta: float) -> void:
+	climber.tick(delta)
+	if climber.active:
+		refresh_encounter_ui()
+		return
 	var move := Vector2(
 		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
 		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
@@ -391,13 +405,12 @@ func can_interact() -> bool:
 
 func refresh_encounter_ui() -> void:
 	update_part_focus()
-	var animating_driver = traffic.controlled_car.driver if is_instance_valid(traffic.controlled_car) else null
-	var searching := (is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or (is_instance_valid(animating_driver) and animating_driver.is_busy())) and not inventory_view.visible
+	var searching := (is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car)) and not inventory_view.visible
 	search_progress.visible = searching
 	search_progress.size = Vector2(120, 8)
 	crosshair.visible = not searching and not inventory_view.visible and not aerial
 	if searching:
-		search_progress.value = (searching_driver.search_clock / searching_driver.SEARCH_DURATION if is_instance_valid(searching_driver) else (cargo_search_clock / Timings.VEHICLE_SEARCH if is_instance_valid(cargo_search_car) else animating_driver.progress)) * 100.0
+		search_progress.value = (searching_driver.search_clock / searching_driver.SEARCH_DURATION if is_instance_valid(searching_driver) else cargo_search_clock / Timings.VEHICLE_SEARCH) * 100.0
 	var selected := traffic.selected_car
 	var controlled := traffic.controlled_car
 	stop_button.visible = aerial and is_instance_valid(selected)
@@ -429,6 +442,8 @@ func refresh_encounter_ui() -> void:
 	interact_hint.text = "[E] Mit %s sprechen" % controlled.driver_name if can_interact() and not interaction_open else ""
 	if is_instance_valid(hovered_part):
 		interact_hint.text = "[E] Laderaum durchsuchen" if hovered_part.kind == "cargo" else "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
+	if climber.available():
+		interact_hint.text += "\n[Leertaste] " + ("Heruntersteigen" if is_instance_valid(climber.car) else "Auf Ladeflaeche klettern")
 
 
 func open_interaction() -> void:
@@ -473,7 +488,7 @@ func confirm_interaction() -> void:
 				searching_driver = car.driver
 				searching_car = car
 	if not succeeded:
-		feedback = "Bitte zuerst alle Tueren und Klappen schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich."
+		feedback = "Bitte zuerst die Ladeflaeche verlassen." if car.officer_aboard else ("Bitte zuerst alle Tueren und Klappen schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich.")
 		feedback_time = 6.0
 	close_interaction()
 

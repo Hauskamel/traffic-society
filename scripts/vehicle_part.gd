@@ -49,6 +49,8 @@ func can_use(origin: Vector3) -> bool:
 	return false
 
 func toggle() -> bool:
+	if kind == "trunk" and opened and vehicle.officer_aboard:
+		return false
 	if vehicle.state != vehicle.State.PARKED or vehicle.driver.is_busy():
 		return false
 	opened = not opened

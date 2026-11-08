@@ -9,7 +9,7 @@ func _ready() -> void:
 	collision_layer = 0
 
 func can_use(origin: Vector3) -> bool:
-	return vehicle.state == vehicle.State.PARKED and vehicle.cargo_accessible() and origin.distance_to(global_position) <= 2.8 and vehicle.to_local(origin).z > vehicle.body_length / 2.0 - 0.2
+	return vehicle.state == vehicle.State.PARKED and vehicle.cargo_accessible() and origin.distance_to(global_position) <= 2.8 and (vehicle.to_local(origin).z > vehicle.body_length / 2.0 - 0.2 or (vehicle.officer_aboard and absf(vehicle.to_local(origin).x) < 0.85))
 
 func toggle() -> bool:
 	return false

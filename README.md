@@ -33,6 +33,7 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Escape | Menü / Inventar schließen oder die kurze Durchsuchung abbrechen; sonst Maus freigeben |
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
 | R | Spielerposition zurücksetzen |
+| Leertaste | Am offenen Heck von Transporter/Pickup hochklettern; auf der Ladefläche heruntersteigen |
 | I | Eigenes Inventar in der Ego-Ansicht öffnen; Esc schließt |
 | Linksklick auf Auto | In der Übersicht auswählen; hält das Fahrzeug noch nicht an |
 | Zur Kontrolle anhalten | Ausgewähltes Fahrzeug ausdrücklich in die freie Bucht holen |
@@ -227,7 +228,7 @@ Ein Gegenstandsklick zeigt im mittleren Inventarbereich ein einfaches echtes 3D-
 
 Neun einfache Modellkategorien decken die bisherigen NPC-, Spieler- und Fahrzeuggegenstände ab. Die Vorschau hat eine eigene 3D-Welt mit Kamera und Licht; Drehen verändert weder die Spielkamera noch das Inventar.
 
-Zeiten stehen zentral in `scripts/interaction_timings.gd`: Aus-/Einsteigen 3,6 s, Person durchsuchen 3,2 s, Fahrzeug durchsuchen 3 s. Auch die manuellen Scharnierbewegungen sind etwas langsamer. Während Fahrer- und Suchanimationen ersetzt ein kleiner Fortschrittsbalken das Fadenkreuz. Nach Abschluss oder Abbruch erscheint das normale Fadenkreuz wieder.
+Zeiten stehen zentral in `scripts/interaction_timings.gd`: Aus-/Einsteigen 3,6 s, Person durchsuchen 3,2 s, Fahrzeug durchsuchen 3 s. Auch die manuellen Scharnierbewegungen sind etwas langsamer. Nur während Personen- und Fahrzeugdurchsuchungen ersetzt ein kleiner Fortschrittsbalken das Fadenkreuz. Aus-/Einsteigen und Klettern zeigen keinen Ladebalken. Nach Abschluss oder Abbruch erscheint das normale Fadenkreuz wieder.
 
 Einfahren ist auf 14,4 km/h erhöht, Ausfahren bleibt bei 9 km/h. Straßenverkehr und Spielerwerte sind unverändert.
 
@@ -238,3 +239,19 @@ godot --path . --script res://tests/item_inspection_test.gd
 ```
 
 Prüft alle neun Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.
+
+## Auf Ladeflächen klettern
+
+Bei einem angehaltenen **Pickup oder Transporter** die hintere Klappe beziehungsweise eine Ladetür öffnen. Direkt vor das offene Heck stellen und hineinschauen. Der Hinweis **Leertaste – Auf Ladefläche klettern** erscheint bei freiem Einstieg. Leertaste startet eine kurze räumliche Bewegung ohne Ladebalken.
+
+Auf der Ladefläche mit WASD bewegen, den Innenraum mit E durchsuchen oder mit **Leertaste heruntersteigen**. Im niedrigen Transporter werden Kollisionskapsel und Augenhöhe automatisch abgesenkt; beim Heruntersteigen wird die normale Höhe wiederhergestellt. Bei nur einer geöffneten Transportertür wird die offene Seite genutzt.
+
+Boden, Wände und Dach besitzen passende Kollisionen statt eines den ganzen Laderaum füllenden Blocks. Ein blockierter Zielpunkt verhindert den Einstieg. Solange der Spieler auf der Ladefläche steht, sind Abfahrt und Schließen der hinteren Öffnung gesperrt. Limousinen-Kofferräume und allgemeines Parkour-Klettern sind nicht Bestandteil dieser Funktion.
+
+Grafischer Test:
+
+```sh
+godot --path . --script res://tests/climbing_test.gd
+```
+
+Prüft Pickup und Transporter, geschlossene/blockierte Einstiege, Hochklettern, Bewegung auf dem Boden, automatisch angepasste Höhe, Heruntersteigen, Suchinteraktion von innen und Ladebalken ausschließlich bei Durchsuchungen.

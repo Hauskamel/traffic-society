@@ -6,6 +6,7 @@ enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
 var inventory: RefCounted
 var cargo_inventory: RefCounted
 var cargo_search_active := false
+var officer_aboard := false
 var cargo_props: Node3D
 const CargoZone = preload("res://scripts/cargo_zone.gd")
 var cargo_zone: CargoZone
@@ -61,9 +62,26 @@ func _ready() -> void:
 	var hit := CollisionShape3D.new()
 	var bounds := BoxShape3D.new()
 	bounds.size = Vector3(1.95, body_height - 0.15, body_length + 0.1)
+	if model_kind == "van":
+		bounds.size.z = 1.6
+		hit.position.z = -1.7
+	elif model_kind == "pickup":
+		bounds.size.z = 1.8
+		hit.position.z = -0.75
 	hit.shape = bounds
 	hit.position.y = (body_height + 0.15) / 2.0
 	add_child(hit)
+	if model_kind == "van":
+		physical_box(Vector3(0, 0.7, 0.75), Vector3(1.72, 0.1, 3.4))
+		physical_box(Vector3(0, 2.23, 0.75), Vector3(1.9, 0.12, 3.5))
+		physical_box(Vector3(0, 1.45, -0.9), Vector3(1.8, 1.5, 0.1))
+		for x in [-0.87, 0.87]:
+			physical_box(Vector3(x, 1.45, 0.75), Vector3(0.12, 1.5, 3.4))
+	elif model_kind == "pickup":
+		physical_box(Vector3(0, 0.65, -2.0), Vector3(1.8, 0.7, 0.8))
+		physical_box(Vector3(0, 1.04, 1.3), Vector3(1.55, 0.06, 2.1))
+		for x in [-0.84, 0.84]:
+			physical_box(Vector3(x, 1.22, 1.3), Vector3(0.13, 0.4, 2.1))
 	var paint := material(body_color)
 	var trim := material("24323b")
 	var glass := material("a5c2cc")
@@ -268,7 +286,7 @@ func request_stop() -> bool:
 	return true
 
 func release() -> bool:
-	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active:
+	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active or officer_aboard:
 		return false
 	state = State.LEAVING
 	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),
@@ -427,3 +445,12 @@ func refresh_cargo_props() -> void:
 		for item in cargo_inventory.items:
 			if prop.get_meta("item_id") == item.id:
 				prop.visible = true
+
+
+func physical_box(at: Vector3, size: Vector3) -> void:
+	var hit := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	hit.shape = shape
+	hit.position = at
+	add_child(hit)
