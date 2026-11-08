@@ -65,6 +65,15 @@ func run() -> void:
 	await physics_frame
 	var latch_point: Vector3 = preview.crate.latch.to_global(Vector3(0, -0.05, 0.03))
 	check(preview.pick(pixel(preview, latch_point)) == "latch", "Physical ray picks latch")
+	var hover := InputEventMouseMotion.new()
+	hover.position = pixel(preview, latch_point)
+	preview._gui_input(hover)
+	check(preview.current_part == "latch" and not preview.highlighted.is_empty(), "Mouse hover highlights latch mesh without typed-array error")
+	var latch_mesh = preview.highlighted[0]
+	preview.mark("lid")
+	check(latch_mesh.material_overlay == null and not preview.highlighted.is_empty(), "Switching hover clears latch and highlights lid mesh")
+	preview.clear_highlight()
+	check(preview.highlighted.is_empty(), "Hover highlights clear safely")
 	click(preview, latch_point)
 	check(item.unlocked, "Click opens latch")
 	await capture("closed")

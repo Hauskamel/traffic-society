@@ -404,6 +404,10 @@ Godot 4.6.3/Linux: grafischer Test für feste Kofferinhalte, verschlossene/entri
 
 Ein Behältertyp, keine beliebige Verschachtelung oder Speicherung über Neustarts. Kein Farbeimer, keine Analyse, neuen Dialoge oder automatische Bewertung. Öffnungsbewegungen gelten für die Untersuchungsszene; die Beladung in der Welt bleibt ein vereinfachter Platzhalter. Änderungen bleiben auf `feature/vehicleSearches`.
 
+## Fehlerkorrektur: Absturz bei Koffer-Hervorhebung
+
+Der bedingte Ausdruck für die hervorzuhebenden Meshes erzeugte bei Verschluss und Deckel ein untypisiertes Array. Die Zuweisung an `Array[Node]` konnte dadurch zur Laufzeit abbrechen. Die Liste wird jetzt explizit typisiert erzeugt und per `append` beziehungsweise `assign` befüllt. Der grafische Koffertest deckt nun zusätzlich echtes Maus-Hover über den Verschluss, den Wechsel zum Deckel und das Entfernen der Hervorhebung ab; der Inhalt war bereits separat abgedeckt. Der erweiterte grafische Test ist unter Godot 4.6.3/Linux bestanden; Windows/Godot 4.7.2 bitte erneut prüfen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

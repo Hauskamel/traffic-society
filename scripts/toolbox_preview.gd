@@ -83,7 +83,11 @@ func mark(part: String) -> void:
 	for node in crate.find_children("*", "StaticBody3D", true, false):
 		if node.get_meta("part", "") == part:
 			var mesh = node.get_parent()
-			var meshes: Array[Node] = [mesh] if mesh is MeshInstance3D else mesh.find_children("*", "MeshInstance3D", true, false)
+			var meshes: Array[Node] = []
+			if mesh is MeshInstance3D:
+				meshes.append(mesh)
+			else:
+				meshes.assign(mesh.find_children("*", "MeshInstance3D", true, false))
 			for surface in meshes:
 				surface.material_overlay = glow
 				highlighted.append(surface)
