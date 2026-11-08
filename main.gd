@@ -351,7 +351,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 			if inventory_view.visible:
-				inventory_view.close_view()
+				inventory_view.back()
 			else:
 				finish_search()
 		return

@@ -380,6 +380,30 @@ Grafisch unter Godot 4.6.3/Linux: alle vier Kabinen/Fahrer, Arme bereits vor dem
 
 Feste, kooperative Reaktion ohne Flucht-/Kampf-KI oder rechtliche Bewertung. Fahrzeuge halten auf ihrer aktuellen Strecke; noch kein allgemeines Ausweichen oder sicheres Heranfahren an den Straßenrand. Schaden und Taserwirkung bleiben unverändert außerhalb dieses Schritts.
 
+## Interaktive Werkzeugkoffer · erste Testversion auf feature/vehicleSearches
+
+### Ausgangspunkt und Bedienung
+
+`feature/fundamentals` wurde per PR #1 nach `develop` übernommen. Der neue Branch `feature/vehicleSearches` wurde von diesem Integrationsstand abgeleitet. Dieser Schritt erweitert die Gegenstandsuntersuchung; der bisherige Zugang zur Fahrzeugladung bleibt bestehen.
+
+Werkzeugkoffer bieten in Fahrzeug- und Spielerinventar „Genauer untersuchen“. Die große 3D-Ansicht besitzt anklickbare Bereiche für Verschluss, Deckel und Inhalt. Ein goldener Verschluss wird zuerst gelöst, danach klappt der Deckel auf. Linksklick bedient oder wählt einen sichtbaren Gegenstand; Rechtsziehen dreht die Gesamtszene, Mausrad zoomt. Anklickbare Teile werden beim Überfahren hervorgehoben. Rechts erscheint die drehbare Nahansicht des gewählten Gegenstands mit Beschreibung und eigener Entnahmeaktion. Esc kehrt zuerst zum Inventar zurück, danach zur Welt. Keine neuen Suchbalken oder zusätzlichen Wartezeiten.
+
+### Daten und sichtbare Funde
+
+Bobbys Koffer enthält einen Hammer und ein Messer mit sichtbaren dunkelroten Spuren. Maras Koffer enthält nur einen Hammer. Vor dem Öffnen verrät kein Inventartext das Messer; die Spuren sind Bestandteil der sichtbaren Geometrie, keine automatische bestätigte Blut-/Straftatbewertung. Eriks kistenförmiges Arbeitsmaterial bleibt ein anderer Gegenstand ohne diese Funktion.
+
+Der Koffer speichert entriegelten/offenen Zustand und ein eigenes kleines Inhaltsinventar. Jeder Inhalt hat eine feste Kennung und die Kennung seines ursprünglichen Koffers. Entnehmen verschiebt denselben Datensatz in das Spielerinventar; Zurücklegen ist über die Kofferansicht nur zum ursprünglichen Behälter möglich. Direkte Rückgabe solcher Inhalte als lose Fahrzeug-/NPC-Gegenstände ist gesperrt. Ein volles Ziel verhindert die Übertragung. Der ganze Koffer bleibt als Gegenstand transportierbar, ohne Inhalt oder Öffnungszustand zurückzusetzen. Der bestehende Sitzungscache hält die Daten auch bei erneuter Fahrzeugdurchfahrt.
+
+### Technik
+
+`scripts/toolbox_model.gd` baut Basis, Scharnierdeckel, Verschluss, Hammer und Messer mit einfacher Low-Poly-Geometrie. `scripts/toolbox_preview.gd` nutzt eine isolierte 3D-Welt, eigene Kamera und echte Physikstrahlen gegen die anklickbaren Teile. Der Deckel bewegt sich sichtbar; geschlossener oder gerade bewegter Deckel verhindert die Inhaltsbedienung. Die Oberfläche liegt in `scripts/toolbox_inspection.gd`, eingebettet in die bestehende Inventaransicht. Hammer und Messer besitzen eigene SVG-Symbole und verwenden auch außerhalb des Koffers dieselben 3D-Modelle.
+
+### Prüfung und Grenzen
+
+Godot 4.6.3/Linux: grafischer Test für feste Kofferinhalte, verschlossene/entriegelte/geöffnete Zustände, reale Strahlen auf Verschluss/Deckel/Messer, Hervorhebung, sichtbare Inhalte, volle Inventare, Entnehmen und korrektes Zurücklegen, Schutz gegen doppelte Entnahme, erste Esc-Ebene, Mitnehmen des ganzen Koffers und Wiederkehr ohne Wiederbefüllung. Screenshots auf Darstellung und Lesbarkeit geprüft. Vorhandene Personen-/Fahrzeuginventartests bestanden; gemeinsamer 3D-Modelltest auf 15 Kategorien erweitert. Windows/Godot 4.7.2 benötigt einen Praxistest.
+
+Ein Behältertyp, keine beliebige Verschachtelung oder Speicherung über Neustarts. Kein Farbeimer, keine Analyse, neuen Dialoge oder automatische Bewertung. Öffnungsbewegungen gelten für die Untersuchungsszene; die Beladung in der Welt bleibt ein vereinfachter Platzhalter. Änderungen bleiben auf `feature/vehicleSearches`.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
