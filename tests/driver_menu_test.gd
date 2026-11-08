@@ -70,7 +70,7 @@ func run() -> void:
 		car.driver._physics_process(1.0 / 60.0)
 	scene.refresh_encounter_ui()
 	await capture("driver-exiting")
-	for i in range(110):
+	for i in range(240):
 		car.driver._physics_process(1.0 / 60.0)
 	check(car.driver.state == car.driver.State.OUTSIDE, "Driver must stand outside")
 	scene.eyes.look_at(car.driver.interaction_point())
@@ -86,7 +86,7 @@ func run() -> void:
 	wheel(scene, MOUSE_BUTTON_WHEEL_DOWN)
 	key(scene, KEY_E)
 	check(car.driver.state == car.driver.State.ENTERING, "Confirming entry must start animation")
-	for i in range(180):
+	for i in range(300):
 		car.driver._physics_process(1.0 / 60.0)
 	check(car.driver.can_drive(), "Driver must return to seat")
 	scene.eyes.look_at(car.window_point.global_position)

@@ -56,7 +56,7 @@ func run() -> void:
 		root.get_texture().get_image().save_png("user://cargo-world-" + car.model_kind + ".png")
 		key(scene, KEY_E)
 		check(scene.cargo_search_car == car and not scene.inventory_view.visible, "E must begin short search before revealing cargo")
-		for i in range(90):
+		for i in range(210):
 			scene._physics_process(1.0 / 60.0)
 		var ui = scene.inventory_view
 		check(ui.visible and ui.vehicle_mode and ui.npc_inventory == car.cargo_inventory, "Search must open correct cargo inventory: " + car.model_kind)

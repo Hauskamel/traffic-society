@@ -129,7 +129,8 @@ Prüft alle vier Fahrzeuglängen: keine Freigabe bei überstehendem Heck, sofort
 | Bewegung | km/h | m/s |
 | --- | --- | --- |
 | Straßenverkehr | 21,6 | 6,0 |
-| Ein-/Ausparken | 9,0 | 2,5 |
+| Einfahren in die Bucht | 14,4 | 4,0 |
+| Ausfahren aus der Bucht | 9,0 | 2,5 |
 | Spieler ohne Sprint | 12,6 | 3,5 |
 | Spieler mit Sprint | 21,6 | 6,0 |
 
@@ -167,7 +168,7 @@ Prüft jedes bedienbare Teil an allen vier Modellen: Fadenkreuz-Markierung, bena
 
 1. Fahrzeug anhalten, Fahrer aussteigen lassen und den wartenden Fahrer ansehen.
 2. E öffnet das Mausrad-Menü. **Person durchsuchen** wählen und mit E bestätigen.
-3. Der Fahrer nimmt eine kurze Durchsuchungshaltung ein. Nach circa 1,6 Sekunden öffnet sich die Übersicht mit Mauszeiger. Es gibt keine einzeln anzuklickenden Körperbereiche.
+3. Der Fahrer nimmt eine kurze Durchsuchungshaltung ein. Nach circa 3,2 Sekunden öffnet sich die Übersicht mit Mauszeiger. Es gibt keine einzeln anzuklickenden Körperbereiche.
 4. Links stehen die gefundenen NPC-Gegenstände, in der Mitte die Details des angeklickten Items, rechts das Spielerinventar. Ein Klick betrachtet nur; **Übernehmen** und **Zurückgeben** verschieben den ausgewählten Gegenstand.
 5. Esc oder die untere Schaltfläche beendet die Durchsuchung. Der Fahrer wartet wieder normal und kann zum Einsteigen aufgefordert werden.
 
@@ -175,7 +176,7 @@ Die Welt und der Verkehr laufen weiter. Blick und Bewegung des Spielers sind wä
 
 Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand, vorerst ohne Benutzungsfunktion. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
 
-Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop, verschachtelte Taschen oder 3D-Drehen von Gegenständen. Fahrzeug-Ladebereiche haben eigene, getrennte Inventare; siehe unten.
+Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop oder verschachtelte Taschen. Fahrzeug-Ladebereiche haben eigene, getrennte Inventare; siehe unten.
 
 Tests:
 
@@ -191,7 +192,7 @@ Der grafische Test prüft den gesamten Menü-/Suchablauf, erst danach sichtbare 
 1. Fahrzeug zur Kontrolle anhalten. Der Fahrer darf sitzen bleiben.
 2. Zum Heck gehen und Kofferraum/Heckklappe/Ladeflächenklappe öffnen. Beim Transporter genügt eine geöffnete Ladetür.
 3. Mit dem Fadenkreuz **in den Innenraum** schauen. Der Bodenbereich wird gelb markiert und zeigt **E – Laderaum durchsuchen**. Ein Blick auf die Klappe bedient weiterhin die Klappe.
-4. E startet eine kurze Suchbewegung (circa 1,4 Sekunden). Danach öffnet sich die bekannte Übersicht mit dem Fahrzeuginventar links und Spielerinventar rechts.
+4. E startet eine kurze Suchbewegung (circa 3 Sekunden). Danach öffnet sich die bekannte Übersicht mit dem Fahrzeuginventar links und Spielerinventar rechts.
 5. Items ansehen, **Entnehmen** oder **Zurücklegen** wählen. Esc schließt die Übersicht oder bricht die kurze Suche ab.
 
 Personen- und Fahrzeuginventare sind getrennt. Zurücklegen funktioniert nur in das ursprüngliche Fahrzeug; ein Gegenstand aus dem Auto kann nicht in die Taschen des Fahrers zurückgegeben werden. Die Welt läuft weiter, während Blick und Bewegung gesperrt sind. Sichtbare Platzhaltergegenstände verschwinden beim Entnehmen und erscheinen beim Zurücklegen wieder. Leere Fahrzeuge bleiben innerhalb derselben Sitzung leer, auch bei einer erneuten Durchfahrt.
@@ -213,3 +214,27 @@ godot --path . --script res://tests/cargo_interaction_test.gd
 ```
 
 Der grafische Test durchläuft alle vier Modelle, einschließlich einer einzelnen geöffneten Transportertür, Fadenkreuz-Auswahl, verzögerter Ansicht, sitzendem Fahrer, Entnehmen/Zurücklegen, leerem Laderaum und Abbruch. Der Datentest prüft getrennte Inventare, korrektes Zurücklegen und erhaltene leere Fahrzeug-Inventare bei erneuter Durchfahrt.
+
+## 3D-Gegenstände und längere Animationen
+
+Ein Gegenstandsklick zeigt im mittleren Inventarbereich ein einfaches echtes 3D-Modell statt des bisherigen großen Symbols. Die Slot-Symbole bleiben erhalten.
+
+- Linke Maustaste **in der 3D-Ansicht halten und ziehen**: frei um zwei Achsen drehen, auch auf die Rückseite.
+- Mausrad über der Ansicht: näher heran-/herauszoomen.
+- **Ansicht zurücksetzen** stellt Winkel und Zoom wieder her.
+- Quittungen und Belege haben Text auf Vorder- und Rückseite. Die lesbare Beschreibung bleibt zusätzlich unter der Vorschau erhalten.
+- Die bisherige Beschreibung „Ursprünglicher Besitzer“ wird nicht mehr angezeigt. Die interne Zuordnung bleibt für korrektes Zurückgeben erhalten.
+
+Neun einfache Modellkategorien decken die bisherigen NPC-, Spieler- und Fahrzeuggegenstände ab. Die Vorschau hat eine eigene 3D-Welt mit Kamera und Licht; Drehen verändert weder die Spielkamera noch das Inventar.
+
+Zeiten stehen zentral in `scripts/interaction_timings.gd`: Aus-/Einsteigen 3,6 s, Person durchsuchen 3,2 s, Fahrzeug durchsuchen 3 s. Auch die manuellen Scharnierbewegungen sind etwas langsamer. Während Fahrer- und Suchanimationen ersetzt ein kleiner Fortschrittsbalken das Fadenkreuz. Nach Abschluss oder Abbruch erscheint das normale Fadenkreuz wieder.
+
+Einfahren ist auf 14,4 km/h erhöht, Ausfahren bleibt bei 9 km/h. Straßenverkehr und Spielerwerte sind unverändert.
+
+Grafischer Test:
+
+```sh
+godot --path . --script res://tests/item_inspection_test.gd
+```
+
+Prüft alle neun Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.

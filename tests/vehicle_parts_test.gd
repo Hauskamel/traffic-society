@@ -109,10 +109,10 @@ func run() -> void:
 	animate(car, 1)
 	check(absf(car.driver_door.rotation.y) > 1.0, "Exit must not snap an already open door closed")
 	check(not door.toggle(), "Manual toggle must be blocked during driver animation")
-	animate(car, 180)
+	animate(car, 300)
 	check(door.is_closed(), "Automatic exit must leave the manual part in a closed state")
 	check(car.driver.request_enter(), "Driver must still re-enter")
-	animate(car, 180)
+	animate(car, 300)
 	check(car.release(), "Closed car with seated driver must accept release")
 	check(not door.toggle(), "Moving vehicles must not allow opening parts")
 	if failures.is_empty():

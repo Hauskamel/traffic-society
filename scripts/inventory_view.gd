@@ -16,7 +16,8 @@ var left_title: Label
 var right_title: Label
 var detail_name: Label
 var detail: RichTextLabel
-var preview: TextureRect
+const ItemPreview = preload("res://scripts/item_preview.gd")
+var preview: ItemPreview
 var take_button: Button
 var return_button: Button
 var status: Label
@@ -48,7 +49,7 @@ func _ready() -> void:
 		margin.add_theme_constant_override("margin_" + side, 28)
 	add_child(margin)
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 18)
+	layout.add_theme_constant_override("separation", 12)
 	margin.add_child(layout)
 	heading = label("DURCHSUCHUNG / INVENTAR", 26, layout)
 	instructions = label("Gegenstand anklicken: ansehen  |  Uebernehmen und Zurueckgeben sind eigene Aktionen", 15, layout)
@@ -73,14 +74,14 @@ func _ready() -> void:
 	left_grid = GridContainer.new()
 	left_grid.columns = 3
 	containers[0].add_child(left_grid)
+	containers[1].add_theme_constant_override("separation", 6)
 	detail_name = label("GEGENSTAND", 20, containers[1])
-	preview = TextureRect.new()
-	preview.custom_minimum_size = Vector2(160, 160)
-	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	preview = ItemPreview.new()
 	containers[1].add_child(preview)
+	label("Ziehen: drehen  |  Mausrad: Zoom", 13, containers[1])
+	button("Ansicht zuruecksetzen", containers[1], preview.reset_view)
 	detail = RichTextLabel.new()
-	detail.custom_minimum_size = Vector2(0, 180)
+	detail.custom_minimum_size = Vector2(0, 75)
 	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail.add_theme_font_size_override("normal_font_size", 17)
 	containers[1].add_child(detail)
@@ -167,8 +168,8 @@ func refresh() -> void:
 	fill_grid(right_grid, player_inventory, "player")
 	var item := selected_item()
 	detail_name.text = item.get("name", "GEGENSTAND")
-	preview.texture = icon(item.icon) if not item.is_empty() else null
-	detail.text = (item.description + "\n\nUrspruenglicher Besitzer: " + item.owner) if not item.is_empty() else "Waehle einen Gegenstand, um ihn genauer anzusehen."
+	preview.set_item(item)
+	detail.text = item.description if not item.is_empty() else "Waehle einen Gegenstand, um ihn genauer anzusehen."
 	take_button.disabled = item.is_empty() or selected_source != "npc"
 	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != source_owner
 

@@ -26,7 +26,7 @@ func run() -> void:
 	car.state = car.State.PARKED
 	scene.traffic.controlled_car = car
 	check(car.driver.request_exit(), "Driver must exit before search")
-	for i in range(180):
+	for i in range(300):
 		car.driver._physics_process(1.0 / 60.0)
 	scene.aerial = false
 	scene.update_camera()
@@ -40,7 +40,15 @@ func run() -> void:
 	check(car.driver.state == car.driver.State.SEARCHING, "Confirm must start search pose")
 	check(not scene.inventory_view.visible, "Items must stay hidden until search animation completes")
 	check(not car.driver.request_enter() and not car.release(), "Driver must not enter or leave during search")
-	for i in range(110):
+	for i in range(60):
+		car.driver._physics_process(1.0 / 60.0)
+		scene._physics_process(1.0 / 60.0)
+	check(scene.search_progress.size.y <= 10, "Progress indicator must remain compact")
+	check(scene.search_progress.visible and not scene.crosshair.visible and scene.search_progress.value > 0 and scene.search_progress.value < 100, "Search must show a partial progress bar instead of crosshair")
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png("user://search-progress.png")
+	for i in range(240):
 		car.driver._physics_process(1.0 / 60.0)
 	scene._physics_process(1.0 / 60.0)
 	var ui = scene.inventory_view

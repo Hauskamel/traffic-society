@@ -21,6 +21,7 @@ var start_z := 52.0
 const SpeedSettings = preload("res://scripts/speed_settings.gd")
 const ROAD_SPEED := SpeedSettings.TRAFFIC_SPEED_KMH / 3.6
 const BAY_SPEED := SpeedSettings.PARKING_SPEED_KMH / 3.6
+const EXIT_SPEED := SpeedSettings.EXIT_SPEED_KMH / 3.6
 var state: State = State.DRIVING
 var speed := ROAD_SPEED
 var route: Curve3D
@@ -283,7 +284,7 @@ func _physics_process(delta: float) -> void:
 	if state == State.PULLING_OVER:
 		target = minf(BAY_SPEED, sqrt(maxf(0.0, 2.0 * 1.6 * remaining)))
 	elif state == State.LEAVING and position.z > -26:
-		target = BAY_SPEED
+		target = EXIT_SPEED
 	target = minf(target, speed_limit)
 	speed = move_toward(speed, target, 1.6 * delta)
 	var travel := minf(speed * delta, remaining)

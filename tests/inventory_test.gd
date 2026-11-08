@@ -43,11 +43,11 @@ func run() -> void:
 		car.driver.set_physics_process(false)
 		check(not car.driver.begin_search(), "Seated driver must not be searchable")
 		check(car.driver.request_exit(), "Every driver must be able to exit")
-		for i in range(180):
+		for i in range(300):
 			car.driver._physics_process(1.0 / 60.0)
 		check(car.driver.begin_search(), "Every outside driver must accept search")
 		check(not car.driver.begin_search(), "Repeated search request must be rejected")
-		for i in range(110):
+		for i in range(240):
 			car.driver._physics_process(1.0 / 60.0)
 		check(car.driver.search_ready, "Every driver must finish the short search animation")
 		car.driver.end_search()

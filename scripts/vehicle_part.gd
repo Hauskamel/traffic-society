@@ -1,4 +1,5 @@
 extends Area3D
+const Timings = preload("res://scripts/interaction_timings.gd")
 ## A named physical target under the crosshair, with a reversible hinge animation.
 var vehicle: Node3D
 var pivot: AnimatableBody3D
@@ -73,7 +74,7 @@ func _physics_process(delta: float) -> void:
 		driver_was_busy = false
 		opened = absf(angle()) > 0.1
 	var target := open_angle if opened else 0.0
-	var next := move_toward(angle(), target, delta * 3.5)
+	var next := move_toward(angle(), target, delta * Timings.HINGE_RADIANS_PER_SECOND)
 	if axis == Vector3.RIGHT:
 		pivot.rotation.x = next
 	else:

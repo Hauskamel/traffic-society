@@ -29,6 +29,9 @@ var inventory_view: InventoryView
 var searching_driver: Node3D
 var searching_car: Node3D
 var cargo_search_car: Node3D
+const Timings = preload("res://scripts/interaction_timings.gd")
+var crosshair: Label
+var search_progress: ProgressBar
 var cargo_search_clock := 0.0
 var cargo_start_pitch := 0.0
 var feedback := ""
@@ -208,12 +211,28 @@ func _ready() -> void:
 	stack.add_child(stop_button)
 	interact_hint = Label.new()
 	stack.add_child(interact_hint)
-	var crosshair := Label.new()
+	crosshair = Label.new()
 	crosshair.text = "+"
 	crosshair.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	crosshair.position -= Vector2(5, 12)
 	crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(crosshair)
+	search_progress = ProgressBar.new()
+	search_progress.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	search_progress.position -= Vector2(60, 4)
+	search_progress.custom_minimum_size = Vector2(120, 8)
+	search_progress.show_percentage = false
+	search_progress.add_theme_font_size_override("font_size", 1)
+	for style_name in ["background", "fill"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("263943") if style_name == "background" else Color("efd58b")
+		style.set_corner_radius_all(3)
+		style.set_content_margin_all(0)
+		search_progress.add_theme_stylebox_override(style_name, style)
+	search_progress.size = Vector2(120, 8)
+	search_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	search_progress.visible = false
+	layer.add_child(search_progress)
 	interaction_panel = PanelContainer.new()
 	interaction_panel.position = Vector2(760, 280)
 	interaction_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -324,9 +343,9 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(searching_driver) and searching_driver.search_ready and not inventory_view.visible:
 		inventory_view.open_view(player_inventory, searching_car.inventory, searching_car.driver_name)
 	if is_instance_valid(cargo_search_car) and not inventory_view.visible:
-		cargo_search_clock = minf(1.4, cargo_search_clock + delta)
-		eyes.rotation.x = cargo_start_pitch + sin(cargo_search_clock / 1.4 * PI) * 0.055
-		if cargo_search_clock >= 1.4:
+		cargo_search_clock = minf(Timings.VEHICLE_SEARCH, cargo_search_clock + delta)
+		eyes.rotation.x = cargo_start_pitch + sin(cargo_search_clock / Timings.VEHICLE_SEARCH * PI) * 0.055
+		if cargo_search_clock >= Timings.VEHICLE_SEARCH:
 			eyes.rotation.x = cargo_start_pitch
 			inventory_view.open_view(player_inventory, cargo_search_car.cargo_inventory, "Fahrzeug " + cargo_search_car.plate_number, "Fahrzeug " + cargo_search_car.plate_number, true)
 	feedback_time = maxf(0, feedback_time - delta)
@@ -372,6 +391,13 @@ func can_interact() -> bool:
 
 func refresh_encounter_ui() -> void:
 	update_part_focus()
+	var animating_driver = traffic.controlled_car.driver if is_instance_valid(traffic.controlled_car) else null
+	var searching := (is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or (is_instance_valid(animating_driver) and animating_driver.is_busy())) and not inventory_view.visible
+	search_progress.visible = searching
+	search_progress.size = Vector2(120, 8)
+	crosshair.visible = not searching and not inventory_view.visible and not aerial
+	if searching:
+		search_progress.value = (searching_driver.search_clock / searching_driver.SEARCH_DURATION if is_instance_valid(searching_driver) else (cargo_search_clock / Timings.VEHICLE_SEARCH if is_instance_valid(cargo_search_car) else animating_driver.progress)) * 100.0
 	var selected := traffic.selected_car
 	var controlled := traffic.controlled_car
 	stop_button.visible = aerial and is_instance_valid(selected)

@@ -1,8 +1,9 @@
 extends Node3D
 ## Procedural placeholder animation, replaceable by a rigged GLB later.
 enum State { SEATED, EXITING, OUTSIDE, ENTERING, SEARCHING }
-const DURATION := 2.4
-const SEARCH_DURATION := 1.6
+const Timings = preload("res://scripts/interaction_timings.gd")
+const DURATION := Timings.DRIVER_TRANSITION
+const SEARCH_DURATION := Timings.PERSON_SEARCH
 var search_clock := 0.0
 var search_ready := false
 var state: State = State.SEATED

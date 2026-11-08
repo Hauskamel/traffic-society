@@ -9,7 +9,7 @@ func check(ok: bool, message: String) -> void:
 		failures.append(message)
 		push_error(message)
 
-func animate(driver: Node, frames := 180) -> void:
+func animate(driver: Node, frames := 300) -> void:
 	for i in range(frames):
 		driver._physics_process(1.0 / 60.0)
 

@@ -248,6 +248,16 @@ Die bisherigen Fundament-, Verkehrs-, Fahrer-, Stellplatz-, Personeninventar- un
 
 Ein gemeinsames Ladeinventar je Fahrzeug. Keine Handschuhfächer, versteckten Fächer, verschachtelten Taschen, freie Gegenstandsplatzierung, rechtliche Bewertung oder Speicherung über Spielneustarts. Die Beladungsmodelle sind Platzhalter. Kein Merge nach `develop` oder `main`.
 
+## Gegenstände in 3D untersuchen und Ablauf abstimmen · umgesetzt
+
+Die mittlere Inventarspalte zeigt nach Auswahl ein prozedurales 3D-Modell. Linke Maustaste und Ziehen drehen es frei um zwei Achsen; Mausrad zoomt, ein eigener Knopf setzt die Ansicht zurück. Alle neun vorhandenen Symbolkategorien besitzen Modelle: Schlüssel, Geldbörse, Papier, Werkzeugkoffer, Paket, Tasche, Seil, Handschuhe und Taschenlampe. Quittungen zeigen ihren Inhalt auf Vorder- und Rückseite. Die Beschreibung bleibt als lesbarer Text bestehen, die zusätzliche Besitzerzeile wurde entfernt. Eigentumsdaten werden intern weiterhin zur Rückgabeprüfung verwendet.
+
+`scripts/item_preview.gd` verwendet eine isolierte SubViewport-3D-Welt mit eigener Kamera und Beleuchtung. Die Ansicht verändert keine Gegenstands- oder Spielwelt-Daten. Die Modelle bleiben einfache Platzhalter; es gibt noch keine frei verwendbaren Gegenstände oder neue Beweise.
+
+Zeitabstimmung in `scripts/interaction_timings.gd`: Aus-/Einsteigen von 2,4 auf 3,6 s, Personendurchsuchung von 1,6 auf 3,2 s, Fahrzeugdurchsuchung von 1,4 auf 3 s; manuelle Klappenbewegungen von 3,5 auf 2,3 rad/s. Ein kompakter Fortschrittsbalken ersetzt das Fadenkreuz während Fahrer-/Suchanimationen und verschwindet bei Abschluss oder Abbruch. Einfahrtempo von 9 auf 14,4 km/h erhöht; Ausfahrtempo bleibt separat bei 9 km/h.
+
+Mit Godot 4.6.3 unter Linux geprüft: Fundament-, Verkehrs-, Fahrer-, Stellplatz-, Personeninventar- und Fahrzeuginventartests mit den angepassten Zeiten weiterhin bestanden. Neuer grafischer Test für neun echte 3D-Modellkategorien, Rotation, Zoom, Rücksetzen, Papierseiten, entfernte Besitzerzeile und unveränderte Gegenstände. Die grafischen Personen-/Fahrzeugsuchtests prüfen die längeren Abläufe, der Personentest zusätzlich den kompakten Fortschrittsbalken. Der bestehende Fahrzeugbereichstest für Türbedienung und Übergabe an die Fahreranimation ist mit den längeren Zeiten ebenfalls bestanden. Vorschau und Balken wurden anhand von Screenshots geprüft. Windows/Godot 4.7.2 ist noch vom Nutzer zu testen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
