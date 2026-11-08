@@ -1,5 +1,5 @@
 extends Node
-## Test firing only: raycasts and temporary effects, no damage or NPC reactions.
+## Hitscan with visual vehicle hits; no functional damage or NPC injuries.
 const CAPACITY := 15
 const RELOAD_SECONDS := 1.8
 const SHOT_INTERVAL := 0.16
@@ -104,13 +104,29 @@ func fire() -> bool:
 	cast_shot()
 	return true
 
+func exclude_vehicle_motion(node: Node, driver: Node, ignored: Array[RID]) -> void:
+	if node == driver:
+		return
+	if node is CollisionObject3D and node.collision_layer != 16:
+		ignored.append(node.get_rid())
+	for child in node.get_children():
+		exclude_vehicle_motion(child, driver, ignored)
+
+func shot_query(start: Vector3, end: Vector3) -> Dictionary:
+	var ignored: Array[RID] = [scene.player.get_rid()]
+	for car in scene.traffic.cars:
+		exclude_vehicle_motion(car, car.driver, ignored)
+	var query := PhysicsRayQueryParameters3D.create(start, end, 1 | 4 | 16, ignored)
+	return scene.get_world_3d().direct_space_state.intersect_ray(query)
+
 func cast_shot() -> void:
 	var start: Vector3 = scene.eyes.global_position
 	var end: Vector3 = start - scene.eyes.global_basis.z * 120.0
-	var query := PhysicsRayQueryParameters3D.create(start, end, 7, [scene.player.get_rid()])
-	last_hit = scene.get_world_3d().direct_space_state.intersect_ray(query)
+	last_hit = shot_query(start, end)
 	if not last_hit.is_empty():
 		end = last_hit.position
+		if last_hit.collider.has_method("register_hit"):
+			last_hit.collider.register_hit(last_hit.position, last_hit.normal)
 		var mark := MeshInstance3D.new()
 		var sphere := SphereMesh.new()
 		sphere.radius = 0.035

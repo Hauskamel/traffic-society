@@ -13,7 +13,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Der Stand von `feature/fundamentals` wurde in `develop` übernommen. Auf `feature/vehicleSearches` werden die Fahrzeugdurchsuchungen erweitert. Bereits umgesetzt sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` bleibt beim Ausgangsstand; `develop` enthält die übernommenen Grundlagen.
+Der Stand von `feature/fundamentals` wurde in `develop` übernommen. Auch `feature/vehicleSearches` ist inzwischen in `develop` übernommen. Auf `feature/vehicleDamage` entsteht nun die Grundlage für Fahrzeugtreffer. Bereits umgesetzt sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` bleibt beim Ausgangsstand; `develop` enthält die übernommenen Grundlagen.
 
 Die Dokumentenansicht ist verfügbar; ein Vergleichsmodus und Befragungsdialoge folgen später. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
@@ -344,3 +344,13 @@ Verschluss, Deckel und Inhalt bleiben innerhalb der Sitzung erhalten – auch be
 Es ist zunächst ein einfacher Behältertyp, noch kein allgemeines System verschachtelter Inventare. Kein Farbeimer, keine Drogenanalyse oder neue Dialoge. Die Kofferöffnung wird in der Untersuchungsansicht dargestellt; der kleine Beladungsplatzhalter im Fahrzeug bleibt vereinfacht.
 
 Prüfung unter Linux/Godot 4.6.3: `tests/toolbox_test.gd` für echtes 3D-Anklicken von Verschluss/Deckel/Inhalt, Funddarstellung, Entnahme/Rückgabe, volle Inventare, Mitnehmen und Wiederkehr. Die gemeinsame 3D-Vorschau umfasst jetzt 15 Modellkategorien. Windows/Godot 4.7.2 bitte testen.
+
+## Fahrzeugtreffer · Schritt 1
+
+Auf **feature/vehicleDamage** hinterlassen Glock-Schüsse sichtbare Einschussmarkierungen an allen vier Fahrzeugmodellen. Karosserieflächen, Glas, Reifen und Felgen besitzen eigene, von den Bewegungskollisionen getrennte Schussflächen. Türen und Heckklappen werden entsprechend ihrer tatsächlichen Öffnung getroffen. Die Markierung sitzt auf dem getroffenen Mesh und bewegt sich beim Fahren, Türöffnen und Drehen des Rads mit.
+
+Bedienung unverändert: Glock wählen, mit Shift greifen, mit Rechtsklick ziehen/zielen und mit Linksklick schießen. Die kleinen dunklen Einschussmarkierungen bleiben am aktuellen Fahrzeug bestehen; pro Fahrzeug maximal 64, danach werden die ältesten ersetzt. Beim Entfernen des Fahrzeugs verschwinden sie. Sie werden in dieser ersten Stufe noch nicht bei einer späteren erneuten Durchfahrt wiederhergestellt.
+
+Technik: eigener Schuss-Layer 16 und geometrienahe Trefferkörper statt der groben Kabinen-/Bewegungskollision. Glas blockiert den Schuss vorerst weiterhin. Texturierte, an der Flächennormalen ausgerichtete Mesh-Flächen funktionieren mit dem GL-Compatibility-Renderer. Noch keine Verformung, durchbrochenen Scheiben, platten Reifen, Fahrverhaltensänderungen oder NPC-Verletzungen.
+
+Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Modelle, Karosserie/Glas/Reifen/Dach, echte Glock-Schüsse, Wände, bewegte Fahrzeuge/Türen und begrenzte Markierungen. Bestehende Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bitte testen.

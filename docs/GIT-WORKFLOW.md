@@ -37,4 +37,4 @@ Der funktionierende Windows-Stand wurde mit `project.godot`, `main.tscn`, `main.
 
 ## Aktueller Entwicklungszweig
 
-PR #1 (`feature/fundamentals` → `develop`) wurde übernommen. `feature/vehicleSearches` basiert auf diesem Integrationsstand und enthält die nächste Ausbaustufe der Fahrzeugdurchsuchung. Änderungen an dieser Stufe werden separat nach `develop` vorgeschlagen. `main` bleibt unverändert.
+PR #1 (`feature/fundamentals` → `develop`) wurde übernommen. Auch PR #2 (`feature/vehicleSearches` → `develop`) wurde übernommen. Der aktive Branch `feature/vehicleDamage` basiert auf diesem Stand und enthält die Grundlagen der Fahrzeugtreffer. Änderungen dieser Stufe werden separat nach `develop` vorgeschlagen. `main` bleibt unverändert.

@@ -3,6 +3,8 @@ extends AnimatableBody3D
 signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
+const VehicleHitSurfaces = preload("res://scripts/vehicle_hit_surfaces.gd")
+var hit_surfaces: VehicleHitSurfaces
 var is_patrol := false
 var surrender_stop := false
 var pickup_reserved := false
@@ -250,6 +252,10 @@ func _ready() -> void:
 	add_child(window_point)
 	build_cargo()
 	new_test_drive()
+	hit_surfaces = VehicleHitSurfaces.new()
+	hit_surfaces.vehicle = self
+	add_child(hit_surfaces)
+	hit_surfaces.build(self)
 
 func set_route(points: Array[Vector3]) -> void:
 	route = Curve3D.new()
