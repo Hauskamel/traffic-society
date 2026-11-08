@@ -283,3 +283,5 @@ Grafischer Test: `tests/documents_test.gd` mit Godot 4.6.3 unter Linux; prüft a
 Beim Anfordern wechselt die Kamera sanft in eine nähere Vogelperspektive über dem kontrollierten Fahrzeug. Die Dokumente bleiben farbig im Vordergrund; dahinter läuft die sichtbare Spielwelt mit **18 % Geschwindigkeit**, entsättigt und leicht abgedunkelt. Das normale HUD ist ausgeblendet. Karten und Maus bleiben direkt bedienbar.
 
 Esc beziehungsweise „Dokumente zurückgeben“ stellt die vorherige Spielgeschwindigkeit wieder her und führt die Kamera zur Ego-Ansicht zurück. Während des kurzen Rückwegs bleibt die Steuerung gesperrt. Auch Streifen-Wartezeit und Animationen laufen während der Dokumentenprüfung langsamer. Der Prüfmodus verändert weder Position noch Blickrichtung des Spielers und lässt die normale Übersichtskamera unverändert.
+
+Die dauerhafte Bedienungs-/Statusanzeige links oben ist entfernt. Situative Interaktionshinweise und Rückmeldungen stehen unten mittig; bei Fahrzeugauswahl erscheint dort auch der Anhalteknopf.

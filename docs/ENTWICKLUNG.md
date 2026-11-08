@@ -318,6 +318,10 @@ Die Dokumente liegen auf einer eigenen Canvas-Ebene vor der Spielwelt. `shaders/
 
 Grafische Prüfung mit Godot 4.6.3 unter Linux: Dokumente aller vier Fahrer, aktive erhöhte Prüfkamera, verstecktes HUD, Zeitlupe mit weiterlaufender Weltzeit, Kartenbedienung, Rückkehr zur Ego-Ansicht und Wiederherstellung einer abweichenden vorherigen Geschwindigkeit sowie Szenenabbau. Darstellung anhand eines Screenshots geprüft. Windows/Godot 4.7.2 benötigt einen Praxistest. Kein Vergleichs- oder Dialogsystem ergänzt.
 
+## Bedienungsanzeige links oben entfernt · umgesetzt
+
+Der dauerhafte Kasten mit Perspektiventitel, Tastaturübersicht, Fahrzeugzähler und Kontrollstatus wurde vollständig entfernt. Situative E-/Kletterhinweise und kurze Aktionsrückmeldungen erscheinen unten mittig. Der Anhalteknopf bleibt bei ausgewähltem Fahrzeug in der Vogelperspektive verfügbar und steht nun ebenfalls unten mittig. Keine neue Debug-Ansicht ergänzt.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

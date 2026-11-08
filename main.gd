@@ -7,12 +7,9 @@ var eyes: Camera3D
 var overview: Camera3D
 var aerial := true
 var pitch := 0.0
-var title: Label
-var instructions: Label
 const TrafficCar = preload("res://scripts/traffic_car.gd")
 const TrafficManager = preload("res://scripts/traffic_manager.gd")
 var traffic: TrafficManager
-var encounter_status: Label
 var interact_hint: Label
 var stop_button: Button
 var interaction_open := false
@@ -214,31 +211,24 @@ func _ready() -> void:
 	var layer := CanvasLayer.new()
 	ui_layer = layer
 	add_child(layer)
-	var panel := PanelContainer.new()
-	panel.position = Vector2(20, 20)
-	layer.add_child(panel)
-	var margin := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 16)
-	panel.add_child(margin)
-	var stack := VBoxContainer.new()
-	margin.add_child(stack)
-	title = Label.new()
-	title.add_theme_font_size_override("font_size", 24)
-	stack.add_child(title)
-	instructions = Label.new()
-	instructions.add_theme_font_size_override("font_size", 15)
-	stack.add_child(instructions)
-	encounter_status = Label.new()
-	encounter_status.add_theme_color_override("font_color", Color("efd58b"))
-	stack.add_child(encounter_status)
 	stop_button = Button.new()
 	stop_button.text = "Zur Kontrolle anhalten"
 	stop_button.focus_mode = Control.FOCUS_NONE
 	stop_button.pressed.connect(order_stop)
-	stack.add_child(stop_button)
+	stop_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	stop_button.offset_left = -110
+	stop_button.offset_right = 110
+	stop_button.offset_top = -100
+	stop_button.offset_bottom = -60
+	stop_button.custom_minimum_size = Vector2(220, 40)
+	layer.add_child(stop_button)
 	interact_hint = Label.new()
-	stack.add_child(interact_hint)
+	interact_hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	interact_hint.offset_top = -58
+	interact_hint.offset_bottom = -18
+	interact_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interact_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(interact_hint)
 	crosshair = Label.new()
 	crosshair.text = "+"
 	crosshair.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -332,9 +322,6 @@ func update_camera() -> void:
 	overview.current = aerial
 	eyes.current = not aerial
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
-	title.text = "KONTROLLPUNKT  /  " + ("UEBERSICHT" if aerial else "EGO-ANSICHT")
-	instructions.text = "TAB: Ansicht wechseln | WASD / Pfeile: bewegen\n"
-	instructions.text += "Auto auswaehlen, dann Anhalten | Mausrad: Zoom\nR: Spieler zuruecksetzen" if aerial else "Maus: umsehen | Shift: schneller | E: interagieren\nEsc: Maus freigeben | R: Spieler zuruecksetzen"
 
 func _unhandled_input(event: InputEvent) -> void:
 	if climber.active:
@@ -502,35 +489,14 @@ func refresh_encounter_ui() -> void:
 	var controlled := traffic.controlled_car
 	stop_button.visible = aerial and is_instance_valid(selected)
 	stop_button.disabled = is_instance_valid(controlled) or not is_instance_valid(selected) or not selected.can_stop()
-	var text := "VERKEHR  |  %d Fahrzeuge\n" % traffic.cars.size()
-	if is_instance_valid(controlled):
-		text += "Kontrolle: %s | %s\n" % [controlled.driver_name, controlled.model_name]
-		match controlled.state:
-			TrafficCar.State.PULLING_OVER:
-				text += "Faehrt in die Parkbucht. Weitere Fahrzeuge fahren vorbei."
-			TrafficCar.State.PARKED:
-				text += "TAB: vor Ort gehen. Mit E am Fenster oder Fahrer interagieren." if aerial else "Am Fahrerfenster oder beim Fahrer mit E interagieren."
-			TrafficCar.State.LEAVING:
-				text += "Fahrzeug faehrt ab. Sobald der Stellplatz frei ist, ist die naechste Kontrolle moeglich."
-	else:
-		text += "Bucht frei. Kein Fahrzeug haelt ohne deinen Anhalteauftrag."
-	if is_instance_valid(selected):
-		text += "\nAuswahl: %s | %s | %s\n" % [selected.driver_name, selected.model_name, selected.plate_number]
-		text += "Bucht belegt: erst die laufende Kontrolle abschliessen." if is_instance_valid(controlled) else ("Jetzt 'Zur Kontrolle anhalten' waehlen." if selected.can_stop() else "Einfahrt bereits passiert. Ein anderes Fahrzeug auswaehlen.")
-	elif not is_instance_valid(controlled) and aerial:
-		text += "\nIn der Uebersicht ein vorbeifahrendes Fahrzeug anklicken."
-	if is_instance_valid(controlled) and controlled.driver.is_busy():
-		text += "\nPerson wird durchsucht ... [Esc: abbrechen]" if controlled.driver.state == controlled.driver.State.SEARCHING else ("\nFahrer steigt aus ..." if controlled.driver.state == controlled.driver.State.EXITING else "\nFahrer steigt ein ...")
-	if is_instance_valid(cargo_search_car) and not inventory_view.visible:
-		text += "\nLaderaum wird durchsucht ... [Esc: abbrechen]"
-	if feedback_time > 0:
-		text += "\n" + feedback
-	encounter_status.text = text
 	interact_hint.text = "[E] Mit %s sprechen" % controlled.driver_name if can_interact() and not interaction_open else ""
 	if is_instance_valid(hovered_part):
 		interact_hint.text = "[E] Laderaum durchsuchen" if hovered_part.kind == "cargo" else "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
 	if climber.available():
 		interact_hint.text += "\n[Leertaste] " + ("Heruntersteigen" if is_instance_valid(climber.car) else "Auf Ladeflaeche klettern")
+
+	if feedback_time > 0:
+		interact_hint.text += ("\n" if not interact_hint.text.is_empty() else "") + feedback
 
 
 func open_interaction() -> void:
