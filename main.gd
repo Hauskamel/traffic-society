@@ -35,6 +35,17 @@ var search_progress: ProgressBar
 var cargo_search_clock := 0.0
 const VehicleClimb = preload("res://scripts/vehicle_climb.gd")
 var climber: VehicleClimb
+const PoliceVisuals = preload("res://scripts/police_visuals.gd")
+const PatrolDispatch = preload("res://scripts/patrol_dispatch.gd")
+var patrol: PatrolDispatch
+var player_avatar: Node3D
+var radio_model: Node3D
+var radio_panel: PanelContainer
+var radio_status: Label
+var radio_call_button: Button
+var radio_cancel_button: Button
+var radio_open := false
+var avatar_clock := 0.0
 var cargo_start_pitch := 0.0
 var feedback := ""
 var feedback_time := 0.0
@@ -176,6 +187,10 @@ func _ready() -> void:
 	eyes.position.y = 1.7
 	eyes.fov = 76
 	player.add_child(eyes)
+	player_avatar = PoliceVisuals.avatar(player)
+	radio_model = PoliceVisuals.radio(eyes)
+	radio_model.position = Vector3(0.34, -0.25, -0.6)
+	radio_model.visible = false
 	player.rotation.y = PI / 2
 
 	overview = Camera3D.new()
@@ -187,6 +202,9 @@ func _ready() -> void:
 
 	traffic = TrafficManager.new()
 	add_child(traffic)
+	patrol = PatrolDispatch.new()
+	patrol.scene = self
+	add_child(patrol)
 
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -253,6 +271,37 @@ func _ready() -> void:
 	interaction_rows.add_theme_font_size_override("normal_font_size", 20)
 	menu_margin.add_child(interaction_rows)
 	interaction_panel.visible = false
+	radio_panel = PanelContainer.new()
+	radio_panel.position = Vector2(30, 340)
+	layer.add_child(radio_panel)
+	var radio_margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		radio_margin.add_theme_constant_override("margin_" + side, 18)
+	radio_panel.add_child(radio_margin)
+	var radio_stack := VBoxContainer.new()
+	radio_stack.add_theme_constant_override("separation", 12)
+	radio_margin.add_child(radio_stack)
+	var radio_title := Label.new()
+	radio_title.text = "FUNKGERAET / STREIFE 21-1"
+	radio_stack.add_child(radio_title)
+	radio_status = Label.new()
+	radio_stack.add_child(radio_status)
+	radio_call_button = Button.new()
+	radio_call_button.text = "Streife zur Abholung anfordern"
+	radio_call_button.focus_mode = Control.FOCUS_NONE
+	radio_call_button.pressed.connect(call_patrol)
+	radio_stack.add_child(radio_call_button)
+	radio_cancel_button = Button.new()
+	radio_cancel_button.text = "Anforderung abbrechen"
+	radio_cancel_button.focus_mode = Control.FOCUS_NONE
+	radio_cancel_button.pressed.connect(patrol.cancel_waiting)
+	radio_stack.add_child(radio_cancel_button)
+	var close_radio := Button.new()
+	close_radio.text = "Funk schliessen [T / Esc]"
+	close_radio.focus_mode = Control.FOCUS_NONE
+	close_radio.pressed.connect(set_radio_open.bind(false))
+	radio_stack.add_child(close_radio)
+	radio_panel.visible = false
 	inventory_view = InventoryView.new()
 	layer.add_child(inventory_view)
 	inventory_view.closed.connect(finish_search)
@@ -262,6 +311,8 @@ func _ready() -> void:
 
 func update_camera() -> void:
 	close_interaction()
+	set_radio_open(false)
+	player_avatar.visible = aerial
 	overview.current = aerial
 	eyes.current = not aerial
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
@@ -271,6 +322,10 @@ func update_camera() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if climber.active:
+		return
+	if radio_open:
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_T, KEY_ESCAPE]:
+			set_radio_open(false)
 		return
 	if inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
@@ -283,6 +338,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_TAB:
 			aerial = not aerial
 			update_camera()
+		elif event.keycode == KEY_T and not aerial:
+			set_radio_open(true)
 		elif event.keycode == KEY_SPACE:
 			climber.begin()
 		elif event.keycode == KEY_E:
@@ -344,6 +401,12 @@ func held(a: int, b: int) -> float:
 	return 1.0 if Input.is_physical_key_pressed(a) or Input.is_physical_key_pressed(b) else 0.0
 
 func _physics_process(delta: float) -> void:
+	avatar_clock += delta
+	var walking := Vector2(player.velocity.x, player.velocity.z).length() > 0.1
+	for i in range(2):
+		player_avatar.get_node("Leg" + str(i)).rotation.x = sin(avatar_clock * 8 + i * PI) * 0.35 if walking else 0.0
+	player_avatar.scale.y = climber.shape().shape.height / 1.8
+	update_radio()
 	climber.tick(delta)
 	if climber.active:
 		refresh_encounter_ui()
@@ -352,7 +415,7 @@ func _physics_process(delta: float) -> void:
 		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
 		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
 	).normalized()
-	if interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
+	if radio_open or interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
 		move = Vector2.ZERO
 	if is_instance_valid(searching_driver) and searching_driver.search_ready and not inventory_view.visible:
 		inventory_view.open_view(player_inventory, searching_car.inventory, searching_car.driver_name)
@@ -393,7 +456,9 @@ func order_stop() -> void:
 
 func can_interact() -> bool:
 	var car := traffic.controlled_car
-	if inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+	if radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+		return false
+	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
 		return false
 	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy():
 		return false
@@ -408,7 +473,7 @@ func refresh_encounter_ui() -> void:
 	var searching := (is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car)) and not inventory_view.visible
 	search_progress.visible = searching
 	search_progress.size = Vector2(120, 8)
-	crosshair.visible = not searching and not inventory_view.visible and not aerial
+	crosshair.visible = not searching and not inventory_view.visible and not radio_open and not aerial
 	if searching:
 		search_progress.value = (searching_driver.search_clock / searching_driver.SEARCH_DURATION if is_instance_valid(searching_driver) else cargo_search_clock / Timings.VEHICLE_SEARCH) * 100.0
 	var selected := traffic.selected_car
@@ -450,7 +515,10 @@ func open_interaction() -> void:
 	if not can_interact():
 		return
 	var driver := traffic.controlled_car.driver
-	interaction_actions.assign(["Person durchsuchen", "Einsteigen lassen", "Gespraech beenden"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
+	if driver.arrested:
+		interaction_actions.assign(["Gespraech beenden"] if traffic.controlled_car.pickup_reserved else ["Person durchsuchen", "Festnahme aufheben", "Gespraech beenden", "Streife anfordern"])
+	else:
+		interaction_actions.assign(["Person durchsuchen", "Einsteigen lassen", "Gespraech beenden", "Weiterfahren lassen", "Festnehmen"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
 	interaction_index = 0
 	interaction_open = true
 	interaction_panel.visible = true
@@ -479,9 +547,17 @@ func confirm_interaction() -> void:
 		"Aussteigen lassen":
 			succeeded = car.driver.request_exit()
 		"Einsteigen lassen":
+			car.depart_after_entry = false
 			succeeded = car.driver.request_enter()
 		"Weiterfahren lassen":
-			succeeded = car.release()
+			succeeded = car.request_departure()
+		"Festnehmen":
+			succeeded = car.driver.set_arrested(true)
+			car.depart_after_entry = false
+		"Festnahme aufheben":
+			succeeded = not car.pickup_reserved and car.driver.set_arrested(false)
+		"Streife anfordern":
+			set_radio_open(true)
 		"Person durchsuchen":
 			succeeded = car.driver.begin_search()
 			if succeeded:
@@ -548,3 +624,27 @@ func begin_cargo_search(car: Node3D) -> bool:
 func refresh_cargo_visuals() -> void:
 	for car in traffic.cars:
 		car.refresh_cargo_props()
+
+
+func set_radio_open(value: bool) -> void:
+	radio_open = value
+	if is_instance_valid(radio_panel):
+		radio_panel.visible = value
+	if is_instance_valid(radio_model):
+		radio_model.visible = value and not aerial
+	if value:
+		close_interaction()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if value or aerial else Input.MOUSE_MODE_CAPTURED
+
+func update_radio() -> void:
+	if not is_instance_valid(radio_status):
+		return
+	radio_status.text = patrol.report + "\n" + patrol.display_text().replace("\n", " / ")
+	radio_model.get_meta("screen").text = patrol.display_text()
+	var car := traffic.controlled_car
+	radio_call_button.disabled = patrol.active() or not is_instance_valid(car) or not car.driver.arrested or car.driver.state != car.driver.State.OUTSIDE or car.officer_aboard or car.cargo_search_active
+	radio_cancel_button.visible = patrol.stage == PatrolDispatch.Stage.WAITING
+
+func call_patrol() -> void:
+	patrol.request_pickup(traffic.controlled_car)
+	update_radio()

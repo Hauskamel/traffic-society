@@ -133,6 +133,10 @@ func set_item(item: Dictionary) -> void:
 				for finger in range(4):
 					cube(Vector3(x - 0.12 + finger * 0.08, 0.34, 0), Vector3(0.065, 0.25, 0.1), "b99d6c")
 				cube(Vector3(x + 0.21, 0.06, 0), Vector3(0.16, 0.22, 0.1), "b99d6c").rotation.z = -0.5
+		"radio":
+			var handset: Node3D = preload("res://scripts/police_visuals.gd").radio(model)
+			handset.scale = Vector3.ONE * 1.8
+			handset.position.y = -0.15
 		"flashlight":
 			var mesh := MeshInstance3D.new()
 			var cylinder := CylinderMesh.new()

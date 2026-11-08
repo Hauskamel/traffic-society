@@ -4,6 +4,7 @@ const TrafficCar = preload("res://scripts/traffic_car.gd")
 const ItemInventory = preload("res://scripts/item_inventory.gd")
 var npc_inventories: Dictionary = {}
 var vehicle_inventories: Dictionary = {}
+var in_custody: Dictionary = {}
 const SPAWN_INTERVAL := 11.0
 # Painted control space: x=4.65..9.55, z=0..10, not the whole lay-by.
 const PARKING_SPACE := Rect2(4.65, 0.0, 4.9, 10.0)
@@ -32,6 +33,8 @@ func spawn_next(z := 52.0) -> bool:
 	for offset in range(ROSTER.size()):
 		var index := (roster_index + offset) % ROSTER.size()
 		var data: Dictionary = ROSTER[index]
+		if in_custody.has(data.driver):
+			continue
 		var present := false
 		for existing in cars:
 			if existing.driver_name == data.driver and existing.state != TrafficCar.State.FINISHED:
@@ -60,7 +63,7 @@ func spawn_next(z := 52.0) -> bool:
 	return false
 
 func select_car(car: TrafficCar) -> void:
-	if not cars.has(car) or car.state != TrafficCar.State.DRIVING:
+	if car.is_patrol or not cars.has(car) or car.state != TrafficCar.State.DRIVING:
 		return
 	selected_car = car
 	refresh_markers()
@@ -119,6 +122,8 @@ func update_spacing() -> void:
 		for other in cars:
 			if other == car or other.state == TrafficCar.State.FINISHED:
 				continue
+			if car.is_patrol and car.state == TrafficCar.State.PULLING_OVER and other.state == TrafficCar.State.PARKED:
+				continue # Authored bypass lane alongside the occupied control space.
 			var ahead := car.position.z - other.position.z
 			var clearance := (car.body_length + other.body_length) / 2.0 + 3.0
 			if ahead > 0 and absf(car.position.x - other.position.x) < 2.5:

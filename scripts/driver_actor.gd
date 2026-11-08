@@ -1,9 +1,10 @@
 extends Node3D
 ## Procedural placeholder animation, replaceable by a rigged GLB later.
-enum State { SEATED, EXITING, OUTSIDE, ENTERING, SEARCHING }
+enum State { SEATED, EXITING, OUTSIDE, ENTERING, SEARCHING, IN_CUSTODY }
 const Timings = preload("res://scripts/interaction_timings.gd")
 const DURATION := Timings.DRIVER_TRANSITION
 const SEARCH_DURATION := Timings.PERSON_SEARCH
+var arrested := false
 var search_clock := 0.0
 var search_ready := false
 var state: State = State.SEATED
@@ -18,6 +19,7 @@ var head: MeshInstance3D
 var limbs: Array[Node3D] = []
 var body: StaticBody3D
 var collider: CollisionShape3D
+var handcuffs: MeshInstance3D
 
 func block(at: Vector3, size: Vector3, color: String, parent: Node3D) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
@@ -53,6 +55,8 @@ func _ready() -> void:
 		block(Vector3(0, -0.27, 0), Vector3(0.15, 0.53, 0.18), "b79b69", arm)
 		block(Vector3(0, -0.55, 0), Vector3(0.14, 0.15, 0.15), "d7b49a", arm)
 		limbs.append(arm)
+	handcuffs = block(Vector3(0, 0.86, 0.3), Vector3(0.36, 0.045, 0.05), "a8b2ae", rig)
+	handcuffs.visible = false
 	body = StaticBody3D.new()
 	body.collision_layer = 4
 	body.collision_mask = 0
@@ -89,7 +93,7 @@ func request_exit() -> bool:
 	return true
 
 func request_enter() -> bool:
-	if state != State.OUTSIDE:
+	if state != State.OUTSIDE or arrested:
 		return false
 	collider.disabled = true
 	initial_door_angle = door.rotation.y
@@ -142,6 +146,11 @@ func end_search() -> void:
 	torso.rotation.x = 0
 
 func _physics_process(delta: float) -> void:
+	if arrested and state in [State.OUTSIDE, State.IN_CUSTODY]:
+		limbs[2].rotation.x = -0.7
+		limbs[3].rotation.x = -0.7
+		limbs[2].rotation.z = 0.3
+		limbs[3].rotation.z = -0.3
 	if state == State.SEARCHING:
 		search_clock = minf(SEARCH_DURATION, search_clock + delta)
 		var amount := smoothstep(0.0, 0.5, search_clock)
@@ -158,3 +167,14 @@ func _physics_process(delta: float) -> void:
 		state = State.OUTSIDE if state == State.EXITING else State.SEATED
 		collider.disabled = state != State.OUTSIDE
 		door.collision_layer = 4
+
+
+func set_arrested(value: bool) -> bool:
+	if state != State.OUTSIDE:
+		return false
+	arrested = value
+	handcuffs.visible = value
+	for i in [2, 3]:
+		limbs[i].rotation.x = 0
+		limbs[i].rotation.z = 0
+	return true

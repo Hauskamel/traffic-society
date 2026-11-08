@@ -35,6 +35,7 @@ static func for_driver(driver_name: String) -> RefCounted:
 static func for_player() -> RefCounted:
 	var inventory := new()
 	inventory.items.append({"id": "player:flashlight", "name": "Taschenlampe", "icon": "flashlight", "owner": "Spieler", "description": "Deine dienstliche Taschenlampe.\nNoch ohne eigene Benutzungsfunktion."})
+	inventory.items.append({"id": "player:radio", "name": "Funkgeraet", "icon": "radio", "owner": "Spieler", "description": "Dienstliches Walkie-Talkie mit Display.\nT: Funkgeraet oeffnen und Abholung anfordern."})
 	return inventory
 
 

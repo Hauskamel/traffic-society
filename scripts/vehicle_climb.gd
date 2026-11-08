@@ -47,7 +47,7 @@ func available() -> bool:
 	if active or scene.aerial or scene.interaction_open or scene.inventory_view.visible or is_instance_valid(scene.searching_driver) or is_instance_valid(scene.cargo_search_car) or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return false
 	var vehicle = scene.traffic.controlled_car
-	if not is_instance_valid(vehicle) or vehicle.state != vehicle.State.PARKED or vehicle.model_kind not in ["van", "pickup"] or not vehicle.cargo_accessible():
+	if not is_instance_valid(vehicle) or vehicle.state != vehicle.State.PARKED or vehicle.pickup_reserved or vehicle.model_kind not in ["van", "pickup"] or not vehicle.cargo_accessible():
 		return false
 	if is_instance_valid(car):
 		return clear_at(exit_point(), original_height)

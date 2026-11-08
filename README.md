@@ -34,6 +34,7 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Linksklick | In der Ego-Ansicht Maus wieder einfangen |
 | R | Spielerposition zurücksetzen |
 | Leertaste | Am offenen Heck von Transporter/Pickup hochklettern; auf der Ladefläche heruntersteigen |
+| T | Funkgerät öffnen / schließen; Streife für festgenommene Person anfordern |
 | I | Eigenes Inventar in der Ego-Ansicht öffnen; Esc schließt |
 | Linksklick auf Auto | In der Übersicht auswählen; hält das Fahrzeug noch nicht an |
 | Zur Kontrolle anhalten | Ausgewähltes Fahrzeug ausdrücklich in die freie Bucht holen |
@@ -175,7 +176,7 @@ Prüft jedes bedienbare Teil an allen vier Modellen: Fadenkreuz-Markierung, bena
 
 Die Welt und der Verkehr laufen weiter. Blick und Bewegung des Spielers sind während der Animation und Ansicht gesperrt; Esc kann auch die kurze Animation abbrechen. Mit I lässt sich außerhalb einer Durchsuchung das eigene Inventar ohne NPC-Inhalt ansehen.
 
-Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand, vorerst ohne Benutzungsfunktion. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
+Alle vier Fahrer haben feste Schlüssel, eine Geldbörse und eine individuell beschriftete Quittung. Die Gegenstände besitzen eigene Symbole. Der Spieler startet mit einer Taschenlampe als Inventargegenstand (vorerst ohne Benutzungsfunktion) und einem Funkgerät, das mit T geöffnet wird. NPCs haben acht, der Spieler zwölf Plätze. Eine volle Zielseite verhindert die Übertragung ohne Verlust. Zurückgeben ist nur an den ursprünglichen Besitzer möglich.
 
 Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei einer erneuten Durchfahrt derselben Figur. Weggenommene Items erscheinen dabei nicht erneut. Ein Neustart setzt die Inventare zurück. Es gibt noch kein Speichern, Gewicht, Drag-and-drop oder verschachtelte Taschen. Fahrzeug-Ladebereiche haben eigene, getrennte Inventare; siehe unten.
 
@@ -238,7 +239,7 @@ Grafischer Test:
 godot --path . --script res://tests/item_inspection_test.gd
 ```
 
-Prüft alle neun Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.
+Prüft alle zehn Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.
 
 ## Auf Ladeflächen klettern
 
@@ -255,3 +256,16 @@ godot --path . --script res://tests/climbing_test.gd
 ```
 
 Prüft Pickup und Transporter, geschlossene/blockierte Einstiege, Hochklettern, Bewegung auf dem Boden, automatisch angepasste Höhe, Heruntersteigen, Suchinteraktion von innen und Ladebalken ausschließlich bei Durchsuchungen.
+
+## Weiterfahren, Spielerfigur und Streifenabholung
+
+Beim ausgestiegenen Fahrer stehen **Einsteigen lassen** (Auto bleibt stehen) und **Weiterfahren lassen** (Einsteigen und anschließende Abfahrt) getrennt zur Verfügung. Offene manuelle Klappen müssen vor der Freigabe geschlossen sein. Der Spieler besitzt jetzt eine sichtbare Polizistenfigur in der Vogelperspektive.
+
+1. Fahrer aussteigen lassen und im Personenmenü **Festnehmen** wählen. Solange keine Abholung angefordert ist, lässt sich die Festnahme wieder aufheben.
+2. Mit **T** das Funkgerät mit Display öffnen und **Streife zur Abholung anfordern** anklicken. Bewegung und Blick sind während der Funkbedienung gesperrt, die Welt läuft weiter.
+3. Nach frühestens **20 Sekunden** spawnt der Streifenwagen; die zusätzliche Anfahrt benötigt Zeit. Bei belegtem Spawnpunkt wartet er kurz auf freien Verkehr. Die Anforderung lässt sich bis zum Spawn abbrechen.
+4. Der Wagen hält am zweiten Stellplatz vor dem kontrollierten Fahrzeug. Ein Polizist steigt aus, begleitet die Person zum Streifenwagen, bringt sie hinein und fährt mit ihr ab.
+
+Die Person kehrt während dieser Sitzung nicht in den Verkehr zurück. Das zurückgelassene Fahrzeug wird nach dem Transport vorläufig entfernt und der Kontrollplatz freigegeben. Abschleppen, rechtliche Festnahmeprüfung und dauerhafte Speicherung sind noch nicht umgesetzt. Die Abholung nutzt feste Wege für diesen Kontrollplatz; sie ist kein allgemeines Navigationssystem. Das Funkgerät besitzt auch eine drehbare Inventarvorschau.
+
+Neue Ablaufprüfungen: `tests/departure_test.gd`, `tests/patrol_test.gd` (alle vier Fahrer) und `tests/police_interaction_test.gd` (grafische Bedienung und Abholung). Geprüft unter Linux/Godot 4.6.3; Windows/Godot 4.7.2 benötigt einen Praxistest.

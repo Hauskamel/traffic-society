@@ -3,6 +3,9 @@ extends AnimatableBody3D
 signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
+var is_patrol := false
+var pickup_reserved := false
+var depart_after_entry := false
 var inventory: RefCounted
 var cargo_inventory: RefCounted
 var cargo_search_active := false
@@ -286,7 +289,7 @@ func request_stop() -> bool:
 	return true
 
 func release() -> bool:
-	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active or officer_aboard:
+	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active or officer_aboard or driver.arrested:
 		return false
 	state = State.LEAVING
 	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),
@@ -295,6 +298,9 @@ func release() -> bool:
 	return true
 
 func _physics_process(delta: float) -> void:
+	if depart_after_entry and driver.can_drive() and all_parts_closed():
+		depart_after_entry = false
+		release()
 	if state == State.PARKED or state == State.FINISHED:
 		return
 	var remaining := route.get_baked_length() - distance
@@ -454,3 +460,17 @@ func physical_box(at: Vector3, size: Vector3) -> void:
 	hit.shape = shape
 	hit.position = at
 	add_child(hit)
+
+
+func request_departure() -> bool:
+	if state != State.PARKED or driver.arrested or officer_aboard or cargo_search_active:
+		return false
+	for part in parts:
+		if part.kind != "driver_door" and not part.is_closed():
+			return false
+	if driver.state == driver.State.SEATED:
+		return release()
+	if driver.request_enter():
+		depart_after_entry = true
+		return true
+	return false

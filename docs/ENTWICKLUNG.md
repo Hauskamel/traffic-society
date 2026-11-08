@@ -270,6 +270,28 @@ Transporter und Pickup haben getrennte Kollisionen für Kabine, Ladeboden und Be
 
 Mit Godot 4.6.3 unter Linux geprüft: grafischer Test für beide Modelle, blockierte/geschlossene Zugänge, Klettern, begehbaren Boden, Duckhöhe, Heruntersteigen, Interaktion von innen und fehlenden Balken beim Klettern beziehungsweise Aussteigen. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 ist noch vom Nutzer zu prüfen.
 
+## Weiterfahren vom Gehweg und Streifenabholung · umgesetzt
+
+### Bedienung und Ablauf
+
+Die Aktion „Weiterfahren lassen“ ist nun auch beim ausgestiegenen Fahrer verfügbar: Er steigt ein und fährt anschließend ab. „Einsteigen lassen“ bleibt eine eigene Aktion ohne automatische Abfahrt. Die vorhandenen Sperren für offene Klappen, Durchsuchungen und einen Spieler auf der Ladefläche bleiben wirksam.
+
+Eine einfache Polizistenfigur mit Gehbewegung zeigt den tatsächlichen Spielerstandort in der Vogelperspektive. In der Ego-Ansicht wird sie ausgeblendet. Das Spielerinventar enthält zusätzlich ein Funkgerät mit eigener 3D-Vorschau. T öffnet ein sichtbares Handgerät mit Display und Bedienfeld. Währenddessen sind Bewegung und Blick gesperrt; Verkehr und Wartezeit laufen weiter.
+
+Das Personenmenü bietet „Festnehmen“ beziehungsweise „Festnahme aufheben“. Eine festgenommene Person kann nicht selbst weiterfahren. Über das Funkgerät wird ihre Abholung angefordert. Es gibt maximal einen laufenden Auftrag; während der ersten 20 Sekunden ist ein Abbruch möglich. Erst nach dieser Wartezeit erscheint der Streifenwagen an einem freien Spawnpunkt und fährt zum zweiten Stellplatz vor dem kontrollierten Fahrzeug.
+
+Der Streifenpolizist steigt aus, läuft zum Verhafteten, begleitet ihn um das Fahrzeug zur Beifahrerseite, setzt ihn in den Streifenwagen, steigt selbst wieder ein und fährt ab. Während der reservierten Abholung sind konkurrierende Fahrzeug-/Personeninteraktionen gesperrt. Der Verkehr berücksichtigt den Streifenwagen. Die Anfahrt umgeht den belegten Kontrollplatz auf dessen Bordsteinseite.
+
+### Technik und Prüfung
+
+`scripts/patrol_dispatch.gd` steuert Wartezeit, Anfahrt, Begleitung, Einsteigen und Abfahrt als Zustandsfolge. `scripts/police_visuals.gd` baut Spielerfigur und Handfunkgerät. Fahrer erhalten einen Festnahmestatus und eine Handschellendarstellung. Der Verkehrsmanager merkt sich abgeholte Personen für die Sitzung, damit sie nicht erneut spawnen.
+
+Godot 4.6.3 unter Linux: Getrennter Einsteige-/Abfahrttest für alle vier Fahrzeugmodelle bestanden. Abholtest für alle vier Fahrer einschließlich 20-Sekunden-Grenze, Abbruch und erneuter Anforderung, zweitem Stellplatz, Begleiten, Einsteigen, Abfahrt, Freigabe des Kontrollplatzes und unterbundener Wiederkehr bestanden. Grafischer Test prüft Figurenanzeige, Menüs, Funkdisplay und die vollständige Abholung. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz- sowie Personen-/Fahrzeuginventartests bestanden. Windows/Godot 4.7.2 bleibt vom Nutzer zu prüfen.
+
+### Vorläufige Grenzen
+
+Die Festnahme ist eine manuelle Testaktion ohne rechtliche Bewertung. Feste Wege statt allgemeiner Navigation; ein Streifenauftrag gleichzeitig. Nach dem Transport wird das leere Ursprungsfahrzeug vorläufig entfernt, ohne Abschleppanimation. Keine Speicherung von Haftstatus über einen Spielneustart. `main` und `develop` bleiben unverändert.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
