@@ -422,6 +422,26 @@ Grafischer Test unter Godot 4.6.3/Linux: alle vier Modelle mit Karosserie-, Glas
 
 Dies ist ausschließlich Schritt 1: keine Deformation, Reifenpanne, Glaszerstörung, Durchschüsse, Fahrverhaltensänderung oder Körperteilverletzung. Die eigene Trefferstruktur ist die Grundlage für diese weiteren Schritte.
 
+## Scheiben- und Reifenschäden – Schritt 2 umgesetzt
+
+### Scheiben
+
+Jede Glas-Trefferfläche besitzt die Zustände intakt, angerissen und zerstört. Ein erster Treffer ergänzt eine Rissdarstellung auf beiden Seiten des jeweiligen Fensters. Der zweite Treffer blendet Glas samt Rissen aus, deaktiviert ausschließlich seine Schusskollision und erzeugt einen kurzen Splitter-/Toneffekt. Der zerstörende Schuss endet noch am Glas; folgende Schüsse nutzen die freie Öffnung. Bewegungskollisionen und Türbedienung bleiben erhalten. Die Darstellung folgt weiterhin der Tür-/Klappenhierarchie.
+
+### Reifen und Fahrt
+
+Ein erster Gummitreffer ersetzt den Reifen durch ein breiteres, unten abgeflachtes Low-Poly-Mesh mit eigener passender Schussform. Der beschädigte Reifen dreht nicht mehr als starrer platter Körper durch den Boden; die Felge dreht sich weiter. Pro Rad wird höchstens eine Panne gezählt. Felgentreffer allein verändern den Reifen nicht.
+
+Die Geschwindigkeitsobergrenze beträgt bei 1/2/3/4 platten Reifen 3/1,8/0,9/0,45 m/s. Bestehende niedrigere Verkehrs-/Parklimits bleiben gültig. Die vorhandene Beschleunigungs-/Bremslogik senkt die Geschwindigkeit gleichmäßig, die Bremsleuchten zeigen das Abbremsen an. Auch vollständig beschädigte Fahrzeuge können noch langsam abfahren, um keine permanente Belegung zu verursachen.
+
+Das Fahrzeug sinkt abhängig von den betroffenen Rädern leicht ab und neigt sich. Radpositionen werden aus gespeicherten Ausgangspositionen abgeleitet und auf der ebenen Strecke am Boden gehalten; keine kumulativen Positionsverschiebungen. Aussteigepositionen berücksichtigen die abgesenkte Stellung, damit der Fahrer neben dem Auto auf Bodenniveau bleibt. Es ist eine vereinfachte Darstellung mit weiterhin vorgegebenen Fahrwegen, keine vollständige Fahrwerkssimulation.
+
+### Prüfung und Grenzen
+
+Godot 4.6.3/Linux: grafischer Test für alle vier Modelle, einzelne Glaszustände, deaktivierte Glastrefferfläche und folgende freie Schussbahn, echte erste/zweite Glock-Schüsse, vier unabhängige Reifen, Felgenabgrenzung, Mehrfachtreffer ohne Mehrfachzählung, Absenkung, sanftes Abbremsen, Tempolimits, Aufgabe, Aussteigen und anschließende Abfahrt. Screenshots der Risse und beschädigten Reifen geprüft. Bestehende Treffer-/Schuss-/Nachladetests sowie Fundament-, Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bleibt praktisch zu testen.
+
+Kein NPC-Schaden, Reparatursystem, Schleudern oder Unfälle. Splitter sind kurzlebige kosmetische Effekte; Geräusche synthetische Platzhalter. Schaden gilt nur für das aktuelle Fahrzeugobjekt, ohne Wiederherstellung bei späterer Durchfahrt oder Neustart. Entwicklung bleibt auf `feature/vehicleDamage`; PR #3 enthält beide Schadensschritte.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
