@@ -13,7 +13,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-`develop` enthält die Grundlagen, interaktiven Werkzeugkoffer und die direkte Ladungsauswahl aus PR #4. Der aktive Branch **feature/vehicleDamage** enthält jetzt zusätzlich diesen aktuellen Integrationsstand sowie die Fahrzeugschäden mit Scheibenbruch und platten Reifen. `main` bleibt unverändert.
+`develop` enthält die Grundlagen, direkte Fahrzeugdurchsuchung und Fahrzeugschäden. Der aktive Branch **feature/bodPhysics** ergänzt darauf ein separates Körperphysik-Testlabor. `main` bleibt unverändert.
 
 Verkehr, Fahreraktionen, Inventare, Dokumentenansicht, Waffen und Streifenabholung bleiben verfügbar. Die folgenden Abschnitte dokumentieren die einzelnen Ausbaustufen.
 
@@ -392,3 +392,26 @@ Die Welt läuft weiter; Blick und Bewegung sind während der Ansicht gesperrt. W
 Für tiefer liegende Ladung kannst du auf Pickup und Transporter klettern. Beim Transporter empfiehlt es sich, beide Hecktüren zu öffnen; der Einstieg nutzt die freie rechte Seite neben dem Regal. Gegenstände, Regal und andere Weltobjekte können die Sicht versperren – die Perspektive muss deshalb gegebenenfalls geändert werden.
 
 Prüfung unter Godot 4.6.3/Linux: `tests/extended_search_test.gd` (reale Weltziele, geschlossener Zugang, Wandblockade, einzelne Inventaransicht, Behälterschritte, sichtbares und anklickbares Päckchen, Rückgabe und Zustände), `tests/climbing_test.gd`, Werkzeugkoffer-/Inventar-/Verkehrstests sowie die gemeinsame Vorschau mit 18 Modellkategorien. Windows/Godot 4.7.2 bitte praktisch testen.
+
+## Körperphysik-Testlabor · feature/bodPhysics
+
+**F9 im Spiel** öffnet das Labor. Alternativ `scenes/body_lab/body_lab.tscn` im Editor öffnen und mit F6 starten. Links steht ein Körper, rechts bewegt sich ein gleich aufgebauter Körper auf einer kurzen Strecke.
+
+| Eingabe | Funktion |
+| --- | --- |
+| Dropdown | Körperregion für den Vergleich wählen |
+| Leertaste / Vergleichstreffer | Beide Körper mit gleichem Impuls und Kraftverlust an der gewählten Region treffen |
+| Linksklick auf Körper | Die tatsächlich angeklickte Region einzeln treffen |
+| Schieberegler | Testimpuls und lokalen Kraftverlust getrennt verändern; keine ballistische Kalibrierung |
+| Rechte Maustaste ziehen | Kamera um die Testfläche drehen |
+| Mausrad | Näher heran / weiter weg |
+| R / Zurücksetzen | Beide Körper unverletzt neu aufbauen |
+| F9 / Zum Spiel | Eine neue Sitzung des Hauptspiels starten |
+
+Zum Vergleichen etwa drei Sekunden warten, „Linker Oberschenkel“ wählen und die Leertaste drücken. Im geprüften Ablauf kann der stehende Körper über das gesunde Bein ausgleichen, während der bewegte Körper wegen Restgeschwindigkeit und verringerter Stützkraft stürzt. Bei anderem Trefferzeitpunkt oder Impuls kann das Ergebnis anders ausfallen. Ein Oberarmtreffer schwächt Arm und Unterarm, ohne automatisch die Beinstütze abzuschalten.
+
+Jeder Körper besteht aus **13 RigidBody3D-Segmenten und 12 Gelenken**. Es werden keine vorgefertigten Treffer-/Todesanimationen oder AnimationPlayer verwendet. Virtuelle Muskelkräfte versuchen laufend berechnete Haltungs- und Gehziele zu erreichen. Treffer verringern die Kraft einzelner Regionen und wirken als Impuls an der tatsächlichen Trefferstelle. Geschwindigkeit, Bodennähe der Füße, Haltung und regionale Kraftunterschiede beeinflussen die Balancehilfe. Die Anzeigen zeigen gemessene Segmentgeschwindigkeit, Beckenhöhe und die aktuelle Stützregelung.
+
+**Prototyp-Grenzen:** Die Unterstützung und Gehziele sind vereinfachte prozedurale Regelungen, keine medizinisch genaue Biomechanik oder fertig abgestimmte menschliche Bewegung. Kein Blutungs-, Schmerz-, Heilungs- oder Aufstehsystem. Das Labor nutzt Impulstreffer statt einer Waffen-/Ballistiksimulation. Die Verkehrs-NPCs sind noch nicht auf dieses System umgestellt. Ein Szenenwechsel ins Labor und zurück erhält den laufenden Kontrollfortschritt nicht; F9 zurück startet eine neue Spielsitzung.
+
+Prüfung mit Godot 4.6.3 unter Linux: `tests/body_physics_test.gd` simuliert echte Physikschritte, stabile unverletzte Körper, Bewegung mit Richtungswechsel, regionalen Kraftverlust, den Stand-/Bewegungsvergleich, Arm-/Beinabgrenzung, Zurücksetzen und begrenzte endliche Positionen. `tests/body_lab_entry_test.gd` prüft F9, Wiederherstellung der Zeit nach Dokumentenprüfung und die Rückkehr zum Spiel. Screenshots vor und nach Treffern geprüft. Windows/Godot 4.7.2 bitte testen; Physik-Backend und Solver können das Ergebnis beeinflussen.

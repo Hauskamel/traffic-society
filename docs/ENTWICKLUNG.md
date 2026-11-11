@@ -474,6 +474,28 @@ Weiterhin feste Fälle ohne Zufallsladung, allgemeine Verschachtelung, Flüssigk
 
 PR #4 wurde nach `develop` übernommen. Anschließend wurde der aktualisierte Integrationsstand in `feature/vehicleDamage` zusammengeführt. Dokumentationskonflikte wurden unter Erhaltung beider Funktionsbeschreibungen aufgelöst. Der Branch enthält nun direkte Ladungsauswahl, Behälteruntersuchung und Kühlboxen gemeinsam mit Scheiben-/Reifenschäden. Die gemeinsamen grafischen Tests für Fahrzeugschäden, direkte Durchsuchung und Klettern sowie der Verkehrstest sind unter Godot 4.6.3/Linux bestanden. `main` bleibt unverändert.
 
+## Aktive Körperphysik – separates Testlabor auf feature/bodPhysics
+
+### Aufbau und Bedienung
+
+Der Branch basiert auf `develop` nach Übernahme der Fahrzeugschäden. F9 führt aus dem Hauptspiel in `scenes/body_lab/body_lab.tscn`. Zwei gleich aufgebaute Figuren stehen auf einer ebenen Testfläche: links ohne Bewegungsauftrag, rechts mit prozeduralem Gehauftrag auf kurzer Strecke. Region auswählen und Leertaste gibt beiden denselben Testimpuls und regionalen Kraftverlust. Einzelne Regionen lassen sich auch direkt anklicken. Orbitkamera, Zoom, getrennte Regler für Impuls und lokalen Kraftverlust sowie Zurücksetzen ermöglichen wiederholbare Vergleiche. Rückkehr mit F9 startet eine neue Hauptspiel-Sitzung.
+
+### Physik und Reaktion
+
+`scripts/active_body.gd` baut pro Figur 13 echte RigidBody3D-Segmente für Becken, Rumpf, Kopf, Ober-/Unterarme, Oberschenkel, Unterschenkel und Füße. Zwölf Generic6DOFJoint3D-Gelenke verbinden sie mit linearen Sperren und Winkelgrenzen. Selbstkollisionen der Figur sind im Prototyp deaktiviert; Boden und andere Figuren bleiben physikalische Kollisionspartner.
+
+Positions- und rotationsabhängige Feder-/Dämpfungskräfte bilden virtuelle Muskeln. Rotationskräfte sind über eine näherungsweise Trägheit der Segmente skaliert; begrenzte Kräfte und gedämpfte Unterstützung vermeiden Explodieren der Glieder. Haltungs- und Gehziele werden mathematisch pro Schritt berechnet, nicht aus AnimationPlayer, AnimationTree oder vorgefertigten Trefferclips abgespielt.
+
+Jede Region hat eine eigene Kraftreserve. Ein Oberschenkeltreffer schwächt auch die zugehörige Unterschenkel-/Fußkette; ein Oberarmtreffer entsprechend den Unterarm. Ein Impuls wirkt am tatsächlichen Treffpunkt und übernimmt die vorhandenen Geschwindigkeiten. Die Balancehilfe hängt kontinuierlich von Rumpf-/Kopfstabilität, Becken, regionaler Asymmetrie, gemessener Geschwindigkeit, Fußnähe zum Boden und tatsächlicher Körperhaltung ab. Zu tief gefallene Körper erhalten keine volle Aufrichtunterstützung. Es gibt keine Auswahl eines vorgefertigten „Beintreffer im Laufen“-Animationsclips und keinen globalen Lebensstatus mit Todesanimation.
+
+Im geprüften Vergleich nach drei Sekunden hält die stehende Figur den linken Oberschenkeltreffer über das gesunde Bein aus; die bewegte Figur verliert später die Balance und fällt. Diese Reaktion ist ein Ergebnis der gewählten Regler und des Bewegungszustands, keine Garantie für jeden Trefferzeitpunkt. Die Gehbewegung und biomechanische Plausibilität bleiben experimentell.
+
+### Prüfung und Grenzen
+
+Godot 4.6.3/Linux: echte Physikschritte für beide Gelenkkörper, Stabilität im Stand, tatsächliche Fortbewegung und längeres unverletztes Gehen mit Richtungswechsel. Geprüft wurden lokale Kraftausbreitung, Impuls ohne Positionssprung, unterschiedliche gemessene Bewegung beim Treffer, Stand-/Bewegungsreaktion, Armverletzung mit erhaltener Beinstütze, Zurücksetzen und endliche begrenzte Positionen/Geschwindigkeiten. Grafische Vorher-/Reaktions-/Nachheransicht geprüft. Ein eigener Szenenwechseltest prüft F9 auch aus der verlangsamten Dokumentenansicht, Zeitwiederherstellung, Regionenauswahl, Reset und Rückkehr zum Hauptspiel. Windows/Godot 4.7.2 erfordert einen Praxistest; andere Physik-Backends/Solver können die Reaktion ändern.
+
+Das Labor ist getrennt von den Verkehrs-NPCs. Es enthält keine Ballistik-, Blutungs-, Schmerz-, Heilungs- oder Aufstehlogik und keine fertige menschliche Bewegungs-KI. Virtuelle Stützkräfte sind eine bewusste Vereinfachung aktiver Ragdolls. Die Integration mit Verkehr, Handschellen, Fahrzeuganimationen und vorhandenen Waffen ist ein weiterer Schritt. Der Stand bleibt auf `feature/bodPhysics`.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
