@@ -13,7 +13,9 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-Der Stand von `feature/fundamentals` wurde in `develop` übernommen. Auch `feature/vehicleSearches` ist inzwischen in `develop` übernommen. Auf `feature/vehicleDamage` entsteht nun die Grundlage für Fahrzeugtreffer. Bereits umgesetzt sind Verkehr, Fahreraktionen, bedienbare Fahrzeugbereiche sowie Personen- und Fahrzeugdurchsuchung mit getrennten Inventaren umgesetzt: Laufend fahren vorbereitete Fahrzeuge an der Bucht vorbei. Ein Fahrzeug lässt sich in der Übersicht auswählen und ausdrücklich zur Kontrolle anhalten. Am Fahrerfenster öffnet E ein Menü zum Aussteigen oder Freigeben. Draußen kann der Fahrer durchsucht und wieder zum Einsteigen aufgefordert werden. `main` bleibt beim Ausgangsstand; `develop` enthält die übernommenen Grundlagen.
+`develop` enthält die Grundlagen, interaktiven Werkzeugkoffer und die direkte Ladungsauswahl aus PR #4. Der aktive Branch **feature/vehicleDamage** enthält jetzt zusätzlich diesen aktuellen Integrationsstand sowie die Fahrzeugschäden mit Scheibenbruch und platten Reifen. `main` bleibt unverändert.
+
+Verkehr, Fahreraktionen, Inventare, Dokumentenansicht, Waffen und Streifenabholung bleiben verfügbar. Die folgenden Abschnitte dokumentieren die einzelnen Ausbaustufen.
 
 Die Dokumentenansicht ist verfügbar; ein Vergleichsmodus und Befragungsdialoge folgen später. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
@@ -364,3 +366,29 @@ Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Mo
 Fahrer können sich nach wie vor ergeben, aussteigen und nach Aufheben der Festnahme wieder einsteigen/weiterfahren. Noch keine Unfälle, Schleudern, Reparatur, NPC-Verletzungen oder neue Fahrzeugphysik. Die abgesenkte Stellung ist eine einfache Darstellung auf der ebenen Teststrecke. Scheibenreste/Splitter und Töne sind einfache Platzhalter.
 
 Schäden bleiben am aktuellen Fahrzeug bestehen, werden aber bei einer späteren neu erzeugten Durchfahrt oder nach Spielneustart noch nicht wiederhergestellt. Prüfung unter Linux/Godot 4.6.3: `tests/vehicle_damage_test.gd` für alle vier Modelle, echte Schüsse auf die Scheibe, Risse/Bruch/freie Öffnung, vier einzelne Reifen, Felgen, Mehrfachtreffer, Tempolimits, Aufgabe und beschädigte Abfahrt. Windows/Godot 4.7.2 bitte testen.
+
+## Direkte Fahrzeugdurchsuchung · feature/extendedVehicleSearch
+
+**Die Ladefläche selbst ist nicht mehr durchsuchbar.** Öffne Kofferraum oder Ladetüren, suche einen konkreten Gegenstand in der Welt und richte das Fadenkreuz darauf. Die Hervorhebung und der Hinweis nennen genau diesen Gegenstand. **E** öffnet ihn ohne Suchwartezeit; weitere, noch nicht ausgewählte Fahrzeuggegenstände werden nicht als Gesamtliste verraten.
+
+| Fahrzeug | Feste Beladung |
+| --- | --- |
+| Bobby / Limousine | Werkzeugkoffer, Kühlbox, Werkstattbeleg |
+| Nora / Kleinwagen | Kühlbox, Geschenk, Kassenbon |
+| Erik / Transporter | Lagerregal mit drei äußerlich gleichen Farbeimern; Wasserfass |
+| Mara / Pickup | Werkzeugkoffer, gesicherte Leiter, Handschuhe |
+
+- **Werkzeugkoffer:** Verschluss lösen, Deckel öffnen. Bobbys Koffer enthält Hammer und Messer mit roten Spuren; Maras nur einen Hammer.
+- **Farbeimer:** Deckel abnehmen, dann den weißen Einsatz mit dem sichtbaren Rand herausnehmen. Einer der drei Eimer enthält darunter ein versiegeltes Päckchen; außen sehen alle gleich aus.
+- **Kühlbox:** Verschluss und Deckel öffnen, Innenkorb mit den einfachen Lebensmittel-Platzhaltern herausnehmen. Bobbys Box enthält darunter ein Päckchen, Noras nicht.
+- **Wasserfass:** Deckel abnehmen. Ein wasserdicht wirkendes Päckchen ist unter einer vereinfachten transparenten Wasserfläche sichtbar.
+
+In der großen Ansicht bedient **Linksklick** ein Teil oder wählt sichtbaren Inhalt; **Rechtsziehen** dreht den Behälter und das **Mausrad** zoomt. Die Nahansicht rechts lässt sich mit links drehen. Verdeckter Inhalt kann nicht durch Deckel oder Einsatz ausgewählt werden. Es gibt keine automatische Bestätigung, dass das helle Material Drogen oder die roten Spuren Blut sind.
+
+**Entnehmen** verschiebt einen Fund ins Spielerinventar. Zurücklegen ist nur in den ursprünglichen geöffneten und freigelegten Behälter möglich. Esc führt zuerst in die Inventaransicht des ausgewählten Gegenstands zurück; dort kann auch der ganze Behälter mitgenommen werden. Ein weiteres Esc beendet die Kontrolle des Gegenstands. Der Inhalt anderer Behälter bleibt verborgen. Die Leiter und das Regal sind vorerst feste Ladung, keine untersuchbaren Behälter.
+
+Die Welt läuft weiter; Blick und Bewegung sind während der Ansicht gesperrt. Währenddessen fährt das kontrollierte Auto nicht ab. Öffnungszustand, Einsätze und Entnahmen bleiben beim Schließen, Mitnehmen und bei erneuter Fahrzeugdurchfahrt in derselben Sitzung erhalten. Zum Zurücklegen eines mitgenommenen ganzen Behälters kannst du am geöffneten Fahrzeug **I** öffnen, den eigenen Gegenstand auswählen und **Zurück ins Fahrzeug legen** drücken. Dabei wird keine Liste unbekannter Ladung gezeigt. Das funktioniert auch bei einem vollständig geleerten Fahrzeug. Keine Speicherung über Neustarts, Analyse, Missionen oder echte Flüssigkeitssimulation.
+
+Für tiefer liegende Ladung kannst du auf Pickup und Transporter klettern. Beim Transporter empfiehlt es sich, beide Hecktüren zu öffnen; der Einstieg nutzt die freie rechte Seite neben dem Regal. Gegenstände, Regal und andere Weltobjekte können die Sicht versperren – die Perspektive muss deshalb gegebenenfalls geändert werden.
+
+Prüfung unter Godot 4.6.3/Linux: `tests/extended_search_test.gd` (reale Weltziele, geschlossener Zugang, Wandblockade, einzelne Inventaransicht, Behälterschritte, sichtbares und anklickbares Päckchen, Rückgabe und Zustände), `tests/climbing_test.gd`, Werkzeugkoffer-/Inventar-/Verkehrstests sowie die gemeinsame Vorschau mit 18 Modellkategorien. Windows/Godot 4.7.2 bitte praktisch testen.

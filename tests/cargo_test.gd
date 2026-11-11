@@ -17,7 +17,7 @@ func run() -> void:
 	for car in scene.traffic.cars:
 		car.set_physics_process(false)
 		check(car.cargo_inventory != car.inventory, "Vehicle and driver inventories must be separate")
-		check(car.cargo_inventory.items.size() == 3, "Each vehicle must have three authored cargo items")
+		check(car.cargo_inventory.items.size() == (4 if car.model_kind == "van" else 3), "Each vehicle must have its authored cargo items")
 	var car = scene.traffic.cars[0]
 	var original = car.cargo_inventory
 	var id: String = original.items[0].id

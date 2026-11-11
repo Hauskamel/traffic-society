@@ -62,10 +62,10 @@ func _ready() -> void:
 	detail_preview = ItemPreview.new()
 	sidebar.add_child(detail_preview)
 	label("Links ziehen: drehen | Mausrad: Zoom", sidebar, 13)
-	detail = label("Waehle einen sichtbaren Gegenstand im Koffer.", sidebar)
+	detail = label("Waehle einen sichtbaren Gegenstand im Behaelter.", sidebar)
 	take = button("Entnehmen", sidebar, take_selected)
 	take.disabled = true
-	label("Zurueck in diesen Koffer", sidebar, 18)
+	label("Zurueck in diesen Behaelter", sidebar, 18)
 	put_back = VBoxContainer.new()
 	sidebar.add_child(put_back)
 	hint = label("", layout)
@@ -77,7 +77,7 @@ func open_view(data: Dictionary, inventory: RefCounted) -> void:
 	item = data
 	player = inventory
 	selected_id = ""
-	detail.text = "Waehle einen sichtbaren Gegenstand im Koffer."
+	detail.text = "Waehle einen sichtbaren Gegenstand im Behaelter."
 	detail_preview.set_item({})
 	take.disabled = true
 	preview.set_container(item)
@@ -97,6 +97,8 @@ func show_hint(part: String) -> void:
 		return
 	if part == "latch":
 		hint.text = "[Linksklick] Verschluss " + ("schliessen" if item.unlocked else "oeffnen")
+	elif part == "insert":
+		hint.text = "[Linksklick] Einsatz " + ("zuruecklegen" if item.get("insert_removed", false) else "herausnehmen")
 	elif part == "lid":
 		hint.text = "[Linksklick] Deckel " + ("schliessen" if item.opened else "oeffnen") if item.unlocked else "Zuerst den goldfarbenen Verschluss oeffnen."
 	else:
@@ -114,6 +116,12 @@ func activate(part: String) -> void:
 			return
 		item.unlocked = not item.unlocked
 		show_hint(part)
+	elif part == "insert" and item.opened:
+		item.insert_removed = not item.get("insert_removed", false)
+		selected_id = ""
+		take.disabled = true
+		detail_preview.set_item({})
+		show_hint(part)
 	elif part == "lid":
 		if not item.unlocked:
 			show_hint(part)
@@ -125,7 +133,7 @@ func activate(part: String) -> void:
 			detail_preview.set_item({})
 			detail.text = "Der Deckel ist geschlossen."
 		show_hint(part)
-	elif item.opened:
+	elif item.opened and preview.crate.contents_root.visible:
 		for inside in item.contents.items:
 			if inside.id == part:
 				selected_id = part
@@ -136,7 +144,7 @@ func activate(part: String) -> void:
 				break
 
 func take_selected() -> void:
-	if not item.opened or preview.crate.moving or selected_id.is_empty():
+	if not item.opened or not preview.crate.contents_root.visible or preview.crate.moving or selected_id.is_empty():
 		return
 	if item.contents.transfer_to(selected_id, player):
 		selected_id = ""
@@ -147,11 +155,11 @@ func take_selected() -> void:
 		refresh_returns()
 		changed.emit()
 	else:
-		hint.text = "Kein Platz im Spielerinventar. Der Gegenstand bleibt im Koffer."
+		hint.text = "Kein Platz im Spielerinventar. Der Gegenstand bleibt im Behaelter."
 
 func return_item(id: String) -> void:
-	if not item.opened or preview.crate.moving:
-		hint.text = "Zum Zuruecklegen zuerst den Koffer oeffnen."
+	if not item.opened or not preview.crate.contents_root.visible or preview.crate.moving:
+		hint.text = "Zum Zuruecklegen zuerst den Behaelter oeffnen."
 		return
 	var valid := false
 	for held in player.items:

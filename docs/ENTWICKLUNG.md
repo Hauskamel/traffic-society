@@ -442,6 +442,38 @@ Godot 4.6.3/Linux: grafischer Test für alle vier Modelle, einzelne Glaszuständ
 
 Kein NPC-Schaden, Reparatursystem, Schleudern oder Unfälle. Splitter sind kurzlebige kosmetische Effekte; Geräusche synthetische Platzhalter. Schaden gilt nur für das aktuelle Fahrzeugobjekt, ohne Wiederherstellung bei späterer Durchfahrt oder Neustart. Entwicklung bleibt auf `feature/vehicleDamage`; PR #3 enthält beide Schadensschritte.
 
+## Direkte Ladungsauswahl und weitere Behälter · feature/extendedVehicleSearch
+
+### Branch und Spielablauf
+
+Der neue Branch wurde ausdrücklich von `develop` nach Übernahme der Werkzeugkoffer-Version abgeleitet. Die parallel entwickelten Fahrzeugschäden werden dabei nicht übernommen.
+
+Der allgemeine Trefferbereich der Ladefläche ist dauerhaft deaktiviert. E wählt nun einen real platzierten Gegenstand und öffnet dessen fokussierte Inventar-/Untersuchungsansicht direkt, ohne Wartebalken. Die UI zeigt keine vollständige Fahrzeugladungs-Liste. Auswahl und Transfers sind auf den ursprünglich gewählten Gegenstand begrenzt; sein Inhalt bleibt bis zur erforderlichen Öffnung verborgen. Die bekannte Spieler-Inventarspalte bleibt nutzbar.
+
+### Beladungen und Mechaniken
+
+Pickup: Werkzeugkoffer, dekorative gesicherte Leiter und Handschuhe. Transporter: seitliches Lagerregal mit drei identisch gestalteten Farbeimern und ein Wasserfass. Limousine/Kleinwagen erhalten jeweils eine Kühlbox neben ihrer übrigen festen Ladung.
+
+Werkzeugkoffer behalten Verschluss, Klappdeckel und die bisherigen Inhalte. Farbeimer haben einen abnehmbaren Deckel und herausnehmbaren weißen Einsatz; erst danach kann das darunterliegende Päckchen gesehen und ausgewählt werden. Kühlboxen besitzen Verschluss, Klappdeckel und herausnehmbaren Innenkorb mit wenigen Lebensmittel-Platzhaltern. Ein Päckchen liegt nur in Bobbys Kühlbox. Im Transporter enthält der zweite Farbeimer ein Päckchen, die anderen sind leer. Das Wasserfass besitzt einen abnehmbaren Deckel und eine einfache transparente Wasserfläche mit sichtbarem Päckchen darunter. Es gibt keine chemische Bestätigung oder automatische Fundbewertung.
+
+### Technik und Zustände
+
+`scripts/cargo_item.gd` erweitert die bisherigen Interaktionsbereiche um ein konkretes Ladungsobjekt mit Datenbindung. Reichweite, offener Zugang, Parkzustand, Sichtblockaden und reservierte Abholung begrenzen die Bedienung. Regal und Ladung besitzen einfache Kollisionen; die Leiter bleibt Dekoration. Der Transporter-Einstieg bevorzugt eine geöffnete rechte Tür neben dem Regal.
+
+`scripts/cargo_container_model.gd` erweitert die gemeinsame Untersuchungsansicht um Farbeimer, Kühlbox und Wasserfass. Die Kamera blickt je nach Behälter stärker von oben, damit nach dem Freilegen nicht nur ein Datenflag gesetzt ist, sondern das Päckchen tatsächlich sichtbar und per Physikstrahl anklickbar wird. Verdeckte oder bewegte Inhalte sind nicht auswählbar. Modelle und Zustand werden auch in der Fahrzeugwelt verwendet; Weltladung wird nach Entnahme/Rückgabe aktualisiert.
+
+Die bisherigen stabilen Gegenstandskennungen und das Sitzungscache bleiben erhalten. Bei leerer oder teilweiser Wiederkehr werden unsichtbare Originalplätze vorbereitet, aber nur die tatsächlichen Datensätze aus dem aktuellen Inventar eingeblendet und gebunden. Dadurch erzeugt ein zurückgelegter Behälter keine neuen Inhalte. Ganzen Behälter mitnehmen, Einsätze zurücklegen und Inhalte an ihren ursprünglichen Behälter zurückgeben bleiben möglich. Ein volles Inventar verhindert die Übertragung ohne Verlust. Die Abfahrtssperre gilt bis zum vollständigen Schließen der Untersuchungsansicht. Mitgenommene ganze Gegenstände können über I am geöffneten ursprünglichen Fahrzeug zurückgelegt werden, ohne eine Gesamtliste der Ladung anzuzeigen. Dies erhält die Rückgabemöglichkeit auch bei vollständig leerer Ladung.
+
+### Prüfung und Grenzen
+
+Godot 4.6.3/Linux: grafischer Test für alle vier konkreten Weltziele, geschlossene Bereiche, Wandblockade, E ohne Suchzeit, fokussierte Liste statt Gesamtliste, Zugriffsschutz auf nicht gefundene Gegenstände, erste/zweite Esc-Ebene und Freigabe der Abfahrt. Alle vier Behältertypen, verdeckte Einsätze, tatsächliches 3D-Anklicken des freigelegten Päckchens, Entnehmen/Zurücklegen und erneutes Öffnen geprüft. Werkzeugkoffer-Test und Klettertest an die neue Ladung angepasst und bestanden. Bestehende Inventar-, Verkehrs-, Fahrer-, Stellplatz- und Abfahrttests bestanden; die Modellvorschau umfasst 18 Kategorien. Screenshots der Weltbeladung und Behälter geprüft. Windows/Godot 4.7.2 benötigt einen Praxistest.
+
+Weiterhin feste Fälle ohne Zufallsladung, allgemeine Verschachtelung, Flüssigkeitsphysik, Analyse, neue Missionen oder Speicherung über Neustarts. Die Lebensmittel im Kühlkorb und die Leiter sind bewusst einfache Platzhalter beziehungsweise Dekoration. Entwicklung bleibt auf `feature/extendedVehicleSearch`.
+
+## Integration der direkten Fahrzeugdurchsuchung in vehicleDamage
+
+PR #4 wurde nach `develop` übernommen. Anschließend wurde der aktualisierte Integrationsstand in `feature/vehicleDamage` zusammengeführt. Dokumentationskonflikte wurden unter Erhaltung beider Funktionsbeschreibungen aufgelöst. Der Branch enthält nun direkte Ladungsauswahl, Behälteruntersuchung und Kühlboxen gemeinsam mit Scheiben-/Reifenschäden. Die gemeinsamen grafischen Tests für Fahrzeugschäden, direkte Durchsuchung und Klettern sowie der Verkehrstest sind unter Godot 4.6.3/Linux bestanden. `main` bleibt unverändert.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
