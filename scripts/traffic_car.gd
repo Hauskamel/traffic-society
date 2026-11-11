@@ -327,13 +327,13 @@ func _physics_process(delta: float) -> void:
 	target = minf(target, speed_limit)
 	if is_instance_valid(hit_surfaces):
 		target = minf(target, hit_surfaces.speed_cap())
-	if driver.surrendered:
+	if driver.surrendered or driver.is_injured():
 		target = 0
-	speed = move_toward(speed, target, (4.0 if driver.surrendered else 1.6) * delta)
-	if driver.surrendered and speed <= 0.05:
+	speed = move_toward(speed, target, (4.0 if driver.surrendered or driver.is_injured() else 1.6) * delta)
+	if (driver.surrendered or driver.is_injured()) and speed <= 0.05:
 		speed = 0
 		state = State.PARKED
-		driver.request_exit()
+		if not driver.is_injured(): driver.request_exit()
 		state_changed.emit()
 		return
 	var travel := minf(speed * delta, remaining)

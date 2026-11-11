@@ -491,7 +491,7 @@ func can_interact() -> bool:
 		return false
 	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
 		return false
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy():
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy() or car.driver.is_injured():
 		return false
 	var outside: bool = car.driver.state == car.driver.State.OUTSIDE
 	var target: Vector3 = car.driver.interaction_point() if outside else car.window_point.global_position

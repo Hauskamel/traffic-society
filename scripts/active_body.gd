@@ -20,6 +20,9 @@ const SPEC := {
 }
 var bodies: Dictionary = {}
 var strength: Dictionary = {}
+var model_scale := 1.0
+var posture_enabled := true
+var seat_support: Node3D
 var dead := false
 var collapsed := false
 var moving := false
@@ -42,22 +45,22 @@ func _ready() -> void:
 		body.name = region
 		body.mass = data[2]
 		body.collision_layer = 4
-		body.collision_mask = 1 | 4
+		body.collision_mask = 1 | 4 | 64
 		body.can_sleep = false
 		body.linear_damp = 1.0
 		body.angular_damp = 3.0
 		body.set_meta("actor", self)
 		body.set_meta("region", region)
 		add_child(body)
-		body.position = data[0]
+		body.position = data[0] * model_scale
 		var collision := CollisionShape3D.new()
 		var shape := BoxShape3D.new()
-		shape.size = data[1]
+		shape.size = data[1] * model_scale
 		collision.shape = shape
 		body.add_child(collision)
 		var visual := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = data[1]
+		box.size = data[1] * model_scale
 		visual.mesh = box
 		var material := StandardMaterial3D.new()
 		material.albedo_color = Color("b59a71") if region.contains("arm") or region == "torso" else Color("425b70")
@@ -84,20 +87,23 @@ func _ready() -> void:
 		connect_parts("torso",side+"_upper_arm",Vector3(x,1.45,0),1.5)
 		connect_parts(side+"_upper_arm",side+"_forearm",Vector3(x,1.10,0),1.5)
 
+func _exit_tree() -> void:
+	if is_instance_valid(seat_support): seat_support.queue_free()
+
 func compound_piece(body: RigidBody3D, label: String, at: Vector3, size: Vector3, color: String) -> void:
 	var collision := CollisionShape3D.new()
 	collision.name = label + "Collision"
 	var shape := BoxShape3D.new()
-	shape.size = size
+	shape.size = size * model_scale
 	collision.shape = shape
-	collision.position = at
+	collision.position = at * model_scale
 	body.add_child(collision)
 	var visual := MeshInstance3D.new()
 	visual.name = label + "Visual"
 	var box := BoxMesh.new()
-	box.size = size
+	box.size = size * model_scale
 	visual.mesh = box
-	visual.position = at
+	visual.position = at * model_scale
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color(color)
 	visual.material_override = material
@@ -107,7 +113,7 @@ func connect_parts(a: String, b: String, at: Vector3, limit: float) -> void:
 	var joint := Generic6DOFJoint3D.new()
 	add_child(joint)
 	joint.name = a + "_to_" + b
-	joint.position = at
+	joint.position = at * model_scale
 	joint.node_a = bodies[a].get_path()
 	joint.node_b = bodies[b].get_path()
 	joint.exclude_nodes_from_collision = true
@@ -118,6 +124,15 @@ func connect_parts(a: String, b: String, at: Vector3, limit: float) -> void:
 		joint.call("set_flag_" + ["x","y","z"][axis], Generic6DOFJoint3D.FLAG_ENABLE_ANGULAR_LIMIT, true)
 		joint.call("set_param_" + ["x","y","z"][axis], Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -limit if axis == 0 else -.4)
 		joint.call("set_param_" + ["x","y","z"][axis], Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, limit if axis == 0 else .4)
+
+	if b.ends_with("_upper_arm"):
+		# Raised surrender poses must remain free to fall after loss of tone.
+		joint.set_param_x(Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -2.6)
+		joint.set_param_x(Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, 2.6)
+		joint.set_param_y(Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -1.2)
+		joint.set_param_y(Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, 1.2)
+		joint.set_param_z(Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -3.0)
+		joint.set_param_z(Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, 3.0)
 
 	# Knees and elbows flex around one axis; prevent sideways folding and
 	# backwards hyperextension. Limits remain active on the passive ragdoll.
@@ -180,7 +195,7 @@ func _physics_process(delta: float) -> void:
 	var right := muscle("right_shin")
 	var asymmetry := absf(left - right)
 	var velocity := Vector2(pelvis.linear_velocity.x, pelvis.linear_velocity.z).length()
-	var core := 0.0 if collapsed or dead else minf(strength.pelvis, minf(strength.torso, strength.head))
+	var core := 0.0 if collapsed or dead or not posture_enabled else minf(strength.pelvis, minf(strength.torso, strength.head))
 	balance = clampf(1.0 - asymmetry * velocity * .75, .05, 1.0) * core
 	var near_ground := false
 	for side in ["left", "right"]:

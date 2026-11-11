@@ -514,6 +514,24 @@ Knie und Ellenbogen erhalten gerichtete Beugegrenzen (bis ca. 132 Grad, maximal 
 
 Erweiterte echte Physiktests prüfen schwere Kopf-, Rumpf- und Beckentreffer jeweils im Stand und in Bewegung: Stützregelung aus, Becken und Rumpf erreichen den Boden, tödlicher Zustand nur beim schweren Kopftreffer. Ein leichter Rumpftreffer erhält die Standfähigkeit. Bestehende Tests für gesunde Fortbewegung, isolierte Gliedmaßentreffer und Zurücksetzen bleiben enthalten.
 
+## Körperphysik – Integration der Glock-Treffer ins Hauptspiel
+
+### NPC-Modell und Trefferübergabe
+
+Das Fahrer-Platzhaltermodell entspricht jetzt den elf Physikregionen. Die bisherigen vier Bein-/Armpivots bleiben für Ein-/Aussteigen, Durchsuchung und Händehoch erhalten. Geometrienahe Schusskörper auf Layer 32 ordnen auch Hand-/Fußtreffer der gemeinsamen Region zu. Die breite Interaktionskapsel wird bei Schussabfragen ausgeschlossen, damit sie keine regionalen Treffer verdeckt. Fahrzeugtrefferflächen bleiben auf Layer 16 und blockieren die Sichtlinie weiterhin.
+
+Beim ersten Glock-Treffer erstellt der Fahrer den gemeinsamen ActiveBody, übergibt jede sichtbare Segmentpose sowie vorhandene Bewegung und blendet den prozeduralen Rig aus. Danach zeigen die Metadaten der dynamischen Segmente wieder auf denselben Fahrer: Folgetreffer wirken auf die physisch aktuelle Region. 95 % Kraftverlust und 3 N·s kommen aus den gemeinsamen Standardkonstanten. Kleidung, Haare und Gesichtsdetails werden übernommen. Die neutralen anatomischen Gelenkrahmen bleiben bei der Poseübergabe erhalten; Schultern erlauben das Absenken vormals erhobener Arme, Knie/Ellenbogen behalten ihre gerichteten Grenzen.
+
+### Sitzpose, Fahrzeug und Ablaufgrenzen
+
+Die Physikfigur ist ein Top-Level-Kind des Fahrers und wird daher nicht starr mit dem Fahrzeug verschoben, beim Entfernen des Fahrers aber mit aufgeräumt. Sitzende Körper erhalten keine Stehregelung. Da die bisherigen Interaktionskollisionen keine ausmodellierte Kabine bilden, werden eigene grobe Fahrzeugkollisionen ausgenommen und Sitzfläche, Lehne und Fußboden als unsichtbare Stützen auf Layer 64 ergänzt. Diese Helfer folgen dem Fahrzeug und werden beim Reset oder Entfernen des Physikkörpers entfernt.
+
+Jeder verletzte Fahrer bremst mit 4 m/s² bis zum Stillstand und führt keine Aussteige-/Freigabeanimation mehr aus. Verletzte Personen sind vorerst von normalen Personeninteraktionen ausgeschlossen; ein laufender Streifenabtransport endet bei verletztem Verdächtigen oder Beamten. Sanitätsdienst, Wiederaufstehen, weitere Verletzteninteraktionen und medizinische Genauigkeit sind nicht Teil dieses Schritts.
+
+### Prüfung
+
+Godot 4.6.3/Linux: neue Integrationstests für alle vier Fahrzeugmodelle mit echten Straßenkollisionen, regionalen Glock-Strahlen, Poseübergabe, dynamischen Folgetreffern, Kopf-/Beinzuständen, erhobenen Armen, Glasabdeckung, Sitzstützen, Abbremsen und Reset. Grafischer Test schießt über die bestehende Waffenfunktion samt Magazinverbrauch; headless wird wegen fehlender Mausaufnahme der unveränderte gemeinsame Trefferpfad genutzt. Bestehende Labortests sowie Fahrer-, Verkehr-, Freigabe-, Inventar- und Streifentests bestanden. Waffen-, Fahrzeugtreffer-, Fahrzeugschaden- und Aufgabetests wurden zusätzlich grafisch geprüft. Windows/Godot 4.7.2 muss weiterhin vor Ort getestet werden.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
