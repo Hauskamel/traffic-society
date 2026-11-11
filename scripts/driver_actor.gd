@@ -2,6 +2,7 @@ extends Node3D
 ## Procedural interaction poses; regional hits transfer to an articulated body.
 enum State { SEATED, EXITING, OUTSIDE, ENTERING, SEARCHING, IN_CUSTODY, INJURED }
 const ActiveBody = preload("res://scripts/active_body.gd")
+var combat: Node
 var physical_actor: Node3D
 var region_meshes: Dictionary = {}
 var shot_shapes: Array[StaticBody3D] = []
@@ -151,6 +152,7 @@ func receive_hit(region: String, point: Vector3, impulse: Vector3, severity := A
 		search_ready = false
 		state = State.INJURED
 	physical_actor.receive_hit(region, point, impulse, severity)
+	if is_instance_valid(combat): combat.on_body_hit(region)
 
 func build_seat_support(car: Node3D, factor: float) -> void:
 	var support := AnimatableBody3D.new()

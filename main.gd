@@ -337,6 +337,9 @@ func update_camera() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10:
+		get_tree().change_scene_to_file("res://scenes/combat_test/combat_test.tscn")
+		return
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F9:
 		get_tree().change_scene_to_file("res://scenes/body_lab/body_lab.tscn")
 		return

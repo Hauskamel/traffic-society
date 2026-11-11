@@ -434,3 +434,23 @@ Scheiben und Karosserie blockieren Schüsse weiterhin. Nach Zerstören einer Sch
 **Aktueller Umfang:** Nach einer Verletzung sind normale Gesprächs-, Durchsuchungs-, Einsteige- und Abtransportabläufe für diese Person gesperrt, auch bei einer isolierten Gliedmaßenverletzung. Ein laufender Abtransport wird bei verletztem Verdächtigen oder Beamten abgebrochen. Medizinische Hilfe, Wiederaufstehen, Leichendurchsuchung und Fortschrittsspeicherung fehlen noch. Kabinenstützen sind eine vereinfachte Kollisionshilfe; das Fahrzeug ist weiterhin kein dynamisches Unfallmodell. Selbstkollisionen der Figur bleiben deaktiviert.
 
 `tests/npc_physics_test.gd` prüft alle vier Fahrzeuge mit echten Strahlabfragen: regionale Treffer, Übergabe ohne Positionssprung, Folgetreffer auf den dynamischen Kopf, Zusammenbruch, fallende erhobene Arme, Scheibenabdeckung, sitzende Verletzte, Abbremsen und Aufräumen beim Reset. Im grafischen Modus benutzt der Test `fire()` inklusive Munition; im Headless-Modus wird wegen fehlender Mausaufnahme nur der gleiche Trefferpfad `cast_shot()` aufgerufen. Bestehende Waffen-, Fahrzeugschaden-, Aufgabe-, Fahrer-, Verkehrs- und Streifentests prüfen die unverletzten Abläufe weiter.
+
+
+## Bewaffneter NPC – Ego-Testszene
+
+Im Hauptspiel öffnet **F10** die separate Szene `scenes/combat_test/combat_test.tscn` (alternativ in Godot öffnen und F6 drücken). Sie beginnt aus der Ego-Perspektive mit **einem geparkten Auto, einem sitzenden Testfahrer und dem Spieler**. Kein nachspawnender Verkehr. Die Aggression ist hier ein festes Testszenario und keine neue Eigenschaft der normalen Verkehrs-NPCs.
+
+1. **E** am Fenster fordert den Fahrer zum Aussteigen auf.
+2. Nach dem Aussteigen wartet er kurz und greift sichtbar zur Pistole an seiner Hüfte. Ober-/Unterarm und Waffe bewegen sich prozedural; die Pistole wechselt vom Holster zur Hand.
+3. Beim Griff läuft die Welt für **zwei reale Sekunden mit 22 % Geschwindigkeit**, mit entsättigtem Weltbild. Mausblick und Waffenziehen des Spielers bleiben in Echtzeit bedienbar. Mit **Shift, anschließend Rechtsklick** ziehen/zielen.
+4. Während Griff/Ziehen etwa **0,22 Sekunden** mit der vollständig gezogenen Glock auf den sichtbaren NPC zielen: Er gibt auf, hebt die Hände und schießt nicht. Nach Beginn des eigentlichen Ziel-/Schusszustands genügt Drohen im Testszenario nicht mehr.
+5. Ein **Arm- oder Handtreffer** entwaffnet ihn und beendet den Angriff, sofern er nicht bereits zusammengebrochen ist. Die Pistole fällt als Physikobjekt herunter. Kopf-/Kerntreffer nutzen weiterhin die Körperphysik. Andere Verletzungen beenden den Testangriff vorerst ebenfalls; es gibt noch kein Weiterkämpfen mit verletzten Gliedmaßen.
+6. Ohne Eingreifen zieht er, legt an und schießt in Abständen von **0,9 Sekunden**. Sein Ziel folgt dem Spieler mit begrenzter Geschwindigkeit. Deckung und intakte Fahrzeugflächen blockieren die Trefferstrahlen.
+
+Der Spieler startet mit **100 Gesundheit**. Ein NPC-Treffer verursacht **25 Schaden**, kurzes rotes Trefferfeedback und aktualisiert die Gesundheitsanzeige. Bei null Gesundheit endet die Handlungsfähigkeit; NPC-Schüsse stoppen. Keine automatische Heilung, Rüstung oder regionalen Spielerverletzungen in dieser Version.
+
+**R setzt hier immer die gesamte Szene zurück:** Spielerposition, Gesundheit, Munition, NPC im Auto, Fahrzeugschäden, Waffen auf dem Boden und Zeitlupe. **F lädt hier beim Zielen nach. F10 kehrt zum normalen Spiel zurück.** Im normalen Spiel bleibt R die Nachladetaste. Tab, Inventar, Funk, Klettern und normale Gesprächsmenüs sind in dieser isolierten Testszene ausgeblendet/gesperrt. Nach Aufgabe kann E in der Nähe die Person sichern.
+
+Spätere Begegnungen sollen anhand vorgefertigter Charaktere, ihrer Reaktion auf die Kontrolle und des Gesprächsverlaufs entscheiden, ob sie überhaupt zur Waffe greifen. Ein Wut-/Dialogsystem ist noch nicht implementiert. Die Testfigur greift reproduzierbar nach dem Aussteigen zur Waffe, damit Reaktionsfenster, Ziehbewegung und Trefferverhalten abgestimmt werden können.
+
+Prüfung: `tests/combat_test.gd` testet Ego-Start, Aussteigen, Zeitlupenfenster, Aufgabe durch Zielen, NPC-Schüsse, Deckung, Spielertod, Arm-/Handregion, fallende Waffe und vollständigen R-Reset auch während der Zeitlupe. Globales Zeittempo wird beim Reset und Verlassen wiederhergestellt. Zusätzlich wurden bisherige Körperphysik-, Fahrer- und Streifenabläufe geprüft. Linux/Godot 4.6.3; Windows bitte vor Ort testen.

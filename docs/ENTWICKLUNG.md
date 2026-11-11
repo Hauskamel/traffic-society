@@ -532,6 +532,30 @@ Jeder verletzte Fahrer bremst mit 4 m/s² bis zum Stillstand und führt keine Au
 
 Godot 4.6.3/Linux: neue Integrationstests für alle vier Fahrzeugmodelle mit echten Straßenkollisionen, regionalen Glock-Strahlen, Poseübergabe, dynamischen Folgetreffern, Kopf-/Beinzuständen, erhobenen Armen, Glasabdeckung, Sitzstützen, Abbremsen und Reset. Grafischer Test schießt über die bestehende Waffenfunktion samt Magazinverbrauch; headless wird wegen fehlender Mausaufnahme der unveränderte gemeinsame Trefferpfad genutzt. Bestehende Labortests sowie Fahrer-, Verkehr-, Freigabe-, Inventar- und Streifentests bestanden. Waffen-, Fahrzeugtreffer-, Fahrzeugschaden- und Aufgabetests wurden zusätzlich grafisch geprüft. Windows/Godot 4.7.2 muss weiterhin vor Ort getestet werden.
 
+## Bewaffneter NPC – isolierte Ego-Konfrontation
+
+### Testaufbau und Steuerung
+
+F10 öffnet `scenes/combat_test/combat_test.tscn`, eine spezialisierte Ableitung der Hauptszene. Sie verwendet Straße, Spieler, Fahrzeug und Glock unverändert, behält aber genau ein geparktes Fahrzeug und unterbindet nachspawnenden Verkehr. Der Testfahrer sitzt anfangs im Auto. E löst das Aussteigen aus. Inventar-/Funk-/Dokumenten-/Kletterabläufe sind hier gesperrt, damit die Begegnung eine feste, wiederholbare Abfolge besitzt.
+
+R wird in dieser Szene vor Menüs und Waffeninput verarbeitet und lädt die ganze Szene neu. Das entfernt auch Physikkörper, fallengelassene Waffen, Verletzungen und Fahrzeugschäden; Gesundheit und Inventar entstehen neu. F übernimmt ausschließlich hier das Nachladen. F10 führt in eine neue Hauptspiel-Sitzung zurück. Die normalen R-/F9-Funktionen bleiben außerhalb des Tests erhalten.
+
+### Ziehen, Zeitlupe und Gegenreaktion
+
+`scripts/npc_gunfight.gd` steuert Sitzen → kurze Orientierung → Griff → Ziehen → Zielen/Schießen. Schulter und Ellenbogen bewegen die Hand zur Hüfte und nach vorn; das vorhandene Pistolenmodell wechselt vom Holster zur Hand. Vor abgeschlossenem Ziehen und anschließender Zielpause gibt es keinen Schuss. Die getrennte Komponente ist nur dem Testfahrer zugeordnet. Die bestehende allgemeine Aufgabelogik überlässt dieser Komponente ihre Reaktionsfenster.
+
+Beim Griff senkt die Szene das globale Tempo auf 22 % des vorherigen Wertes für zwei reale Sekunden. Ein entsättigter Bildschirmfilter liegt hinter dem HUD. Spielerblick bleibt direkt, Waffenzeit wird ergänzend unskaliert fortgeschrieben; Fortbewegung und Weltphysik bleiben verlangsamt. Rechtzeitiges vollständiges Zielen über einen echten sichtliniengeprüften Trefferstrahl löst nach 0,22 realen Sekunden Aufgabe aus. Arm-/Handtreffer gehen zuerst durch die regionale Körperphysik und lösen anschließend Entwaffnung/Aufgabe aus. Die Waffe wird als Starrkörper mit Schwerkraft abgelegt. Andere Verletzungen beenden den Angriff in dieser ersten Fassung ebenfalls. Reset, Aufgabe, Tod und Szenenwechsel beenden die Zeitlupe und stellen das vorherige globale Tempo wieder her.
+
+### Spielerschaden und Grenzen
+
+`scripts/player_health.gd` enthält 100 Gesundheit, Schaden, Trefferfeedback und ein einmaliges Todessignal. Die Testszene zeigt Gesundheit und kurzen roten Trefferfilter. NPC-Schüsse kommen vom Waffenlauf, ignorieren den Schützen und berücksichtigen Welt-, Fahrzeug- und Spielerflächen. Ein Treffer verursacht 25 Schaden; die Schussfolge hat 0,9 Sekunden Abstand. Das Ziel wird mit begrenztem Tempo nachgeführt. Bei Spielertod enden Bewegung, Waffeninput und weitere NPC-Schüsse; R bleibt aktiv.
+
+Aggression, Dialogreaktionen und Charakterentscheidungen sind noch keine neue Verkehrs-KI: Nur diese Testfigur startet den Ablauf fest nach dem Aussteigen. Keine Deckungs-/Verfolgungs-KI, NPC-Magazinverwaltung, Spielerrüstung oder medizinischen Körperregionen. Das spätere Auswahlkriterium soll auf verfassten Charakteren und der jeweiligen Kontrollsituation beruhen.
+
+### Prüfung
+
+`tests/combat_test.gd` prüft einen Wagen, sitzenden NPC und Ego-Start, E-Aussteigen, sichtbaren Griff mit Zeitlupe, echte Strahlprüfung bei Aufgabe, kein verfrühtes Schießen, NPC-Treffer und Gesundheit, Deckungsschutz, Tod ohne Folgeschüsse, Entwaffnung über die regionale Armfläche sowie vollständigen R-Reset nach Tod und während Zeitlupe. Grafische Snapshots prüfen Anfang, Griff, Aufgabe, Tod und Entwaffnung. Bisherige NPC-/Laborphysik, Fahrer, Freigabe und Streifentransport bleiben geprüft. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu testen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
