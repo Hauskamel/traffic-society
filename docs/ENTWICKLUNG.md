@@ -408,6 +408,40 @@ Ein Behältertyp, keine beliebige Verschachtelung oder Speicherung über Neustar
 
 Der bedingte Ausdruck für die hervorzuhebenden Meshes erzeugte bei Verschluss und Deckel ein untypisiertes Array. Die Zuweisung an `Array[Node]` konnte dadurch zur Laufzeit abbrechen. Die Liste wird jetzt explizit typisiert erzeugt und per `append` beziehungsweise `assign` befüllt. Der grafische Koffertest deckt nun zusätzlich echtes Maus-Hover über den Verschluss, den Wechsel zum Deckel und das Entfernen der Hervorhebung ab; der Inhalt war bereits separat abgedeckt. Der erweiterte grafische Test ist unter Godot 4.6.3/Linux bestanden; Windows/Godot 4.7.2 bitte erneut prüfen.
 
+## Fahrzeugtreffer – Schritt 1 auf feature/vehicleDamage
+
+PR #2 wurde nach `develop` übernommen. `feature/vehicleDamage` basiert auf diesem Integrationsstand und ergänzt zunächst präzise Fahrzeugtreffer und sichtbare Einschussmarkierungen.
+
+`scripts/vehicle_hit_surfaces.gd` erzeugt für die sichtbaren Box-/Reifen-Meshes eigene Schusstrefferkörper auf Layer 16. Boxen entsprechen ihren sichtbaren Abmessungen; Reifen erhalten eine konvexe Form aus ihrem Mesh. Die Trefferflächen folgen der vorhandenen Hierarchie für Türen, Heckklappen, Lenkung und Raddrehung. Karosserie, Glas, Reifen und Felgen sind getrennt klassifiziert. Fahrer, Beladungsplatzhalter und Auswahlring erhalten in diesem Schritt keine Fahrzeugtrefferflächen.
+
+`scripts/pistol_action.gd` nutzt weiterhin Hitscan. Der Schussstrahl prüft Welt, die bisherige NPC-Kollision und die neuen Fahrzeugflächen; die groben Fahrzeug-/Türkollisionen für Bewegung werden ausgeschlossen. Dadurch sitzt der Treffer auf der sichtbaren Oberfläche, statt vor einer unsichtbaren Kabinenbox. Andere Weltobjekte blockieren den Strahl weiterhin. NPCs erhalten unverändert keinen Schaden.
+
+`scripts/vehicle_hit_surface.gd` leitet Fahrzeugtreffer an die Markierungsverwaltung weiter. Ein texturiertes Quad liegt knapp über der getroffenen Oberfläche, zeigt entlang ihrer Normalen und ist dem jeweiligen Mesh untergeordnet. Die eigene SVG-Textur ist ein einfacher Einschuss-Platzhalter, rendererkompatibel ohne Decal-Node. Maximal 64 Markierungen je Fahrzeug begrenzen den Ressourcenverbrauch; die ältesten werden bei weiteren Treffern ersetzt. Die Markierungen bestehen bis zum Entfernen des Fahrzeugobjekts, ohne Wiederherstellung bei späterer Durchfahrt oder Spielneustart.
+
+Grafischer Test unter Godot 4.6.3/Linux: alle vier Modelle mit Karosserie-, Glas-, Reifen- und Dachtreffern; echte Glock-Schüsse erzeugen Markierungen; sie folgen Türen und Fahrzeugbewegung, und die Trefferkörper folgen geöffneten Türen. Wandblockade und Markierungsbudget geprüft. Darstellung per Screenshot geprüft. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz- sowie Personen-/Fahrzeuginventartests bestanden. Windows/Godot 4.7.2 benötigt einen Praxistest.
+
+Dies ist ausschließlich Schritt 1: keine Deformation, Reifenpanne, Glaszerstörung, Durchschüsse, Fahrverhaltensänderung oder Körperteilverletzung. Die eigene Trefferstruktur ist die Grundlage für diese weiteren Schritte.
+
+## Scheiben- und Reifenschäden – Schritt 2 umgesetzt
+
+### Scheiben
+
+Jede Glas-Trefferfläche besitzt die Zustände intakt, angerissen und zerstört. Ein erster Treffer ergänzt eine Rissdarstellung auf beiden Seiten des jeweiligen Fensters. Der zweite Treffer blendet Glas samt Rissen aus, deaktiviert ausschließlich seine Schusskollision und erzeugt einen kurzen Splitter-/Toneffekt. Der zerstörende Schuss endet noch am Glas; folgende Schüsse nutzen die freie Öffnung. Bewegungskollisionen und Türbedienung bleiben erhalten. Die Darstellung folgt weiterhin der Tür-/Klappenhierarchie.
+
+### Reifen und Fahrt
+
+Ein erster Gummitreffer ersetzt den Reifen durch ein breiteres, unten abgeflachtes Low-Poly-Mesh mit eigener passender Schussform. Der beschädigte Reifen dreht nicht mehr als starrer platter Körper durch den Boden; die Felge dreht sich weiter. Pro Rad wird höchstens eine Panne gezählt. Felgentreffer allein verändern den Reifen nicht.
+
+Die Geschwindigkeitsobergrenze beträgt bei 1/2/3/4 platten Reifen 3/1,8/0,9/0,45 m/s. Bestehende niedrigere Verkehrs-/Parklimits bleiben gültig. Die vorhandene Beschleunigungs-/Bremslogik senkt die Geschwindigkeit gleichmäßig, die Bremsleuchten zeigen das Abbremsen an. Auch vollständig beschädigte Fahrzeuge können noch langsam abfahren, um keine permanente Belegung zu verursachen.
+
+Das Fahrzeug sinkt abhängig von den betroffenen Rädern leicht ab und neigt sich. Radpositionen werden aus gespeicherten Ausgangspositionen abgeleitet und auf der ebenen Strecke am Boden gehalten; keine kumulativen Positionsverschiebungen. Aussteigepositionen berücksichtigen die abgesenkte Stellung, damit der Fahrer neben dem Auto auf Bodenniveau bleibt. Es ist eine vereinfachte Darstellung mit weiterhin vorgegebenen Fahrwegen, keine vollständige Fahrwerkssimulation.
+
+### Prüfung und Grenzen
+
+Godot 4.6.3/Linux: grafischer Test für alle vier Modelle, einzelne Glaszustände, deaktivierte Glastrefferfläche und folgende freie Schussbahn, echte erste/zweite Glock-Schüsse, vier unabhängige Reifen, Felgenabgrenzung, Mehrfachtreffer ohne Mehrfachzählung, Absenkung, sanftes Abbremsen, Tempolimits, Aufgabe, Aussteigen und anschließende Abfahrt. Screenshots der Risse und beschädigten Reifen geprüft. Bestehende Treffer-/Schuss-/Nachladetests sowie Fundament-, Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bleibt praktisch zu testen.
+
+Kein NPC-Schaden, Reparatursystem, Schleudern oder Unfälle. Splitter sind kurzlebige kosmetische Effekte; Geräusche synthetische Platzhalter. Schaden gilt nur für das aktuelle Fahrzeugobjekt, ohne Wiederherstellung bei späterer Durchfahrt oder Neustart. Entwicklung bleibt auf `feature/vehicleDamage`; PR #3 enthält beide Schadensschritte.
+
 ## Direkte Ladungsauswahl und weitere Behälter · feature/extendedVehicleSearch
 
 ### Branch und Spielablauf
@@ -435,6 +469,10 @@ Die bisherigen stabilen Gegenstandskennungen und das Sitzungscache bleiben erhal
 Godot 4.6.3/Linux: grafischer Test für alle vier konkreten Weltziele, geschlossene Bereiche, Wandblockade, E ohne Suchzeit, fokussierte Liste statt Gesamtliste, Zugriffsschutz auf nicht gefundene Gegenstände, erste/zweite Esc-Ebene und Freigabe der Abfahrt. Alle vier Behältertypen, verdeckte Einsätze, tatsächliches 3D-Anklicken des freigelegten Päckchens, Entnehmen/Zurücklegen und erneutes Öffnen geprüft. Werkzeugkoffer-Test und Klettertest an die neue Ladung angepasst und bestanden. Bestehende Inventar-, Verkehrs-, Fahrer-, Stellplatz- und Abfahrttests bestanden; die Modellvorschau umfasst 18 Kategorien. Screenshots der Weltbeladung und Behälter geprüft. Windows/Godot 4.7.2 benötigt einen Praxistest.
 
 Weiterhin feste Fälle ohne Zufallsladung, allgemeine Verschachtelung, Flüssigkeitsphysik, Analyse, neue Missionen oder Speicherung über Neustarts. Die Lebensmittel im Kühlkorb und die Leiter sind bewusst einfache Platzhalter beziehungsweise Dekoration. Entwicklung bleibt auf `feature/extendedVehicleSearch`.
+
+## Integration der direkten Fahrzeugdurchsuchung in vehicleDamage
+
+PR #4 wurde nach `develop` übernommen. Anschließend wurde der aktualisierte Integrationsstand in `feature/vehicleDamage` zusammengeführt. Dokumentationskonflikte wurden unter Erhaltung beider Funktionsbeschreibungen aufgelöst. Der Branch enthält nun direkte Ladungsauswahl, Behälteruntersuchung und Kühlboxen gemeinsam mit Scheiben-/Reifenschäden. Die gemeinsamen grafischen Tests für Fahrzeugschäden, direkte Durchsuchung und Klettern sowie der Verkehrstest sind unter Godot 4.6.3/Linux bestanden. `main` bleibt unverändert.
 
 ## Dokumentationsregel
 

@@ -13,9 +13,9 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-`develop` enthält die übernommenen Grundlagen und die interaktiven Werkzeugkoffer. Der aktive Branch **feature/extendedVehicleSearch** erweitert darauf die direkte Auswahl einzelner Ladungsgegenstände: kein pauschales Durchsuchen der Ladefläche mehr. `feature/vehicleDamage` bleibt ein separater Entwicklungszweig und ist hier nicht enthalten. `main` bleibt beim Ausgangsstand.
+`develop` enthält die Grundlagen, interaktiven Werkzeugkoffer und die direkte Ladungsauswahl aus PR #4. Der aktive Branch **feature/vehicleDamage** enthält jetzt zusätzlich diesen aktuellen Integrationsstand sowie die Fahrzeugschäden mit Scheibenbruch und platten Reifen. `main` bleibt unverändert.
 
-Verkehr, Fahreraktionen, Inventare, Dokumentenansicht, Waffen und Streifenabholung sind weiterhin verfügbar. Die aktuelle Bedienung der Fahrzeugdurchsuchung steht im Abschnitt „Direkte Fahrzeugdurchsuchung“ am Ende; ältere Abschnitte dokumentieren die vorherigen Ausbaustufen.
+Verkehr, Fahreraktionen, Inventare, Dokumentenansicht, Waffen und Streifenabholung bleiben verfügbar. Die folgenden Abschnitte dokumentieren die einzelnen Ausbaustufen.
 
 Die Dokumentenansicht ist verfügbar; ein Vergleichsmodus und Befragungsdialoge folgen später. Der Verkehr nutzt zunächst nur eine Fahrtrichtung und einen gleichzeitig reservierbaren Kontrollstellplatz.
 
@@ -346,6 +346,26 @@ Verschluss, Deckel und Inhalt bleiben innerhalb der Sitzung erhalten – auch be
 Es ist zunächst ein einfacher Behältertyp, noch kein allgemeines System verschachtelter Inventare. Kein Farbeimer, keine Drogenanalyse oder neue Dialoge. Die Kofferöffnung wird in der Untersuchungsansicht dargestellt; der kleine Beladungsplatzhalter im Fahrzeug bleibt vereinfacht.
 
 Prüfung unter Linux/Godot 4.6.3: `tests/toolbox_test.gd` für echtes 3D-Anklicken von Verschluss/Deckel/Inhalt, Funddarstellung, Entnahme/Rückgabe, volle Inventare, Mitnehmen und Wiederkehr. Die gemeinsame 3D-Vorschau umfasst jetzt 15 Modellkategorien. Windows/Godot 4.7.2 bitte testen.
+
+## Fahrzeugtreffer · Schritt 1
+
+Auf **feature/vehicleDamage** hinterlassen Glock-Schüsse sichtbare Einschussmarkierungen an allen vier Fahrzeugmodellen. Karosserieflächen, Glas, Reifen und Felgen besitzen eigene, von den Bewegungskollisionen getrennte Schussflächen. Türen und Heckklappen werden entsprechend ihrer tatsächlichen Öffnung getroffen. Die Markierung sitzt auf dem getroffenen Mesh und bewegt sich beim Fahren, Türöffnen und Drehen des Rads mit.
+
+Bedienung unverändert: Glock wählen, mit Shift greifen, mit Rechtsklick ziehen/zielen und mit Linksklick schießen. Die kleinen dunklen Einschussmarkierungen bleiben am aktuellen Fahrzeug bestehen; pro Fahrzeug maximal 64, danach werden die ältesten ersetzt. Beim Entfernen des Fahrzeugs verschwinden sie. Sie werden in dieser ersten Stufe noch nicht bei einer späteren erneuten Durchfahrt wiederhergestellt.
+
+Technik: eigener Schuss-Layer 16 und geometrienahe Trefferkörper statt der groben Kabinen-/Bewegungskollision. Intaktes oder angerissenes Glas blockiert den Schuss; zerstörte Scheiben geben die Öffnung frei. Texturierte, an der Flächennormalen ausgerichtete Mesh-Flächen funktionieren mit dem GL-Compatibility-Renderer. Karosserietreffer bleiben rein optisch. Die folgenden Scheiben-/Reifenschäden bauen auf diesen Trefferflächen auf; NPC-Verletzungen sind noch nicht enthalten.
+
+Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Modelle, Karosserie/Glas/Reifen/Dach, echte Glock-Schüsse, Wände, bewegte Fahrzeuge/Türen und begrenzte Markierungen. Bestehende Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bitte testen.
+
+## Scheiben- und Reifenschäden · Schritt 2
+
+- **Scheiben:** Der erste Treffer erzeugt sichtbare Risse; der zweite zerstört die jeweilige Scheibe mit kurzem Splittereffekt und Geräusch. Danach können weitere Schüsse durch die Öffnung fliegen. Der zerstörende Treffer selbst wird noch aufgehalten. Jede Scheibe besitzt ihren eigenen Zustand; Türscheiben und ihre Risse bewegen sich mit der Tür.
+- **Reifen:** Ein Treffer ins Gummi macht genau diesen Reifen platt. Felgentreffer lösen keine Panne aus. Das Ersatzmodell ist breiter und unten abgeflacht; Radnabe und Fahrzeugstand werden abgesenkt. Weitere Treffer zählen denselben Reifen nicht erneut.
+- **Fahrt:** Mit einem platten Reifen gilt maximal **10,8 km/h**, mit zwei **6,48 km/h**, mit drei **3,24 km/h**, mit vier **1,62 km/h**. Es wird gleichmäßig abgebremst. Die bisherigen niedrigeren Limits beim Parken und im Verkehr bleiben wirksam. Das Fahrzeug kann weiterhin aus der Bucht fahren.
+
+Fahrer können sich nach wie vor ergeben, aussteigen und nach Aufheben der Festnahme wieder einsteigen/weiterfahren. Noch keine Unfälle, Schleudern, Reparatur, NPC-Verletzungen oder neue Fahrzeugphysik. Die abgesenkte Stellung ist eine einfache Darstellung auf der ebenen Teststrecke. Scheibenreste/Splitter und Töne sind einfache Platzhalter.
+
+Schäden bleiben am aktuellen Fahrzeug bestehen, werden aber bei einer späteren neu erzeugten Durchfahrt oder nach Spielneustart noch nicht wiederhergestellt. Prüfung unter Linux/Godot 4.6.3: `tests/vehicle_damage_test.gd` für alle vier Modelle, echte Schüsse auf die Scheibe, Risse/Bruch/freie Öffnung, vier einzelne Reifen, Felgen, Mehrfachtreffer, Tempolimits, Aufgabe und beschädigte Abfahrt. Windows/Godot 4.7.2 bitte testen.
 
 ## Direkte Fahrzeugdurchsuchung · feature/extendedVehicleSearch
 

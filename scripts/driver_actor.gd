@@ -123,7 +123,13 @@ func apply_pose(t: float) -> void:
 	elif state == State.ENTERING and t > 0.82:
 		door.rotation.y = lerpf(initial_door_angle, -1.15, smoothstep(0.0, 0.18, 1.0 - t))
 	var movement := smoothstep(0.0, 1.0, clampf((t - 0.24) / 0.55, 0, 1))
-	position = seat.lerp(outside, movement)
+	var destination := outside
+	var car := get_parent()
+	if car is AnimatableBody3D and car.get("hit_surfaces") != null and car.hit_surfaces.flat_tires > 0:
+		var grounded: Vector3 = car.to_global(outside)
+		grounded.y = 0
+		destination = car.to_local(grounded)
+	position = seat.lerp(destination, movement)
 	rotation.y = lerpf(0, PI / 2.0, movement)
 	rig.scale = Vector3.ONE * lerpf(0.78, 1.0, movement)
 	for i in range(limbs.size()):
@@ -152,6 +158,9 @@ func end_search() -> void:
 	torso.rotation.x = 0
 
 func _physics_process(delta: float) -> void:
+	var car := get_parent()
+	if state == State.OUTSIDE and car is AnimatableBody3D and car.get("hit_surfaces") != null and car.hit_surfaces.flat_tires > 0:
+		global_position.y = 0
 	if surrendered and not arrested and state != State.SEARCHING:
 		raise_hands()
 	if arrested and state in [State.OUTSIDE, State.IN_CUSTODY]:
