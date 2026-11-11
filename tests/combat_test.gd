@@ -39,6 +39,11 @@ func run() -> void:
 	await capture("reach")
 	if DisplayServer.get_name() != "headless":
 		Input.mouse_mode=Input.MOUSE_MODE_CAPTURED
+		var motion := InputEventMouseMotion.new()
+		motion.relative=Vector2(100,0)
+		var yaw: float = scene.player.rotation.y
+		scene._unhandled_input(motion)
+		check(is_equal_approx(angle_difference(yaw,scene.player.rotation.y),-.25*scene.SLOW_SPEED),"Mouse look slows with reaction window")
 		scene.eyes.look_at(scene.test_car.driver.head.global_position)
 		var shift := InputEventKey.new()
 		shift.keycode=KEY_SHIFT
@@ -60,6 +65,13 @@ func run() -> void:
 		for i in range(20): scene.combat._physics_process(.016)
 	check(scene.combat.phase==scene.combat.Phase.SURRENDERED and not scene.slowing and Engine.time_scale==1,"Timely aim causes surrender and ends slow motion")
 	check(scene.combat.shots==0,"No premature shot during reaction window")
+	if DisplayServer.get_name() != "headless":
+		var motion := InputEventMouseMotion.new()
+		motion.relative=Vector2(100,0)
+		var yaw: float = scene.player.rotation.y
+		scene._unhandled_input(motion)
+		check(is_equal_approx(angle_difference(yaw,scene.player.rotation.y),-.25),"Normal mouse sensitivity returns after slow motion")
+
 	check(scene.test_car.driver.surrendered and absf(scene.test_car.driver.limbs[3].rotation.z)>2,"Intimidated driver visibly raises hands")
 	await capture("surrender")
 	await fresh()

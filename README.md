@@ -442,7 +442,7 @@ Im Hauptspiel öffnet **F10** die separate Szene `scenes/combat_test/combat_test
 
 1. **E** am Fenster fordert den Fahrer zum Aussteigen auf.
 2. Nach dem Aussteigen wartet er kurz und greift sichtbar zur Pistole an seiner Hüfte. Ober-/Unterarm und Waffe bewegen sich prozedural; die Pistole wechselt vom Holster zur Hand.
-3. Beim Griff läuft die Welt für **zwei reale Sekunden mit 22 % Geschwindigkeit**, mit entsättigtem Weltbild. Mausblick und Waffenziehen des Spielers bleiben in Echtzeit bedienbar. Mit **Shift, anschließend Rechtsklick** ziehen/zielen.
+3. Beim Griff läuft die Welt für **zwei reale Sekunden mit 22 % Geschwindigkeit**, mit entsättigtem Weltbild. Mausblick und Fadenkreuzbewegung sind ebenfalls auf 22 % verlangsamt und wechseln beim Ende der Zeitlupe sofort zur normalen Empfindlichkeit zurück. Das Waffenziehen bleibt in Echtzeit bedienbar. Mit **Shift, anschließend Rechtsklick** ziehen/zielen.
 4. Während Griff/Ziehen etwa **0,22 Sekunden** mit der vollständig gezogenen Glock auf den sichtbaren NPC zielen: Er gibt auf, hebt die Hände und schießt nicht. Nach Beginn des eigentlichen Ziel-/Schusszustands genügt Drohen im Testszenario nicht mehr.
 5. Ein **Arm- oder Handtreffer** entwaffnet ihn und beendet den Angriff, sofern er nicht bereits zusammengebrochen ist. Die Pistole fällt als Physikobjekt herunter. Kopf-/Kerntreffer nutzen weiterhin die Körperphysik. Andere Verletzungen beenden den Testangriff vorerst ebenfalls; es gibt noch kein Weiterkämpfen mit verletzten Gliedmaßen.
 6. Ohne Eingreifen zieht er, legt an und schießt in Abständen von **0,9 Sekunden**. Sein Ziel folgt dem Spieler mit begrenzter Geschwindigkeit. Deckung und intakte Fahrzeugflächen blockieren die Trefferstrahlen.

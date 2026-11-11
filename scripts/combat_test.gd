@@ -153,7 +153,12 @@ func _unhandled_input(event: InputEvent) -> void:
 						test_car.driver.set_arrested(true)
 					combat.report = "Person entwaffnet und gesichert."
 			return
-	super._unhandled_input(event)
+	if event is InputEventMouseMotion and slowing:
+		var slowed := event.duplicate() as InputEventMouseMotion
+		slowed.relative *= SLOW_SPEED
+		super._unhandled_input(slowed)
+	else:
+		super._unhandled_input(event)
 func _exit_tree() -> void:
 	end_reaction_window()
 

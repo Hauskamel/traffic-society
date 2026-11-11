@@ -544,7 +544,7 @@ R wird in dieser Szene vor Menüs und Waffeninput verarbeitet und lädt die ganz
 
 `scripts/npc_gunfight.gd` steuert Sitzen → kurze Orientierung → Griff → Ziehen → Zielen/Schießen. Schulter und Ellenbogen bewegen die Hand zur Hüfte und nach vorn; das vorhandene Pistolenmodell wechselt vom Holster zur Hand. Vor abgeschlossenem Ziehen und anschließender Zielpause gibt es keinen Schuss. Die getrennte Komponente ist nur dem Testfahrer zugeordnet. Die bestehende allgemeine Aufgabelogik überlässt dieser Komponente ihre Reaktionsfenster.
 
-Beim Griff senkt die Szene das globale Tempo auf 22 % des vorherigen Wertes für zwei reale Sekunden. Ein entsättigter Bildschirmfilter liegt hinter dem HUD. Spielerblick bleibt direkt, Waffenzeit wird ergänzend unskaliert fortgeschrieben; Fortbewegung und Weltphysik bleiben verlangsamt. Rechtzeitiges vollständiges Zielen über einen echten sichtliniengeprüften Trefferstrahl löst nach 0,22 realen Sekunden Aufgabe aus. Arm-/Handtreffer gehen zuerst durch die regionale Körperphysik und lösen anschließend Entwaffnung/Aufgabe aus. Die Waffe wird als Starrkörper mit Schwerkraft abgelegt. Andere Verletzungen beenden den Angriff in dieser ersten Fassung ebenfalls. Reset, Aufgabe, Tod und Szenenwechsel beenden die Zeitlupe und stellen das vorherige globale Tempo wieder her.
+Beim Griff senkt die Szene das globale Tempo auf 22 % des vorherigen Wertes für zwei reale Sekunden. Ein entsättigter Bildschirmfilter liegt hinter dem HUD. Spielerblick wird während des Reaktionsfensters ebenfalls mit 22 % Empfindlichkeit verarbeitet; beim Ende gilt sofort wieder die normale Empfindlichkeit. Waffenzeit wird ergänzend unskaliert fortgeschrieben; Fortbewegung und Weltphysik bleiben verlangsamt. Rechtzeitiges vollständiges Zielen über einen echten sichtliniengeprüften Trefferstrahl löst nach 0,22 realen Sekunden Aufgabe aus. Arm-/Handtreffer gehen zuerst durch die regionale Körperphysik und lösen anschließend Entwaffnung/Aufgabe aus. Die Waffe wird als Starrkörper mit Schwerkraft abgelegt. Andere Verletzungen beenden den Angriff in dieser ersten Fassung ebenfalls. Reset, Aufgabe, Tod und Szenenwechsel beenden die Zeitlupe und stellen das vorherige globale Tempo wieder her.
 
 ### Spielerschaden und Grenzen
 
@@ -555,6 +555,10 @@ Aggression, Dialogreaktionen und Charakterentscheidungen sind noch keine neue Ve
 ### Prüfung
 
 `tests/combat_test.gd` prüft einen Wagen, sitzenden NPC und Ego-Start, E-Aussteigen, sichtbaren Griff mit Zeitlupe, echte Strahlprüfung bei Aufgabe, kein verfrühtes Schießen, NPC-Treffer und Gesundheit, Deckungsschutz, Tod ohne Folgeschüsse, Entwaffnung über die regionale Armfläche sowie vollständigen R-Reset nach Tod und während Zeitlupe. Grafische Snapshots prüfen Anfang, Griff, Aufgabe, Tod und Entwaffnung. Bisherige NPC-/Laborphysik, Fahrer, Freigabe und Streifentransport bleiben geprüft. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu testen.
+
+## Zeitlupe – Fadenkreuzbewegung
+
+Mausbewegungen werden in der Konfrontationstestszene während der Zeitlupe mit demselben Faktor 0,22 wie die Welt skaliert. Dafür wird nur das weitergereichte Mausereignis kopiert und angepasst; die normale Empfindlichkeit bleibt unverändert und gilt nach Ende, Aufgabe oder Reset automatisch wieder. Grafische Eingabetests prüfen die tatsächliche Kameradrehung während und nach dem Reaktionsfenster.
 
 ## Dokumentationsregel
 
