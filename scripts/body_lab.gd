@@ -168,5 +168,10 @@ func _process(_delta: float) -> void:
 	if actors.size() == 2:
 		status.text = last_report + "\nBeckenhoehe: %.2f / %.2f m\nBalancehilfe: %.0f / %.0f %%" % [actors[0].bodies.pelvis.global_position.y,actors[1].bodies.pelvis.global_position.y,actors[0].balance*100,actors[1].balance*100]
 
+		var states: Array[String] = []
+		for actor in actors:
+			states.append("Tot" if actor.dead else ("Zusammengebrochen" if actor.collapsed else "Aktiv"))
+		status.text += "\nZustand: " + " / ".join(states)
+
 func return_to_game() -> void:
 	get_tree().change_scene_to_file("res://main.tscn")

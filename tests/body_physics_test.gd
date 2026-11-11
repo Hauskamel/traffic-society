@@ -62,10 +62,28 @@ func run() -> void:
 	await frames(120)
 	check(standing.muscle("left_forearm") < .3 and standing.muscle("left_thigh") == 1, "Arm injury affects arm chain rather than leg")
 	check(standing.bodies.pelvis.global_position.y > .75, "Arm injury retains standing leg support")
+	for region in ["torso", "head", "pelvis"]:
+		lab.reset_actors()
+		await frames(180)
+		for actor in lab.actors:
+			check(not actor.collapsed and not actor.dead, "Reset clears incapacitation and death")
+			actor.receive_hit(region, actor.bodies[region].global_position, Vector3(0,0,-3))
+		await frames(240)
+		await capture("collapse-" + region)
+		for actor in lab.actors:
+			check(actor.collapsed and actor.balance == 0, "Severe core injury disables all postural support")
+			check(actor.bodies.pelvis.global_position.y < .45 and actor.bodies.torso.global_position.y < .55, "Standing and moving core-hit actors settle on the ground")
+			check(actor.dead == (region == "head"), "Fatal head injury is distinct from core incapacitation")
+	lab.reset_actors()
+	await frames(180)
+	standing = lab.actors[0]
+	standing.receive_hit("torso", standing.bodies.torso.global_position, Vector3(0,0,-.5), .2)
+	await frames(120)
+	check(not standing.collapsed and not standing.dead and standing.bodies.pelvis.global_position.y > .7, "Minor torso injury preserves posture")
 	lab.reset_actors()
 	await frames(600)
 	check(lab.actors[0].bodies.pelvis.global_position.y > .8 and lab.actors[1].bodies.pelvis.global_position.y > .7, "Uninjured rigs remain upright through repeated direction changes")
 	lab.queue_free()
 	await process_frame
-	if failures.is_empty(): print("PASS: articulated rigid bodies, stable rest/locomotion, regional strength propagation, context-sensitive thigh response, arm isolation, reset and bounded physics")
+	if failures.is_empty(): print("PASS: stable locomotion, regional limb response, severe standing/moving core collapse, fatal head injury, minor core injury, reset and bounded physics")
 	quit(0 if failures.is_empty() else 1)

@@ -486,7 +486,7 @@ Der Branch basiert auf `develop` nach Übernahme der Fahrzeugschäden. F9 führt
 
 Positions- und rotationsabhängige Feder-/Dämpfungskräfte bilden virtuelle Muskeln. Rotationskräfte sind über eine näherungsweise Trägheit der Segmente skaliert; begrenzte Kräfte und gedämpfte Unterstützung vermeiden Explodieren der Glieder. Haltungs- und Gehziele werden mathematisch pro Schritt berechnet, nicht aus AnimationPlayer, AnimationTree oder vorgefertigten Trefferclips abgespielt.
 
-Jede Region hat eine eigene Kraftreserve. Ein Oberschenkeltreffer schwächt auch die zugehörige Unterschenkel-/Fußkette; ein Oberarmtreffer entsprechend den Unterarm. Ein Impuls wirkt am tatsächlichen Treffpunkt und übernimmt die vorhandenen Geschwindigkeiten. Die Balancehilfe hängt kontinuierlich von Rumpf-/Kopfstabilität, Becken, regionaler Asymmetrie, gemessener Geschwindigkeit, Fußnähe zum Boden und tatsächlicher Körperhaltung ab. Zu tief gefallene Körper erhalten keine volle Aufrichtunterstützung. Es gibt keine Auswahl eines vorgefertigten „Beintreffer im Laufen“-Animationsclips und keinen globalen Lebensstatus mit Todesanimation.
+Jede Region hat eine eigene Kraftreserve. Ein Oberschenkeltreffer schwächt auch die zugehörige Unterschenkel-/Fußkette; ein Oberarmtreffer entsprechend den Unterarm. Ein Impuls wirkt am tatsächlichen Treffpunkt und übernimmt die vorhandenen Geschwindigkeiten. Die Balancehilfe hängt kontinuierlich von Rumpf-/Kopfstabilität, Becken, regionaler Asymmetrie, gemessener Geschwindigkeit, Fußnähe zum Boden und tatsächlicher Körperhaltung ab. Zu tief gefallene Körper erhalten keine volle Aufrichtunterstützung. Es gibt keine Auswahl eines vorgefertigten „Beintreffer im Laufen“-Animationsclips und keine Todesanimation. Ein separater tödlicher Kopfverletzungszustand schaltet die aktive Muskelregelung ab.
 
 Im geprüften Vergleich nach drei Sekunden hält die stehende Figur den linken Oberschenkeltreffer über das gesunde Bein aus; die bewegte Figur verliert später die Balance und fällt. Diese Reaktion ist ein Ergebnis der gewählten Regler und des Bewegungszustands, keine Garantie für jeden Trefferzeitpunkt. Die Gehbewegung und biomechanische Plausibilität bleiben experimentell.
 
@@ -505,6 +505,14 @@ Die getrennten Fuß-Starrkörper und Sprunggelenke wurden entfernt. Jeder Unters
 Mit Godot 4.6.3/Linux geprüft: neue Standards, zusammengesetzte Trefferkörper, echte Strahlen auf Hände/Füße, Ruhe- und Bewegungsstabilität, Stand-/Laufreaktion beim Oberschenkeltreffer mit 95 % und 3 N·s, Armverletzung sowie Szenenwechsel. Grafische Darstellung geprüft. Windows/Godot 4.7.2 bleibt vom Nutzer zu testen.
 
 `apply_impulse` erhält direkt den Impulsvektor. Unter der verwendeten Meter-/Kilogramm-Skalierung sind 3,0 daher 3 N·s, nicht 3 N. Eine mittlere Kraft lässt sich erst mit einer angenommenen Dauer bestimmen: 3/0,01 = 300 N. Der Prototyp ist weiterhin keine kalibrierte Ballistiksimulation.
+
+## Körperphysik – Zusammenbrechen nach schweren Kerntreffern
+
+Ursache der unnatürlichen abgestützten Rumpfhaltung: Die Balancehilfe berücksichtigte Rumpfschäden, die aktiven Beinmotoren verfolgten aber weiterhin volle Standziele. Jetzt skaliert die zentrale Kraftreserve auch alle Gliedmaßenmotoren. Bei höchstens 25 % Restkraft in Kopf, Rumpf oder Becken wird der Zusammenbruch bis zum Zurücksetzen gespeichert: keine aktive Aufrichtung, Fortbewegung oder Muskelspannung mehr. Bei höchstens 10 % Kopfrestkraft gilt die Figur als tot. Diese Schwellen sind Gameplay-Regeln im Labor, keine medizinische Simulation. Restgeschwindigkeit und tatsächlicher Treffpunkt bleiben erhalten.
+
+Knie und Ellenbogen erhalten gerichtete Beugegrenzen (bis ca. 132 Grad, maximal ca. 3 Grad Überstreckung); seitliches Knicken und axiales Verdrehen sind auf ca. 3 Grad begrenzt. Die Gelenkgrenzen bleiben auch beim passiven Körper aktiv. Selbstkollisionen sind weiterhin deaktiviert, daher wird damit keine vollständige anatomische Kollisionssimulation erreicht.
+
+Erweiterte echte Physiktests prüfen schwere Kopf-, Rumpf- und Beckentreffer jeweils im Stand und in Bewegung: Stützregelung aus, Becken und Rumpf erreichen den Boden, tödlicher Zustand nur beim schweren Kopftreffer. Ein leichter Rumpftreffer erhält die Standfähigkeit. Bestehende Tests für gesunde Fortbewegung, isolierte Gliedmaßentreffer und Zurücksetzen bleiben enthalten.
 
 ## Dokumentationsregel
 

@@ -20,6 +20,8 @@ const SPEC := {
 }
 var bodies: Dictionary = {}
 var strength: Dictionary = {}
+var dead := false
+var collapsed := false
 var moving := false
 var clock := 0.0
 var heading := 0.0
@@ -104,6 +106,7 @@ func compound_piece(body: RigidBody3D, label: String, at: Vector3, size: Vector3
 func connect_parts(a: String, b: String, at: Vector3, limit: float) -> void:
 	var joint := Generic6DOFJoint3D.new()
 	add_child(joint)
+	joint.name = a + "_to_" + b
 	joint.position = at
 	joint.node_a = bodies[a].get_path()
 	joint.node_b = bodies[b].get_path()
@@ -115,6 +118,15 @@ func connect_parts(a: String, b: String, at: Vector3, limit: float) -> void:
 		joint.call("set_flag_" + ["x","y","z"][axis], Generic6DOFJoint3D.FLAG_ENABLE_ANGULAR_LIMIT, true)
 		joint.call("set_param_" + ["x","y","z"][axis], Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -limit if axis == 0 else -.4)
 		joint.call("set_param_" + ["x","y","z"][axis], Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, limit if axis == 0 else .4)
+
+	# Knees and elbows flex around one axis; prevent sideways folding and
+	# backwards hyperextension. Limits remain active on the passive ragdoll.
+	if b.ends_with("_shin") or b.ends_with("_forearm"):
+		joint.set_param_x(Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -2.3 if b.ends_with("_shin") else -.05)
+		joint.set_param_x(Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, .05 if b.ends_with("_shin") else 2.3)
+		for axis in ["y", "z"]:
+			joint.call("set_param_" + axis, Generic6DOFJoint3D.PARAM_ANGULAR_LOWER_LIMIT, -.05)
+			joint.call("set_param_" + axis, Generic6DOFJoint3D.PARAM_ANGULAR_UPPER_LIMIT, .05)
 
 func muscle(region: String) -> float:
 	var value: float = strength[region]
@@ -128,7 +140,13 @@ func receive_hit(region: String, point: Vector3, impulse: Vector3, severity := D
 	if not bodies.has(region): return
 	var body: RigidBody3D = bodies[region]
 	last_hit = {"region":region,"velocity":body.linear_velocity,"pelvis_velocity":bodies.pelvis.linear_velocity,"point":point}
-	strength[region] = maxf(.03, strength[region] - severity)
+	strength[region] = maxf(0.0, strength[region] - clampf(severity, 0.0, 1.0))
+	# Prototype injury rules: severe head injury is fatal; severe core injury
+	# removes whole-body postural control, including previously healthy legs.
+	if region == "head" and strength.head <= .1:
+		dead = true
+	if region in ["head", "torso", "pelvis"] and strength[region] <= .25:
+		collapsed = true
 	body.apply_impulse(impulse, point - body.global_position)
 	flash_time = .35
 	highlighted_region = region
@@ -162,7 +180,7 @@ func _physics_process(delta: float) -> void:
 	var right := muscle("right_shin")
 	var asymmetry := absf(left - right)
 	var velocity := Vector2(pelvis.linear_velocity.x, pelvis.linear_velocity.z).length()
-	var core := minf(strength.pelvis, minf(strength.torso, strength.head))
+	var core := 0.0 if collapsed or dead else minf(strength.pelvis, minf(strength.torso, strength.head))
 	balance = clampf(1.0 - asymmetry * velocity * .75, .05, 1.0) * core
 	var near_ground := false
 	for side in ["left", "right"]:
@@ -191,7 +209,7 @@ func _physics_process(delta: float) -> void:
 	var basis := Basis(Vector3.UP, heading)
 	var phase := clock * 7.0
 	var stride := clampf(velocity / 1.4, 0, 1) if moving else 0.0
-	var passive := 1.0 if capable else .04
+	var passive := core * (1.0 if capable else .04)
 	var root := pelvis.global_position
 	root.x = anchor.x
 	root.z = anchor.z
