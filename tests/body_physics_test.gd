@@ -18,19 +18,32 @@ func run() -> void:
 	root.add_child(lab)
 	check(lab.actors.size() == 2, "Lab creates standing and moving actors")
 	for actor in lab.actors:
-		check(actor.bodies.size() == 13, "Each actor has 13 simulated regions")
-		check(actor.find_children("*","Generic6DOFJoint3D",true,false).size() == 12, "Regions are connected by twelve physical joints")
+		check(actor.bodies.size() == 11, "Each actor has 11 simulated regions")
+		check(actor.find_children("*","Generic6DOFJoint3D",true,false).size() == 10, "Regions are connected by ten physical joints")
 		check(actor.find_children("*","AnimationPlayer",true,false).is_empty(), "No prerecorded animation drives the ragdoll")
+	check(is_equal_approx(lab.strength_slider.value,3.0) and is_equal_approx(lab.injury_slider.value,.95), "Default impulse is 3 N s and regional strength loss is 95 percent")
+	for actor in lab.actors:
+		for side in ["left","right"]:
+			check(not actor.bodies.has(side+"_foot") and actor.bodies[side+"_shin"].has_node("FootCollision"), "Foot belongs to lower-leg rigid body")
+			check(actor.bodies[side+"_forearm"].has_node("HandCollision"), "Hand belongs to forearm rigid body")
 	await frames(180)
 	var standing = lab.actors[0]
 	var running = lab.actors[1]
 	check(standing.bodies.pelvis.global_position.y > .8 and standing.bodies.pelvis.linear_velocity.length() < .15, "Uninjured standing actor stabilizes")
 	check(running.bodies.pelvis.global_position.y > .7 and absf(running.bodies.pelvis.global_position.z) > .5, "Moving actor actually travels while upright")
+	for side in ["left","right"]:
+		var direction := Vector3.LEFT if side == "left" else Vector3.RIGHT
+		for suffix in ["shin", "forearm"]:
+			var body: RigidBody3D = standing.bodies[side+"_"+suffix]
+			var point: Vector3 = body.get_node("FootVisual" if suffix == "shin" else "HandVisual").global_position
+			var query := PhysicsRayQueryParameters3D.create(point+direction,point-direction*.05,4)
+			var hit: Dictionary = lab.get_world_3d().direct_space_state.intersect_ray(query)
+			check(not hit.is_empty() and hit.collider == body and hit.collider.get_meta("region") == side+"_"+suffix, "Foot/hand collision selects owning compound region")
 	await capture("before")
 	var at: Vector3 = standing.bodies.left_thigh.global_position
 	lab.comparison_hit()
 	check(standing.bodies.left_thigh.global_position.is_equal_approx(at), "Hit applies impulse rather than teleporting pose")
-	check(is_equal_approx(standing.muscle("left_thigh"),.2) and is_equal_approx(standing.muscle("left_shin"),.2) and is_equal_approx(standing.muscle("left_foot"),.2), "Thigh injury weakens affected leg chain")
+	check(is_equal_approx(standing.muscle("left_thigh"),.05) and is_equal_approx(standing.muscle("left_shin"),.05), "Thigh injury weakens affected leg chain")
 	check(standing.muscle("right_thigh") == 1 and standing.muscle("left_upper_arm") == 1, "Other regions retain their own strength")
 	check(running.last_hit.pelvis_velocity.length() > standing.last_hit.pelvis_velocity.length()+.3, "Same hit starts with different measured movement context")
 	await frames(60)
@@ -45,7 +58,7 @@ func run() -> void:
 	lab.reset_actors()
 	await frames(150)
 	standing = lab.actors[0]
-	standing.receive_hit("left_upper_arm",standing.bodies.left_upper_arm.global_position,Vector3(0,0,-2))
+	standing.receive_hit("left_upper_arm",standing.bodies.left_upper_arm.global_position,Vector3(0,0,-3))
 	await frames(120)
 	check(standing.muscle("left_forearm") < .3 and standing.muscle("left_thigh") == 1, "Arm injury affects arm chain rather than leg")
 	check(standing.bodies.pelvis.global_position.y > .75, "Arm injury retains standing leg support")

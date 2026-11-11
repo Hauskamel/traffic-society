@@ -482,7 +482,7 @@ Der Branch basiert auf `develop` nach Übernahme der Fahrzeugschäden. F9 führt
 
 ### Physik und Reaktion
 
-`scripts/active_body.gd` baut pro Figur 13 echte RigidBody3D-Segmente für Becken, Rumpf, Kopf, Ober-/Unterarme, Oberschenkel, Unterschenkel und Füße. Zwölf Generic6DOFJoint3D-Gelenke verbinden sie mit linearen Sperren und Winkelgrenzen. Selbstkollisionen der Figur sind im Prototyp deaktiviert; Boden und andere Figuren bleiben physikalische Kollisionspartner.
+`scripts/active_body.gd` baut im aktuellen Stand pro Figur 11 echte RigidBody3D-Segmente für Becken, Rumpf, Kopf, Oberarme, Unterarme inklusive Hände, Oberschenkel und Unterschenkel inklusive Füße. Zehn Generic6DOFJoint3D-Gelenke verbinden sie mit linearen Sperren und Winkelgrenzen. Selbstkollisionen der Figur sind im Prototyp deaktiviert; Boden und andere Figuren bleiben physikalische Kollisionspartner.
 
 Positions- und rotationsabhängige Feder-/Dämpfungskräfte bilden virtuelle Muskeln. Rotationskräfte sind über eine näherungsweise Trägheit der Segmente skaliert; begrenzte Kräfte und gedämpfte Unterstützung vermeiden Explodieren der Glieder. Haltungs- und Gehziele werden mathematisch pro Schritt berechnet, nicht aus AnimationPlayer, AnimationTree oder vorgefertigten Trefferclips abgespielt.
 
@@ -495,6 +495,16 @@ Im geprüften Vergleich nach drei Sekunden hält die stehende Figur den linken O
 Godot 4.6.3/Linux: echte Physikschritte für beide Gelenkkörper, Stabilität im Stand, tatsächliche Fortbewegung und längeres unverletztes Gehen mit Richtungswechsel. Geprüft wurden lokale Kraftausbreitung, Impuls ohne Positionssprung, unterschiedliche gemessene Bewegung beim Treffer, Stand-/Bewegungsreaktion, Armverletzung mit erhaltener Beinstütze, Zurücksetzen und endliche begrenzte Positionen/Geschwindigkeiten. Grafische Vorher-/Reaktions-/Nachheransicht geprüft. Ein eigener Szenenwechseltest prüft F9 auch aus der verlangsamten Dokumentenansicht, Zeitwiederherstellung, Regionenauswahl, Reset und Rückkehr zum Hauptspiel. Windows/Godot 4.7.2 erfordert einen Praxistest; andere Physik-Backends/Solver können die Reaktion ändern.
 
 Das Labor ist getrennt von den Verkehrs-NPCs. Es enthält keine Ballistik-, Blutungs-, Schmerz-, Heilungs- oder Aufstehlogik und keine fertige menschliche Bewegungs-KI. Virtuelle Stützkräfte sind eine bewusste Vereinfachung aktiver Ragdolls. Die Integration mit Verkehr, Handschellen, Fahrzeuganimationen und vorhandenen Waffen ist ein weiterer Schritt. Der Stand bleibt auf `feature/bodPhysics`.
+
+## Labor-Standardwerte und gemeinsame Hand-/Fußsegmente
+
+Die Standards liegen nun zentral bei 3,0 N·s Impuls und 95 % lokalem Kraftverlust; UI und direkter Trefferaufruf verwenden dieselben Vorgaben. Bei einmaligem Treffer bleibt 5 % der lokalen Reglerstärke, ohne diese Größe als medizinische Verletzungsschwere zu interpretieren.
+
+Die getrennten Fuß-Starrkörper und Sprunggelenke wurden entfernt. Jeder Unterschenkel besitzt jetzt Bein- und Fußgeometrie samt zwei Kollisionsformen auf demselben RigidBody3D. Die Masse von Unterschenkel und Fuß bleibt zusammen 4 kg. Bodennähe und Kraftweitergabe werden an diesem gemeinsamen Segment ermittelt. Jeder Unterarm erhält sichtbare Hände mit eigener Kollisionsform auf demselben Körper, ohne zusätzliche Handgelenke. Fuß- und Handtreffer melden daher die zugehörige gemeinsame Region. Das Modell hat 11 statt 13 Starrkörper und 10 statt 12 Gelenke.
+
+Mit Godot 4.6.3/Linux geprüft: neue Standards, zusammengesetzte Trefferkörper, echte Strahlen auf Hände/Füße, Ruhe- und Bewegungsstabilität, Stand-/Laufreaktion beim Oberschenkeltreffer mit 95 % und 3 N·s, Armverletzung sowie Szenenwechsel. Grafische Darstellung geprüft. Windows/Godot 4.7.2 bleibt vom Nutzer zu testen.
+
+`apply_impulse` erhält direkt den Impulsvektor. Unter der verwendeten Meter-/Kilogramm-Skalierung sind 3,0 daher 3 N·s, nicht 3 N. Eine mittlere Kraft lässt sich erst mit einer angenommenen Dauer bestimmen: 3/0,01 = 300 N. Der Prototyp ist weiterhin keine kalibrierte Ballistiksimulation.
 
 ## Dokumentationsregel
 

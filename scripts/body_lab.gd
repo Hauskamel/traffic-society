@@ -1,8 +1,8 @@
 extends Node3D
 const Actor = preload("res://scripts/active_body.gd")
 const Visuals = preload("res://scripts/police_visuals.gd")
-const REGIONS := ["left_thigh","right_thigh","left_shin","right_shin","left_upper_arm","right_upper_arm","left_forearm","right_forearm","torso","head","pelvis","left_foot","right_foot"]
-const NAMES := ["Linker Oberschenkel","Rechter Oberschenkel","Linker Unterschenkel","Rechter Unterschenkel","Linker Oberarm","Rechter Oberarm","Linker Unterarm","Rechter Unterarm","Rumpf","Kopf","Becken","Linker Fuss","Rechter Fuss"]
+const REGIONS := ["left_thigh","right_thigh","left_shin","right_shin","left_upper_arm","right_upper_arm","left_forearm","right_forearm","torso","head","pelvis"]
+const NAMES := ["Linker Oberschenkel","Rechter Oberschenkel","Linker Unterschenkel + Fuss","Rechter Unterschenkel + Fuss","Linker Oberarm","Rechter Oberarm","Linker Unterarm + Hand","Rechter Unterarm + Hand","Rumpf","Kopf","Becken"]
 var actors: Array[Node3D] = []
 var camera: Camera3D
 var region: OptionButton
@@ -91,18 +91,18 @@ func build_ui() -> void:
 	strength_slider.min_value = .5
 	strength_slider.max_value = 5
 	strength_slider.step = .5
-	strength_slider.value = 2
-	force_label.text = "Testimpuls: 2.0 (keine Ballistik)"
-	strength_slider.value_changed.connect(func(value: float): force_label.text = "Testimpuls: %.1f (keine Ballistik)" % value)
+	strength_slider.value = Actor.DEFAULT_IMPULSE
+	force_label.text = "Testimpuls: %.1f N s (keine Ballistik)" % strength_slider.value
+	strength_slider.value_changed.connect(func(value: float): force_label.text = "Testimpuls: %.1f N s (keine Ballistik)" % value)
 	stack.add_child(strength_slider)
 	var injury_label := Label.new()
-	injury_label.text = "Lokaler Kraftverlust: 80 %"
+	injury_label.text = "Lokaler Kraftverlust: 95 %"
 	stack.add_child(injury_label)
 	injury_slider = HSlider.new()
 	injury_slider.min_value = .1
 	injury_slider.max_value = .95
 	injury_slider.step = .05
-	injury_slider.value = .8
+	injury_slider.value = Actor.DEFAULT_STRENGTH_LOSS
 	injury_slider.value_changed.connect(func(value: float): injury_label.text = "Lokaler Kraftverlust: %.0f %%" % (value * 100))
 	stack.add_child(injury_slider)
 	button("Vergleichstreffer [Leertaste]",stack,comparison_hit)
