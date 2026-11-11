@@ -1,4 +1,5 @@
 extends SceneTree
+const CargoItem = preload("res://scripts/cargo_item.gd")
 var failures: Array[String] = []
 
 func check(ok: bool, message: String) -> void:
@@ -42,7 +43,6 @@ func run() -> void:
 				part.toggle()
 				for i in range(60):
 					part._physics_process(1.0 / 60.0)
-				break
 		await physics_frame
 		await physics_frame
 		var blocker := StaticBody3D.new()
@@ -77,20 +77,18 @@ func run() -> void:
 		var before: Vector3 = scene.player.position
 		scene.player.move_and_collide(Vector3(0, 0, -0.25))
 		check(scene.player.position.distance_to(before) > 0.2, "Load floor must be walkable")
-		scene.eyes.look_at(car.cargo_zone.global_position)
-		check(car.cargo_zone.can_use(scene.eyes.global_position), "Cargo search must also work from inside")
-		scene.refresh_encounter_ui()
-		check(scene.hovered_part == car.cargo_zone, "Interior search must be selectable from the load floor")
-		await process_frame
-		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png("user://climb-" + car.model_kind + ".png")
-		key(scene, KEY_E)
-		check(scene.cargo_search_car == car, "E must start cargo search while aboard")
-		for i in range(30):
-			scene._physics_process(1.0 / 60.0)
-		check(scene.search_progress.visible, "Actual cargo search must still show a loading bar")
+		var prop = car.cargo_props.get_child(0)
+		var target: Node
+		for node in prop.get_children():
+			if node is CargoItem:
+				target = node
+		scene.eyes.look_at(target.global_position)
+		check(not car.cargo_zone.can_use(scene.eyes.global_position), "Floor is no longer searchable from inside")
+		check(scene.begin_item_inspection(target), "Individual cargo can be inspected while aboard")
+		check(scene.inventory_view.visible and not scene.search_progress.visible, "Direct object inspection has no loading bar")
 		key(scene, KEY_ESCAPE)
-		check(car.officer_aboard, "Cancelling search must preserve the aboard state")
+		key(scene, KEY_ESCAPE)
+		check(car.officer_aboard, "Closing inspection preserves aboard state")
 		key(scene, KEY_SPACE)
 		for i in range(65):
 			scene._physics_process(1.0 / 60.0)

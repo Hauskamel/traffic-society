@@ -3,6 +3,9 @@ signal closed
 signal contents_changed
 var source_owner := ""
 var vehicle_mode := false
+var focused_item_id := ""
+var placement_vehicle: Node3D
+var vehicle_return_button: Button
 var heading: Label
 var instructions: Label
 var player_inventory: RefCounted
@@ -91,6 +94,8 @@ func _ready() -> void:
 	inspect_button = button("Genauer untersuchen", containers[1], inspect_selected)
 	take_button = button("Uebernehmen", containers[1], transfer_selected.bind("npc"))
 	return_button = button("Zurueckgeben", containers[1], transfer_selected.bind("player"))
+	vehicle_return_button = button("Zurueck ins Fahrzeug legen", containers[1], return_to_vehicle)
+	vehicle_return_button.hide()
 	right_title = label("SPIELER", 20, containers[2])
 	right_grid = GridContainer.new()
 	right_grid.columns = 3
@@ -105,6 +110,8 @@ func _ready() -> void:
 func open_view(player: RefCounted, npc: RefCounted = null, person := "", owner_id := "", cargo := false) -> void:
 	if inspection.visible:
 		inspection.close_view()
+	focused_item_id = ""
+	placement_vehicle = null
 	player_inventory = player
 	npc_inventory = npc
 	npc_name = person
@@ -139,16 +146,20 @@ func fill_grid(grid: GridContainer, inventory: RefCounted, source: String) -> vo
 		child.queue_free()
 	if inventory == null:
 		return
-	for i in range(inventory.capacity):
+	var shown: Array[Dictionary] = []
+	for item in inventory.items:
+		if source != "npc" or focused_item_id.is_empty() or item.id == focused_item_id:
+			shown.append(item)
+	for i in range(1 if source == "npc" and not focused_item_id.is_empty() else inventory.capacity):
 		var slot := Button.new()
 		slot.custom_minimum_size = Vector2(102, 92)
 		slot.focus_mode = Control.FOCUS_NONE
 		grid.add_child(slot)
-		if i >= inventory.items.size():
+		if i >= shown.size():
 			slot.text = "Leer"
 			slot.disabled = true
 			continue
-		var item: Dictionary = inventory.items[i]
+		var item: Dictionary = shown[i]
 		slot.icon = icon(item.icon)
 		slot.expand_icon = true
 		slot.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -160,6 +171,8 @@ func fill_grid(grid: GridContainer, inventory: RefCounted, source: String) -> vo
 		slot.pressed.connect(select_item.bind(item.id, source))
 
 func select_item(id: String, source: String) -> void:
+	if source == "npc" and not focused_item_id.is_empty() and id != focused_item_id:
+		return
 	selected_id = id
 	selected_source = source
 	refresh()
@@ -174,6 +187,8 @@ func selected_item() -> Dictionary:
 
 func refresh() -> void:
 	left_title.text = (npc_name + "\n%d / %d Plaetze" % [npc_inventory.items.size(), npc_inventory.capacity]) if npc_inventory != null else "KEINE PERSON\nEigenes Inventar"
+	if not focused_item_id.is_empty():
+		left_title.text = "AUSGEWAEHLTER GEGENSTAND\n" + npc_name
 	right_title.text = "SPIELER\n%d / %d Plaetze" % [player_inventory.items.size(), player_inventory.capacity]
 	fill_grid(left_grid, npc_inventory, "npc")
 	fill_grid(right_grid, player_inventory, "player")
@@ -181,15 +196,16 @@ func refresh() -> void:
 	detail_name.text = item.get("name", "GEGENSTAND")
 	preview.set_item(item)
 	detail.text = item.description if not item.is_empty() else "Waehle einen Gegenstand, um ihn genauer anzusehen."
-	inspect_button.visible = item.get("container_type") == "toolbox"
+	vehicle_return_button.visible = can_return_to_vehicle(item)
+	inspect_button.visible = item.get("container_type") in ["toolbox", "paint_bucket", "water_barrel", "cooler"]
 	take_button.disabled = item.is_empty() or selected_source != "npc"
-	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != source_owner or item.has("container_id")
+	return_button.disabled = item.is_empty() or selected_source != "player" or npc_inventory == null or item.get("owner") != source_owner or item.has("container_id") or (not focused_item_id.is_empty() and item.get("id") != focused_item_id)
 
 func transfer_selected(source: String) -> void:
 	var item := selected_item()
 	if item.is_empty() or selected_source != source or npc_inventory == null:
 		return
-	if source == "player" and (item.owner != source_owner or item.has("container_id")):
+	if source == "player" and (item.owner != source_owner or item.has("container_id") or (not focused_item_id.is_empty() and item.id != focused_item_id)):
 		status.text = "Dieser Gegenstand gehoert nicht zu diesem Inventar."
 		return
 	var origin: RefCounted = npc_inventory if source == "npc" else player_inventory
@@ -204,7 +220,7 @@ func transfer_selected(source: String) -> void:
 
 func inspect_selected() -> void:
 	var item := selected_item()
-	if item.get("container_type") == "toolbox":
+	if item.get("container_type") in ["toolbox", "paint_bucket", "water_barrel", "cooler"]:
 		inspection.open_view(item, player_inventory)
 
 func container_changed() -> void:
@@ -218,3 +234,33 @@ func back() -> void:
 		inspection.close_view()
 	else:
 		close_view()
+
+func open_world_item(player: RefCounted, cargo: RefCounted, item: Dictionary, title: String) -> void:
+	open_view(player, cargo, title, item.owner, true)
+	focused_item_id = item.id
+	select_item(item.id, "npc")
+	inspect_selected()
+
+func open_player_view(player: RefCounted, car: Node3D, origin: Vector3) -> void:
+	open_view(player)
+	if not is_instance_valid(car) or car.state != car.State.PARKED or not car.cargo_accessible() or car.pickup_reserved:
+		return
+	var local := car.to_local(origin)
+	if origin.distance_to(car.to_global(Vector3(0, 1, car.body_length / 2))) < 2.8 and (local.z > car.body_length / 2 - 0.35 or car.officer_aboard):
+		placement_vehicle = car
+	refresh()
+
+func can_return_to_vehicle(item: Dictionary) -> bool:
+	return is_instance_valid(placement_vehicle) and placement_vehicle.state == placement_vehicle.State.PARKED and placement_vehicle.cargo_accessible() and not placement_vehicle.pickup_reserved and selected_source == "player" and item.get("owner") == "Fahrzeug " + placement_vehicle.plate_number and not item.has("container_id")
+
+func return_to_vehicle() -> void:
+	var item := selected_item()
+	if not can_return_to_vehicle(item):
+		return
+	if player_inventory.transfer_to(item.id, placement_vehicle.cargo_inventory):
+		status.text = "Gegenstand ins urspruengliche Fahrzeug zurueckgelegt."
+		selected_id = ""
+		contents_changed.emit()
+	else:
+		status.text = "Kein Platz im Fahrzeug."
+	refresh()

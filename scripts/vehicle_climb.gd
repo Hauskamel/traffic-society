@@ -25,7 +25,11 @@ func entry_x(vehicle: Node3D) -> float:
 	if vehicle.model_kind == "van":
 		for part in vehicle.parts:
 			if part.kind == "trunk" and absf(part.angle()) > 1.1:
-				return -0.43 if part.pivot.position.x < 0 else 0.43
+				if part.pivot.position.x > 0:
+					return 0.43
+		for part in vehicle.parts:
+			if part.kind == "trunk" and absf(part.angle()) > 1.1:
+				return -0.43
 	return 0.0
 
 func entry(vehicle: Node3D) -> Vector3:

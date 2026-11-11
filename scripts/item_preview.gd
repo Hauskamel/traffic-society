@@ -115,6 +115,18 @@ func set_item(item: Dictionary) -> void:
 			preload("res://scripts/toolbox_model.gd").build_tool(tool, item.icon)
 			tool.scale = Vector3.ONE * 1.7
 			tool.rotation.x = 0.6
+		"paint_bucket", "water_barrel", "cooler":
+			var container = preload("res://scripts/cargo_container_model.gd").new()
+			model.add_child(container)
+			container.configure(item)
+		"sealed_packet":
+			cube(Vector3.ZERO, Vector3(0.8, 0.25, 0.5), "e1dfd1")
+			cube(Vector3(0, 0.13, 0), Vector3(0.14, 0.02, 0.52), "ab916b")
+		"ladder":
+			for x in [-0.25, 0.25]:
+				cube(Vector3(x, 0, 0), Vector3(0.07, 1.6, 0.08), "acb5b5")
+			for i in range(5):
+				cube(Vector3(0, -0.6 + i * 0.3, 0), Vector3(0.5, 0.06, 0.08), "acb5b5")
 		"case":
 			if item.get("container_type") == "toolbox":
 				var crate = preload("res://scripts/toolbox_model.gd").new()

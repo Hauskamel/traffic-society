@@ -1,6 +1,7 @@
 extends "res://scripts/item_preview.gd"
 signal picked(part: String)
 signal hovered(part: String)
+const CargoModel = preload("res://scripts/cargo_container_model.gd")
 const ToolboxModel = preload("res://scripts/toolbox_model.gd")
 var crate: ToolboxModel
 var current_part := ""
@@ -22,7 +23,7 @@ func set_container(item: Dictionary) -> void:
 		model.queue_free()
 	model = Node3D.new()
 	world.add_child(model)
-	crate = ToolboxModel.new()
+	crate = ToolboxModel.new() if item.container_type == "toolbox" else CargoModel.new()
 	model.add_child(crate)
 	crate.configure(item, true)
 	reset_view()
@@ -32,20 +33,26 @@ func rebuild() -> void:
 	var data: Dictionary = crate.item
 	model.remove_child(crate)
 	crate.queue_free()
-	crate = ToolboxModel.new()
+	crate = ToolboxModel.new() if data.container_type == "toolbox" else CargoModel.new()
 	model.add_child(crate)
 	crate.configure(data, true)
 
 func reset_view() -> void:
-	distance = 3.5
+	distance = 4.1 if is_instance_valid(crate) and crate.item.get("container_type") != "toolbox" else 3.5
 	if is_instance_valid(model):
 		model.rotation = Vector3.ZERO
 	update_camera()
 
 func update_camera() -> void:
 	if is_instance_valid(camera):
-		camera.position = Vector3(0.35, 0.65, 1).normalized() * distance
-		camera.look_at(Vector3(0, 0.25, 0))
+		var elevation := 0.65
+		if is_instance_valid(crate):
+			match crate.item.get("container_type"):
+				"paint_bucket": elevation = 1.4
+				"water_barrel": elevation = 2.0
+				"cooler": elevation = 1.05
+		camera.position = Vector3(0.35, elevation, 1).normalized() * distance
+		camera.look_at(Vector3(0.2, 0.3, 0) if is_instance_valid(crate) and crate.item.get("container_type") != "toolbox" else Vector3(0, 0.25, 0))
 
 func pick(at: Vector2) -> String:
 	if not is_instance_valid(crate) or size.x <= 0 or size.y <= 0:
@@ -59,7 +66,9 @@ func pick(at: Vector2) -> String:
 	if not is_instance_valid(collider):
 		return ""
 	var token: String = collider.get_meta("part", "")
-	if token not in ["latch", "lid", "body"] and (not crate.item.opened or crate.moving):
+	if token not in ["latch", "lid", "body", "insert"] and (not crate.item.opened or crate.moving):
+		return ""
+	if token not in ["latch", "lid", "body", "insert"] and not crate.contents_root.visible:
 		return ""
 	return token
 

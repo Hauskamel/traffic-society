@@ -31,7 +31,7 @@ func run() -> void:
 	var item: Dictionary = car.cargo_inventory.items[0]
 	var knife_id: String = item.id + ":knife"
 	check(item.contents.items.size() == 2 and not item.opened, "Bobby has authored closed toolbox with two contents")
-	check(scene.traffic.cars[3].cargo_inventory.items[1].contents.items.size() == 1, "Mara has only one hammer")
+	check(scene.traffic.cars[3].cargo_inventory.items[0].contents.items.size() == 1, "Mara has only one hammer")
 	var ui = scene.inventory_view
 	ui.open_view(scene.player_inventory, car.cargo_inventory, "Fahrzeug " + car.plate_number, "Fahrzeug " + car.plate_number, true)
 	ui.select_item(item.id, "npc")
@@ -112,7 +112,7 @@ func run() -> void:
 	preview.crate._process(1)
 	view.activate(knife_id)
 	view.take_selected()
-	var mara: Dictionary = scene.traffic.cars[3].cargo_inventory.items[1]
+	var mara: Dictionary = scene.traffic.cars[3].cargo_inventory.items[0]
 	view.open_view(mara, scene.player_inventory)
 	mara.opened = true
 	view.preview.crate._process(1)

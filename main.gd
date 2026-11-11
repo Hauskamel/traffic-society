@@ -37,6 +37,7 @@ var inventory_view: InventoryView
 var searching_driver: Node3D
 var searching_car: Node3D
 var cargo_search_car: Node3D
+var inspected_vehicle: Node3D
 const Timings = preload("res://scripts/interaction_timings.gd")
 var crosshair: Label
 var search_progress: ProgressBar
@@ -372,8 +373,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			if interaction_open:
 				confirm_interaction()
 			elif is_instance_valid(hovered_part):
-				if hovered_part.kind == "cargo":
-					begin_cargo_search(hovered_part.vehicle)
+				if hovered_part.kind == "cargo_item":
+					begin_item_inspection(hovered_part)
 				else:
 					if not hovered_part.toggle() and hovered_part.vehicle.officer_aboard:
 						feedback = "Bitte zuerst die Ladeflaeche verlassen."
@@ -387,7 +388,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		elif event.keycode == KEY_I and not aerial:
 			close_interaction()
-			inventory_view.open_view(player_inventory)
+			inventory_view.open_player_view(player_inventory, traffic.controlled_car, eyes.global_position)
 	if event is InputEventMouseButton and event.pressed:
 		if interaction_open:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -509,7 +510,7 @@ func refresh_encounter_ui() -> void:
 	stop_button.disabled = is_instance_valid(controlled) or not is_instance_valid(selected) or not selected.can_stop()
 	interact_hint.text = "[E] Mit %s sprechen" % interaction_car().driver_name if can_interact() and not interaction_open else ""
 	if is_instance_valid(hovered_part):
-		interact_hint.text = "[E] Laderaum durchsuchen" if hovered_part.kind == "cargo" else "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
+		interact_hint.text = "[E] " + hovered_part.title + " untersuchen" if hovered_part.kind == "cargo_item" else "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
 	if climber.available():
 		interact_hint.text += "\n[Leertaste] " + ("Heruntersteigen" if is_instance_valid(climber.car) else "Auf Ladeflaeche klettern")
 
@@ -604,6 +605,8 @@ func update_part_focus() -> void:
 			var ignored: Array[RID] = [car.get_rid(), player.get_rid()]
 			for section in car.parts:
 				ignored.append(section.pivot.get_rid())
+			if part.kind == "cargo_item":
+				ignored.append(part.solid.get_rid())
 			blocked.exclude = ignored
 			if get_world_3d().direct_space_state.intersect_ray(blocked).is_empty():
 				target = part
@@ -616,6 +619,9 @@ func update_part_focus() -> void:
 
 
 func finish_search() -> void:
+	if is_instance_valid(inspected_vehicle):
+		inspected_vehicle.cargo_search_active = false
+	inspected_vehicle = null
 	if is_instance_valid(cargo_search_car):
 		cargo_search_car.cargo_search_active = false
 		eyes.rotation.x = cargo_start_pitch
@@ -628,14 +634,16 @@ func finish_search() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
 
 
-func begin_cargo_search(car: Node3D) -> bool:
-	if aerial or inventory_view.visible or car != traffic.controlled_car or car.state != TrafficCar.State.PARKED or not car.cargo_accessible() or car.driver.is_busy() or not car.cargo_zone.can_use(eyes.global_position) or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
+func begin_cargo_search(_car: Node3D) -> bool:
+	return false # Replaced by direct object selection.
+
+func begin_item_inspection(target: Node3D) -> bool:
+	if aerial or inventory_view.visible or not target.can_use(eyes.global_position) or target.vehicle.driver.is_busy():
 		return false
 	close_interaction()
-	cargo_search_car = car
-	cargo_search_clock = 0
-	cargo_start_pitch = eyes.rotation.x
-	car.cargo_search_active = true
+	inspected_vehicle = target.vehicle
+	inspected_vehicle.cargo_search_active = true
+	inventory_view.open_world_item(player_inventory, inspected_vehicle.cargo_inventory, target.item, target.title)
 	return true
 
 func refresh_cargo_visuals() -> void:

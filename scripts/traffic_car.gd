@@ -12,6 +12,7 @@ var cargo_inventory: RefCounted
 var cargo_search_active := false
 var officer_aboard := false
 var cargo_props: Node3D
+const CargoItem = preload("res://scripts/cargo_item.gd")
 const CargoZone = preload("res://scripts/cargo_zone.gd")
 var cargo_zone: CargoZone
 var driver_name := "Bobby Mayer"
@@ -444,20 +445,102 @@ func build_cargo() -> void:
 	cargo_props = Node3D.new()
 	cargo_props.name = "CargoItems"
 	add_child(cargo_props)
+	if model_kind == "van":
+		var rack := Node3D.new()
+		rack.name = "Shelf"
+		add_child(rack)
+		for z in [0.25, 1.8]:
+			for x in [-0.79, -0.24]:
+				piece(Vector3(x, 1.35, z), Vector3(0.035, 1.15, 0.035), material("7c8d92"), rack)
+		for y in [0.78, 1.38]:
+			piece(Vector3(-0.52, y, 1.025), Vector3(0.58, 0.045, 1.6), material("829597"), rack)
+			var solid := StaticBody3D.new()
+			rack.add_child(solid)
+			var cargo_hit := CollisionShape3D.new()
+			var size := BoxShape3D.new()
+			size.size = Vector3(0.58, 0.045, 1.6)
+			cargo_hit.shape = size
+			cargo_hit.position = Vector3(-0.52, y, 1.025)
+			solid.add_child(cargo_hit)
 	if cargo_inventory != null:
-		var catalog: RefCounted = preload("res://scripts/item_inventory.gd").for_vehicle(driver_name, plate_number)
+		var catalog = preload("res://scripts/item_inventory.gd").for_vehicle(driver_name, plate_number)
 		for i in range(catalog.items.size()):
+			var item: Dictionary = catalog.items[i]
+			for actual in cargo_inventory.items:
+				if actual.id == item.id:
+					item = actual
 			var prop := Node3D.new()
-			prop.set_meta("item_id", catalog.items[i].id)
+			prop.set_meta("item_id", item.id)
+			prop.set_meta("data", item)
 			cargo_props.add_child(prop)
-			prop.position = Vector3(-0.45 + float(i) * 0.45, floor_y, rear - 0.55 - float(i % 2) * minf(depth * 0.4, 0.4))
-			if catalog.items[i].icon == "receipt":
-				piece(Vector3(0, 0.025, 0), Vector3(0.23, 0.02, 0.3), material("e1ddbf"), prop)
-			else:
-				var color := "a78a64" if catalog.items[i].icon == "parcel" else "617b83"
-				piece(Vector3(0, 0.14, 0), Vector3(0.34, 0.27, 0.32), material(color), prop)
-				piece(Vector3(0, 0.29, 0), Vector3(0.16, 0.035, 0.05), material("d3bd87"), prop)
+			prop.scale = Vector3.ONE * 0.45
+			prop.position = Vector3(-0.43 if i == 0 else 0.43 if i == 1 else 0.0, floor_y + 0.13, rear - (0.35 if i < 2 else 0.68))
+			if model_kind == "van":
+				if i < 3:
+					prop.scale = Vector3.ONE * 0.48
+					prop.position = Vector3(-0.52, (1.40 if i == 1 else 0.81) + 0.13, 0.65 if i == 2 else 1.48)
+				else:
+					prop.position = Vector3(0.48, floor_y + 0.13, 0.65)
+			elif model_kind == "pickup":
+				prop.position = Vector3(-0.45 if i == 0 else 0.4, floor_y + 0.13, 0.85 if i == 0 else 0.7)
+				if item.icon == "ladder":
+					prop.scale = Vector3.ONE
+					prop.position = Vector3(0.38, floor_y + 0.1, 1.25)
+			build_item_model(prop, item)
+			if item.icon == "ladder":
+				continue
+			var target = preload("res://scripts/cargo_item.gd").new()
+			target.vehicle = self
+			target.pivot = self
+			target.prop = prop
+			target.item = item
+			var box := BoxShape3D.new()
+			box.size = Vector3(1.6, 0.75, 1.0) if item.get("container_type") in ["toolbox", "cooler"] else Vector3(1.0, 1.3 if item.icon == "water_barrel" else 1.05, 1.0)
+			var item_center_y := 0.05 if item.get("container_type") in ["toolbox", "cooler"] else 0.3 if item.icon == "water_barrel" else 0.15
+			var cargo_hit := CollisionShape3D.new()
+			cargo_hit.shape = box
+			cargo_hit.position.y = item_center_y
+			target.add_child(cargo_hit)
+			var solid := StaticBody3D.new()
+			solid.collision_layer = 4
+			prop.add_child(solid)
+			var body_hit := CollisionShape3D.new()
+			body_hit.shape = box
+			body_hit.position.y = item_center_y
+			solid.add_child(body_hit)
+			target.solid = solid
+			prop.add_child(target)
 	refresh_cargo_props()
+
+func build_item_model(prop: Node3D, item: Dictionary) -> void:
+	var previous := prop.get_node_or_null("Model")
+	if previous != null:
+		prop.remove_child(previous)
+		previous.queue_free()
+	var model: Node3D
+	if item.get("container_type") == "toolbox":
+		model = preload("res://scripts/toolbox_model.gd").new()
+	elif item.has("container_type"):
+		model = preload("res://scripts/cargo_container_model.gd").new()
+	else:
+		model = Node3D.new()
+	model.name = "Model"
+	prop.add_child(model)
+	if item.has("container_type"):
+		model.configure(item)
+	elif item.icon == "ladder":
+		for x in [-0.19, 0.19]:
+			piece(Vector3(x, 0, 0), Vector3(0.055, 0.06, 1.8), material("acb5b5"), model)
+		for i in range(6):
+			piece(Vector3(0, 0, -0.75 + i * 0.3), Vector3(0.38, 0.045, 0.06), material("acb5b5"), model)
+	elif item.icon == "receipt":
+		piece(Vector3(0, -0.27, 0), Vector3(0.4, 0.02, 0.55), material("e1ddbf"), model)
+	else:
+		piece(Vector3(0, -0.1, 0), Vector3(0.7, 0.3, 0.65), material("a78a64"), model)
+	for node in prop.get_children():
+		if node is CargoItem:
+			node.set_highlight(false)
+			node.refresh_surfaces()
 
 func refresh_cargo_props() -> void:
 	if cargo_props == null or cargo_inventory == null:
@@ -467,6 +550,11 @@ func refresh_cargo_props() -> void:
 		for item in cargo_inventory.items:
 			if prop.get_meta("item_id") == item.id:
 				prop.visible = true
+				prop.set_meta("data", item)
+				for target in prop.get_children():
+					if target is CargoItem:
+						target.item = item
+				build_item_model(prop, item)
 
 
 func physical_box(at: Vector3, size: Vector3) -> void:
