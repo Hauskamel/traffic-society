@@ -53,14 +53,10 @@ static func for_vehicle(driver_name: String, plate: String) -> RefCounted:
 	var inventory := new()
 	inventory.capacity = 9
 	var sets := {
-		"Bobby Mayer": [["Werkzeugkoffer", "case", "Schraubendreher, Zange und ein kleiner Schraubenschluessel."], ["Ersatzteil", "parcel", "Ein verpackter Oelfilter. Beschriftung: Fuer die alte Limousine."], ["Werkstattbeleg", "receipt", "Werkstatt Nord – Oelwechsel.
-Notiz: Ersatzteil beim naechsten Termin mitbringen."]],
-		"Nora Beck": [["Einkaufstasche", "bag", "Brot, Obst und eine Packung Tee."], ["Geschenk", "parcel", "Ein sorgfaeltig verpacktes Geschenk.
-Anhaenger: Fuer Leon."], ["Kassenbon", "receipt", "Supermarkt am Markt – Lebensmittel, 18,40 Euro."]],
-		"Erik Sommer": [["Paket", "parcel", "Versandkarton.
-Empfaenger: Lager Sued, Tor 3."], ["Arbeitsmaterial", "case", "Eine Kiste mit Kabeln und Befestigungsmaterial."], ["Lieferschein", "receipt", "Auftrag 308 – Lager Sued.
-Enthaelt ein Paket und eine Materialkiste."]],
-		"Mara Wolf": [["Seil", "rope", "Ein aufgewickeltes Arbeitsseil."], ["Werkzeugkoffer", "case", "Ein Koffer mit gebrauchten Handwerkzeugen."], ["Handschuhe", "gloves", "Ein Paar robuste Arbeitshandschuhe."]]
+		"Bobby Mayer": [["Werkzeugkoffer", "case", "Ein Werkzeugkoffer."], ["Kuehlbox", "cooler", "Eine Kuehlbox mit herausnehmbarem Innenkorb."], ["Werkstattbeleg", "receipt", "Werkstatt Nord – Oelwechsel."]],
+		"Nora Beck": [["Kuehlbox", "cooler", "Eine Kuehlbox mit herausnehmbarem Innenkorb."], ["Geschenk", "parcel", "Ein verpacktes Geschenk."], ["Kassenbon", "receipt", "Supermarkt am Markt."]],
+		"Erik Sommer": [["Farbeimer", "paint_bucket", "Ein Eimer weisser Farbe."], ["Farbeimer", "paint_bucket", "Ein Eimer weisser Farbe."], ["Farbeimer", "paint_bucket", "Ein Eimer weisser Farbe."], ["Wasserfass", "water_barrel", "Ein Fass mit Wasser und abnehmbarem Deckel."]],
+		"Mara Wolf": [["Werkzeugkoffer", "case", "Ein Werkzeugkoffer."], ["Leiter", "ladder", "Eine gesicherte Leiter auf der Ladeflaeche."], ["Handschuhe", "gloves", "Ein Paar Arbeitshandschuhe."]]
 	}
 	var contents: Array = sets.get(driver_name, sets["Bobby Mayer"])
 	for i in range(contents.size()):
@@ -77,4 +73,15 @@ Enthaelt ein Paket und eine Materialkiste."]],
 			if driver_name == "Bobby Mayer":
 				inside.items.append({"id": toolbox.id + ":knife", "name": "Messer", "icon": "knife", "owner": toolbox.owner, "container_id": toolbox.id, "description": "Ein Messer mit dunkelroten Spuren auf der Klinge. Ob es Blut ist, ist noch nicht geklaert."})
 			toolbox.contents = inside
+		elif contents[i][1] in ["cooler", "paint_bucket", "water_barrel"]:
+			var container: Dictionary = inventory.items.back()
+			container.container_type = contents[i][1]
+			container.unlocked = container.container_type != "cooler"
+			container.opened = false
+			container.insert_removed = container.container_type == "water_barrel"
+			var inside := new()
+			inside.capacity = 3
+			if (container.container_type == "paint_bucket" and i == 1) or container.container_type == "water_barrel" or (container.container_type == "cooler" and driver_name == "Bobby Mayer"):
+				inside.items.append({"id": container.id + ":packet", "name": "Versiegeltes Paeckchen", "icon": "sealed_packet", "owner": container.owner, "container_id": container.id, "description": "Ein versiegeltes Paeckchen mit hellem Inhalt. Was darin ist, ist noch nicht bestaetigt."})
+			container.contents = inside
 	return inventory

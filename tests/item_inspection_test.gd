@@ -22,7 +22,7 @@ func run() -> void:
 		catalog.append_array(car.inventory.items)
 		catalog.append_array(car.cargo_inventory.items)
 		for cargo in car.cargo_inventory.items:
-			if cargo.get("container_type") == "toolbox":
+			if cargo.has("container_type"):
 				catalog.append_array(cargo.contents.items)
 	for item in catalog:
 		if seen.has(item.icon):
@@ -49,7 +49,7 @@ func run() -> void:
 		check(preview.distance < 3.0, "Wheel must zoom the 3D preview")
 		preview.reset_view()
 		check(preview.distance == 3.0 and preview.model.rotation.is_equal_approx(before), "Reset must restore angle and zoom")
-	check(seen.size() == 15, "All fifteen item categories must be covered")
+	check(seen.size() == 18, "All eighteen item categories must be covered")
 	ui.select_item("Bobby Mayer:receipt", "npc")
 	check(not ui.detail.text.contains("Besitzer"), "Inventory description must omit owner line")
 	check(ui.preview.model.get_child_count() >= 3, "Paper needs geometry and text on both sides")
@@ -63,5 +63,5 @@ func run() -> void:
 	check(scene.player_inventory.items.size() == 6 and scene.traffic.cars[0].inventory.items.size() == 3, "Inspection must not change inventories")
 	check(ui.get_global_rect().end.y <= root.get_visible_rect().end.y + 1, "Inventory must fit the viewport")
 	if failures.is_empty():
-		print("PASS: fifteen 3D models, two-axis dragging, zoom, reset, front/back text, hidden owner line and inventory preservation")
+		print("PASS: eighteen 3D models, two-axis dragging, zoom, reset, front/back text, hidden owner line and inventory preservation")
 	quit(0 if failures.is_empty() else 1)
