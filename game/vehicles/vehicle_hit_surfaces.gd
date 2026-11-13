@@ -1,3 +1,6 @@
+## Fahrzeugweite Verwaltung von Einschussmarken, Glas- und Reifenschäden.
+## Schussflächen sind von den gröberen Bewegungskollisionen getrennt.
+
 extends Node
 const HitSurface = preload("res://game/vehicles/vehicle_hit_surface.gd")
 const SHOT_LAYER := 16
@@ -13,18 +16,29 @@ var wheel_positions: Dictionary = {}
 var damage_sound: AudioStreamPlayer3D
 static var hole_material: StandardMaterial3D
 
+
+## Initialisiert die gemeinsame Schadensdarstellung der Projektilflächen.
 func _ready() -> void:
 	process_physics_priority = 1
 
+
+## Erzeugt die konfigurierten Modelle beziehungsweise Trefferflächen am übergebenen Elternknoten.
 func build(root: Node) -> void:
 	for node in root.get_children():
-		if node == vehicle.driver or node == vehicle.marker or node == vehicle.cargo_props or node is HitSurface:
+		if (
+			node == vehicle.driver
+			or node == vehicle.marker
+			or node == vehicle.cargo_props
+			or node is HitSurface
+		):
 			continue
 		if node is MeshInstance3D and (node.mesh is BoxMesh or node.mesh is CylinderMesh):
 			add_surface(node)
 		else:
 			build(node)
 
+
+## Ordnet einem sichtbaren Fahrzeug-Mesh eine passende geometrienahe Projektilfläche zu.
 func add_surface(mesh: MeshInstance3D) -> void:
 	var zone := HitSurface.new()
 	zone.vehicle = vehicle
@@ -34,7 +48,10 @@ func add_surface(mesh: MeshInstance3D) -> void:
 	zone.collision_mask = 0
 	zone.kind = "body"
 	var material = mesh.material_override
-	if material is StandardMaterial3D and material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+	if (
+		material is StandardMaterial3D
+		and material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED
+	):
 		zone.kind = "glass"
 	elif mesh.mesh is CylinderMesh:
 		zone.kind = "tire"
@@ -53,6 +70,8 @@ func add_surface(mesh: MeshInstance3D) -> void:
 	mesh.add_child(zone)
 	zones.append(zone)
 
+
+## Setzt eine an der getroffenen Fläche haftende und mengenbegrenzte Einschussmarkierung.
 func add_mark(zone: HitSurface, point: Vector3, normal: Vector3) -> void:
 	if normal.length_squared() < 0.5:
 		return
@@ -80,6 +99,8 @@ func add_mark(zone: HitSurface, point: Vector3, normal: Vector3) -> void:
 		var old := marks.pop_front() as MeshInstance3D
 		old.queue_free()
 
+
+## Verarbeitet Glas- oder Reifenschäden und ergänzt die sichtbaren Treffereffekte.
 func register_damage(zone: HitSurface, point: Vector3, normal: Vector3) -> void:
 	if zone.kind == "glass" and zone.damage_state >= 2:
 		return
@@ -97,6 +118,8 @@ func register_damage(zone: HitSurface, point: Vector3, normal: Vector3) -> void:
 		zone.damage_state = 1
 		flatten_tire(zone)
 
+
+## Spielt den zum Fahrzeugschaden passenden räumlichen Ton ab.
 func play_damage(stream: AudioStream) -> void:
 	if not is_instance_valid(damage_sound):
 		damage_sound = AudioStreamPlayer3D.new()
@@ -105,6 +128,8 @@ func play_damage(stream: AudioStream) -> void:
 	damage_sound.stream = stream
 	damage_sound.play()
 
+
+## Ergänzt sichtbare Risse, ohne die noch vorhandene Glasscheibe zu entfernen.
 func crack_glass(zone: HitSurface) -> void:
 	var dimensions: Vector3 = zone.surface.mesh.size
 	var axis := 0 if dimensions.x < dimensions.z else 2
@@ -125,6 +150,8 @@ func crack_glass(zone: HitSurface) -> void:
 		cracks.position[axis] = side * (dimensions[axis] / 2 + 0.003)
 		cracks.rotation.y = side * PI / 2 if axis == 0 else (0.0 if side > 0 else PI)
 
+
+## Erzeugt kurzlebige visuelle Splitter am Einschlagpunkt.
 func glass_fragments(point: Vector3) -> void:
 	var root := vehicle.get_parent()
 	for i in range(8):
@@ -140,11 +167,18 @@ func glass_fragments(point: Vector3) -> void:
 		var tween := shard.create_tween().set_parallel(true)
 		var end := point + Vector3(sin(i * 2.4) * 0.45, 0, cos(i * 2.4) * 0.45)
 		end.y = 0.1
-		tween.tween_property(shard, "global_position", end, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		(
+			tween
+			. tween_property(shard, "global_position", end, 0.7)
+			. set_trans(Tween.TRANS_QUAD)
+			. set_ease(Tween.EASE_IN)
+		)
 		tween.tween_property(shard, "rotation", Vector3(i, i * 0.7, i * 0.3), 0.7)
 		tween.chain().tween_property(shard, "scale", Vector3.ZERO, 0.2)
 		tween.chain().tween_callback(shard.queue_free)
 
+
+## Ersetzt die Reifendarstellung und erhöht die Anzahl tatsächlich beschädigter Reifen.
 func flatten_tire(zone: HitSurface) -> void:
 	var spin: Node3D = zone.surface.get_parent()
 	var steer: Node3D = spin.get_parent()
@@ -171,7 +205,20 @@ func flatten_tire(zone: HitSurface) -> void:
 		var left_b := Vector3(-0.15, maxf(-0.22, cos(b) * 0.35), sin(b) * 0.35)
 		var right_a := left_a + Vector3(0.3, 0, 0)
 		var right_b := left_b + Vector3(0.3, 0, 0)
-		for vertex in [left_a, left_b, right_a, right_a, left_b, right_b, Vector3(-0.15, 0, 0), left_b, left_a, Vector3(0.15, 0, 0), right_a, right_b]:
+		for vertex in [
+			left_a,
+			left_b,
+			right_a,
+			right_a,
+			left_b,
+			right_b,
+			Vector3(-0.15, 0, 0),
+			left_b,
+			left_a,
+			Vector3(0.15, 0, 0),
+			right_a,
+			right_b
+		]:
 			tool.add_vertex(vertex)
 	tool.generate_normals()
 	rubber.mesh = tool.commit()
@@ -196,9 +243,13 @@ func flatten_tire(zone: HitSurface) -> void:
 	play_damage(preload("res://assets/audio/tire_hiss.wav"))
 	apply_stance()
 
+
+## Liefert die durch Reifenschäden begrenzte Fahrzeuggeschwindigkeit.
 func speed_cap() -> float:
 	return [1000.0, 3.0, 1.8, 0.9, 0.45][mini(flat_tires, 4)]
 
+
+## Passt Fahrzeughöhe und Neigung an die beschädigten Reifen an.
 func apply_stance() -> void:
 	if flat_tires == 0:
 		return
@@ -223,5 +274,7 @@ func apply_stance() -> void:
 		steer.position = wheel_positions[steer.get_instance_id()]
 		steer.global_position.y = 0.08 + (0.22 if flat_steers.has(steer) else 0.35)
 
+
+## Gleicht die Fahrzeugstellung kontinuierlich mit dem aktuellen Reifenschaden ab.
 func _physics_process(_delta: float) -> void:
 	apply_stance()

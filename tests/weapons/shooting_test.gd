@@ -1,40 +1,67 @@
+## Integrationsprüfung: shooting.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 var failures: Array[String] = []
 var scene: Node
+
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
+
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
+
+
+## Übergibt ein Tastaturereignis an die getestete Eingabesteuerung.
 func key(code: int, pressed := true) -> void:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.pressed = pressed
 	scene._unhandled_input(event)
+
+
+## Übergibt einen Maustastenzustand an die getestete Eingabesteuerung.
 func mouse(button: int, pressed := true) -> void:
 	var event := InputEventMouseButton.new()
 	event.button_index = button
 	event.pressed = pressed
 	scene._unhandled_input(event)
+
+
+## Führt die Waffen-Eingaben zum vollständigen Zielen aus.
 func aim() -> void:
 	key(KEY_SHIFT)
 	scene.equipment.tick(0.25)
 	mouse(MOUSE_BUTTON_RIGHT)
 	scene.equipment.tick(0.3)
+
+
+## Speichert im grafischen Modus einen Screenshot des aktuellen Testzustands.
 func capture(name: String) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	await process_frame
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("user://shooting-" + name + ".png")
+
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
 	scene.set_physics_process(false)
 	var gear = scene.equipment
 	var gun = gear.pistol_action
-	check(gun.rounds() == 15 and gun.spare_count() == 2 and gun.total_rounds() == 45, "Start: one loaded magazine plus two full inventory magazines")
+	check(
+		gun.rounds() == 15 and gun.spare_count() == 2 and gun.total_rounds() == 45,
+		"Start: one loaded magazine plus two full inventory magazines"
+	)
 	key(KEY_TAB)
 	gear.tick(0)
 	var at: Vector3 = scene.player.position
@@ -62,7 +89,10 @@ func run() -> void:
 	await capture("reload")
 	check(gun.rounds() == 14, "Reload must not grant ammunition before completion")
 	gear.tick(1.1)
-	check(gun.rounds() == 15 and gun.total_rounds() == total and gun.spare_count() == 2, "Tactical reload preserves rounds and returns partial magazine")
+	check(
+		gun.rounds() == 15 and gun.total_rounds() == total and gun.spare_count() == 2,
+		"Tactical reload preserves rounds and returns partial magazine"
+	)
 	check(not gun.start_reload(), "Full magazine does not reload")
 	for i in range(15):
 		gear.tick(0.2)
@@ -72,7 +102,10 @@ func run() -> void:
 	check(not gun.fire() and gun.rounds() == 0, "Empty click cannot consume negative ammo")
 	key(KEY_R)
 	gear.tick(2)
-	check(gun.rounds() == 15 and gun.total_rounds() == 29, "Empty reload loads next magazine without duplicating ammo")
+	check(
+		gun.rounds() == 15 and gun.total_rounds() == 29,
+		"Empty reload loads next magazine without duplicating ammo"
+	)
 	gear.tick(0.2)
 	mouse(MOUSE_BUTTON_LEFT)
 	gear.tick(0.2)
@@ -83,7 +116,10 @@ func run() -> void:
 	var before: int = gun.total_rounds()
 	key(KEY_2)
 	gear.tick(2)
-	check(not gun.reloading and gun.total_rounds() == before and gun.rounds() == 13, "Switching cancels reload without swapping or losing ammo")
+	check(
+		not gun.reloading and gun.total_rounds() == before and gun.rounds() == 13,
+		"Switching cancels reload without swapping or losing ammo"
+	)
 	aim()
 	mouse(MOUSE_BUTTON_LEFT)
 	check(gun.rounds() == 13, "Taser does not consume Glock ammunition")
@@ -100,7 +136,9 @@ func run() -> void:
 	key(KEY_R)
 	check(scene.player.position == at, "R remains harmless when holstered")
 	if failures.is_empty():
-		print("PASS: loaded/spare ammo, no R reset, aimed single shots, hit/flash/recoil, cooldown, empty click, timed reload, retained partials, cancellation and no ammo creation")
+		print(
+			"PASS: loaded/spare ammo, no R reset, aimed single shots, hit/flash/recoil, cooldown, empty click, timed reload, retained partials, cancellation and no ammo creation"
+		)
 	gun.sound.stop()
 	gun.click.stop()
 	await create_timer(0.25).timeout

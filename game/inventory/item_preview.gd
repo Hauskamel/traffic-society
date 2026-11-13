@@ -1,5 +1,7 @@
+## Interaktive 3D-Vorschau einzelner Inventargegenstände.
+## Nutzt einen eigenen Viewport, damit Drehen und Zoomen die Welt nicht beeinflussen.
+
 extends SubViewportContainer
-## Isolated 3D inspection scene; no mutations to the inventory item.
 var viewport: SubViewport
 var world: Node3D
 var model: Node3D
@@ -8,6 +10,8 @@ var selected_id := ""
 var dragging := false
 var distance := 3.0
 
+
+## Richtet den eigenen 3D-Viewport mit Kamera und Beleuchtung ein.
 func _ready() -> void:
 	custom_minimum_size = Vector2(300, 200)
 	stretch = true
@@ -38,6 +42,8 @@ func _ready() -> void:
 	camera.current = true
 	reset_view()
 
+
+## Erzeugt ein Material für die prozedurale Modelldarstellung.
 func material(color: String, metallic := false) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(color)
@@ -45,6 +51,8 @@ func material(color: String, metallic := false) -> StandardMaterial3D:
 	mat.roughness = 0.5
 	return mat
 
+
+## Erzeugt einen farbigen Quader innerhalb der Gegenstandsvorschau.
 func cube(at: Vector3, size: Vector3, color: String) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
 	var shape := BoxMesh.new()
@@ -55,6 +63,8 @@ func cube(at: Vector3, size: Vector3, color: String) -> MeshInstance3D:
 	model.add_child(mesh)
 	return mesh
 
+
+## Ergänzt einen Ring als prozedurales Gegenstandsdetail.
 func ring(at: Vector3, radius: float, color: String) -> void:
 	var mesh := MeshInstance3D.new()
 	var torus := TorusMesh.new()
@@ -66,6 +76,8 @@ func ring(at: Vector3, radius: float, color: String) -> void:
 	mesh.rotation.x = PI / 2
 	model.add_child(mesh)
 
+
+## Platziert lesbaren Text auf der vorgesehenen Modellseite.
 func text_on_surface(text: String, at: Vector3, back := false, width := 350.0) -> void:
 	var label := Label3D.new()
 	label.text = text
@@ -79,6 +91,8 @@ func text_on_surface(text: String, at: Vector3, back := false, width := 350.0) -
 	label.rotation.y = PI if back else 0
 	model.add_child(label)
 
+
+## Ersetzt das Vorschaumodell durch den gewählten Gegenstand.
 func set_item(item: Dictionary) -> void:
 	var id: String = item.get("id", "")
 	if id == selected_id:
@@ -108,7 +122,18 @@ func set_item(item: Dictionary) -> void:
 			cube(Vector3.ZERO, Vector3(0.9, 1.2, 0.018), "e1ddbf")
 			var lines: PackedStringArray = item.description.split("\n", false)
 			text_on_surface(item.name + "\n\n" + lines[0], Vector3(0, 0.12, 0.012))
-			text_on_surface("Notizen\n\n" + ("\n".join(lines.slice(1)) if lines.size() > 1 else "Keine weiteren Vermerke."), Vector3(0, 0.1, -0.012), true)
+			text_on_surface(
+				(
+					"Notizen\n\n"
+					+ (
+						"\n".join(lines.slice(1))
+						if lines.size() > 1
+						else "Keine weiteren Vermerke."
+					)
+				),
+				Vector3(0, 0.1, -0.012),
+				true
+			)
 		"hammer", "knife":
 			var tool := Node3D.new()
 			model.add_child(tool)
@@ -155,7 +180,11 @@ func set_item(item: Dictionary) -> void:
 			for x in [-0.25, 0.25]:
 				cube(Vector3(x, -0.05, 0), Vector3(0.34, 0.6, 0.1), "b99d6c")
 				for finger in range(4):
-					cube(Vector3(x - 0.12 + finger * 0.08, 0.34, 0), Vector3(0.065, 0.25, 0.1), "b99d6c")
+					cube(
+						Vector3(x - 0.12 + finger * 0.08, 0.34, 0),
+						Vector3(0.065, 0.25, 0.1),
+						"b99d6c"
+					)
 				cube(Vector3(x + 0.21, 0.06, 0), Vector3(0.16, 0.22, 0.1), "b99d6c").rotation.z = -0.5
 		"magazine":
 			cube(Vector3.ZERO, Vector3(0.28, 0.95, 0.38), "29333b").rotation.z = -0.18
@@ -163,7 +192,9 @@ func set_item(item: Dictionary) -> void:
 			if int(item.get("rounds", 0)) > 0:
 				cube(Vector3(-0.08, 0.48, 0), Vector3(0.18, 0.08, 0.3), "bfa66c")
 		"pistol", "taser":
-			var weapon: Node3D = preload("res://game/weapons/weapon_visuals.gd").build(model, item.icon)
+			var weapon: Node3D = preload("res://game/weapons/weapon_visuals.gd").build(
+				model, item.icon
+			)
 			weapon.scale = Vector3.ONE * 7
 		"radio":
 			var handset: Node3D = preload("res://game/police/police_visuals.gd").radio(model)
@@ -184,6 +215,8 @@ func set_item(item: Dictionary) -> void:
 			cube(Vector3.ZERO, Vector3(0.8, 0.8, 0.5), "617b83")
 	reset_view()
 
+
+## Stellt Kameradistanz und Modellorientierung der Vorschau zurück.
 func reset_view() -> void:
 	distance = 3.0
 	if is_instance_valid(model):
@@ -192,12 +225,18 @@ func reset_view() -> void:
 		camera.position = Vector3(0, 0.05, distance)
 		camera.look_at(Vector3.ZERO)
 
+
+## Verarbeitet Drehen, Zoomen und gegebenenfalls Auswahl innerhalb der 3D-Vorschau.
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			dragging = event.pressed
-		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
-			distance = clampf(distance + (-0.2 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.2), 1.7, 5.0)
+		elif (
+			event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]
+		):
+			distance = clampf(
+				distance + (-0.2 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.2), 1.7, 5.0
+			)
 			camera.position.z = distance
 		accept_event()
 	elif event is InputEventMouseMotion and dragging and is_instance_valid(model):

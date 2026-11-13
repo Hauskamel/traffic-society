@@ -1,18 +1,29 @@
+## Integrationsprüfung: driver.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 var failures: Array[String] = []
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
 
+
+## Führt die prozedurale Animation mit festem Simulationsschritt weiter.
 func animate(driver: Node, frames := 300) -> void:
 	for i in range(frames):
 		driver._physics_process(1.0 / 60.0)
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	for index in range(4):
 		var scene = load("res://game/world/main.tscn").instantiate()
@@ -31,7 +42,10 @@ func run() -> void:
 		scene.player.position = Vector3(4.9, 0.1, driver.global_position.z)
 		await physics_frame
 		await physics_frame
-		check(driver.request_exit(), "Exit must work even when the officer blocks the door: " + car.model_kind)
+		check(
+			driver.request_exit(),
+			"Exit must work even when the officer blocks the door: " + car.model_kind
+		)
 		check(car.driver_door.collision_layer == 0, "Moving door must not push or trap the officer")
 		check(not driver.request_exit(), "Duplicate exit must be rejected")
 		check(not car.release(), "Car must not drive during exit")
@@ -54,7 +68,10 @@ func run() -> void:
 		await physics_frame
 		await physics_frame
 		var hit = scene.player.move_and_collide(Vector3(1.5, 0, 0))
-		check(hit != null and hit.get_collider() == driver.body, "Officer must collide with waiting driver")
+		check(
+			hit != null and hit.get_collider() == driver.body,
+			"Officer must collide with waiting driver"
+		)
 		scene.player.position = car.to_global(Vector3(-2, 0.1, driver.outside.z))
 		await physics_frame
 		await physics_frame
@@ -67,5 +84,7 @@ func run() -> void:
 		scene.queue_free()
 		await process_frame
 	if failures.is_empty():
-		print("PASS: all four models, door animation, obstructed paths without retries or pauses, exit, driver collision, entry and release guards")
+		print(
+			"PASS: all four models, door animation, obstructed paths without retries or pauses, exit, driver collision, entry and release guards"
+		)
 	quit(0 if failures.is_empty() else 1)

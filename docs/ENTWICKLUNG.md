@@ -592,6 +592,16 @@ Beim NPC werden Impuls und regionaler Kraftverlust reduziert. Kopfverlust bleibt
 
 PR #5 wurde als Merge-Commit `860cb75` („Merge Körperphysik“) in `develop` übernommen. Enthalten sind Körperphysik, bewaffnete NPC-Testszene, Spielerschaden, Sitzphysik mit Ausrollen/Herausfallen und Glasdurchschüsse. Der Merge ist konfliktfrei; der übernommene Spielcode entspricht dem zuvor getesteten Feature-Stand. Branch-Buslinie und README sind aktualisiert. `main` und der vorhandene Feature-Branch werden durch diesen Schritt nicht verändert. Künftige Commit-Nachrichten werden kürzer gehalten.
 
+## Projektstruktur und Code-Dokumentation
+
+Auf `feature/projectStructure` wurden die bisherigen zentralen Skript- und Szenenordner nach Spielsystemen unter `game/` aufgeteilt. Szenen und zugehörige Steuerung liegen beieinander; die Hauptszene liegt unter `game/world/`. Die separaten Entwicklungsumgebungen liegen unter `prototypes/`, ihre festen Abläufe bleiben von wiederverwendbarer Spiellogik getrennt. Tests sind nach den gleichen Fachbereichen gruppiert. Vorhandene Godot-Skript-UIDs wurden mitgenommen; Projektstart, Vererbung, Ladepfade und Dokumentationsverweise wurden angepasst.
+
+Alle Laufzeitskripte haben eine Verantwortungsbeschreibung. Haupt- und Hilfsfunktionen besitzen einheitliche deutsche `##`-Beschreibungen; wichtige Zustandsänderungen, Einheiten und Bereinigungsverpflichtungen werden ausdrücklich genannt. Auch Testhelfer sind kurz dokumentiert. Der fest versionierte Formatter vereinheitlicht Einrückung, Leerzeilen und lange Ausdrücke mit Syntaxbaum- und Kommentarerhaltungsprüfung. `.editorconfig` und `tools/format_code.py` machen den Stil reproduzierbar.
+
+[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) beschreibt Zuständigkeiten und Erweiterungsregeln; [CODE_STYLE.md](CODE_STYLE.md) enthält Kommentarformat, Formatierungsbefehle und Beispiele. Die Umordnung ist keine Leistungsoptimierung und keine vollständige Zerlegung des großen Weltkoordinators. Die Spiellogik bleibt erhalten.
+
+Prüfung: Die Syntaxbäume aller 65 GDScripts stimmen nach Normalisierung der neuen Ressourcenpfade mit dem vorherigen Stand überein. Alle vorhandenen Skript-UIDs sind erhalten. Import und Tests liefen zusätzlich in einer frischen Projektkopie ohne vorhandenen `.godot`-Cache. Alle 31 vorhandenen Testskripte bestanden, einschließlich grafischer UI-, Waffen-, Dokumenten- und Vorschautests. Die Konfrontation wurde grafisch mit bedarfsweisem Rendern der Screenshots geprüft; dies ist kein FPS-Benchmark. Ressourcen-/Dokumentationsprüfung und Formatter melden keine Abweichungen. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu prüfen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

@@ -1,5 +1,7 @@
 # Traffic Society
 
+[Projektstruktur](docs/PROJECT_STRUCTURE.md) · [Code- und Dokumentationsregeln](docs/CODE_STYLE.md)
+
 [Git-Branches als visuelle Buslinie](docs/BRANCHES.md) · Abzweigungen, Merges und aktueller Branch-Status.
 
 Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelperspektive beobachten und Kontrollen später in der Ego-Perspektive durchführen.

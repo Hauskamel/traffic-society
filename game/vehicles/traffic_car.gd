@@ -1,5 +1,7 @@
+## Prozedurales Fahrzeugmodell mit Route, Fahrer, Beladung und Schäden.
+## Bewegung ist routengeführt; bei Fahrertod wird eine Auslaufstrecke angelegt.
+
 extends AnimatableBody3D
-## Authored encounter: +Z to -Z on the right-hand lane, then through the bay.
 signal state_changed
 
 enum State { DRIVING, PULLING_OVER, PARKED, LEAVING, FINISHED }
@@ -47,12 +49,16 @@ var driver_door: AnimatableBody3D
 const VehiclePart = preload("res://game/vehicles/vehicle_part.gd")
 var parts: Array[VehiclePart] = []
 
+
+## Erzeugt ein Material für die prozedurale Modelldarstellung.
 func material(color: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(color)
 	m.roughness = 0.8
 	return m
 
+
+## Erzeugt einen benannten Modellbaustein an der übergebenen Position.
 func piece(at: Vector3, size: Vector3, m: Material, parent: Node3D = self) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
 	var cube := BoxMesh.new()
@@ -63,6 +69,8 @@ func piece(at: Vector3, size: Vector3, m: Material, parent: Node3D = self) -> Me
 	mesh.position = at
 	return mesh
 
+
+## Erzeugt Fahrzeuggeometrie, Fahrer, Ladung, Türen und geometrienahe Trefferflächen.
 func _ready() -> void:
 	name = driver_name.replace(" ", "")
 	sync_to_physics = false
@@ -117,9 +125,23 @@ func _ready() -> void:
 		piece(Vector3(0, 1.45, -0.9), Vector3(1.8, 1.5, 0.1), paint)
 		piece(Vector3(0, 2.23, 0.75), Vector3(1.9, 0.12, 3.5), trim)
 		for side in [-1.0, 1.0]:
-			var rear := panel_hinge(Vector3(side * 0.9, 0, body_length / 2.0), Vector3(0.87, 1.5, 0.1), Vector3(-side * 0.435, 1.45, 0), paint, "CargoDoor")
+			var rear := panel_hinge(
+				Vector3(side * 0.9, 0, body_length / 2.0),
+				Vector3(0.87, 1.5, 0.1),
+				Vector3(-side * 0.435, 1.45, 0),
+				paint,
+				"CargoDoor"
+			)
 			piece(Vector3(-side * 0.76, 1.35, 0.065), Vector3(0.05, 0.25, 0.04), trim, rear)
-			add_part(rear, "Linke Ladetuer" if side < 0 else "Rechte Ladetuer", "trunk", Vector3(-side * 0.435, 1.45, 0), Vector3(0.9, 1.5, 0.24), Vector3.UP, side * 1.5)
+			add_part(
+				rear,
+				"Linke Ladetuer" if side < 0 else "Rechte Ladetuer",
+				"trunk",
+				Vector3(-side * 0.435, 1.45, 0),
+				Vector3(0.9, 1.5, 0.24),
+				Vector3.UP,
+				side * 1.5
+			)
 	elif model_kind == "pickup":
 		cabin_z = -0.75
 		cabin_length = 1.6
@@ -128,12 +150,30 @@ func _ready() -> void:
 		piece(Vector3(0, 1.04, 1.3), Vector3(1.55, 0.06, 2.1), trim)
 		for x in [-0.84, 0.84]:
 			piece(Vector3(x, 1.22, 1.3), Vector3(0.13, 0.4, 2.1), paint)
-		var tailgate := panel_hinge(Vector3(0, 1.02, body_length / 2.0 - 0.05), Vector3(1.8, 0.4, 0.12), Vector3(0, 0.2, 0), paint, "Tailgate")
-		add_part(tailgate, "Ladeflaechenklappe", "trunk", Vector3(0, 0.2, 0), Vector3(1.8, 0.45, 0.24), Vector3.RIGHT, 1.5)
+		var tailgate := panel_hinge(
+			Vector3(0, 1.02, body_length / 2.0 - 0.05),
+			Vector3(1.8, 0.4, 0.12),
+			Vector3(0, 0.2, 0),
+			paint,
+			"Tailgate"
+		)
+		add_part(
+			tailgate,
+			"Ladeflaechenklappe",
+			"trunk",
+			Vector3(0, 0.2, 0),
+			Vector3(1.8, 0.45, 0.24),
+			Vector3.RIGHT,
+			1.5
+		)
 	if model_kind == "sedan":
 		var rear_start := cabin_z + cabin_length / 2.0
 		var main_length := rear_start + body_length / 2.0
-		piece(Vector3(0, 0.79, -body_length / 2.0 + main_length / 2.0), Vector3(1.55, 0.45, main_length), paint)
+		piece(
+			Vector3(0, 0.79, -body_length / 2.0 + main_length / 2.0),
+			Vector3(1.55, 0.45, main_length),
+			paint
+		)
 		var trunk_length := body_length / 2.0 - rear_start
 		var trunk_center := rear_start + trunk_length / 2.0
 		piece(Vector3(0, 0.66, trunk_center), Vector3(1.65, 0.08, trunk_length), trim)
@@ -154,15 +194,37 @@ func _ready() -> void:
 		hit_lid.shape = shape_lid
 		hit_lid.position.z = trunk_length / 2.0
 		lid.add_child(hit_lid)
-		add_part(lid, "Kofferraum", "trunk", Vector3(0, 0, trunk_length / 2.0), Vector3(1.85, 0.24, trunk_length), Vector3.RIGHT, -1.2)
+		add_part(
+			lid,
+			"Kofferraum",
+			"trunk",
+			Vector3(0, 0, trunk_length / 2.0),
+			Vector3(1.85, 0.24, trunk_length),
+			Vector3.RIGHT,
+			-1.2
+		)
 	if model_kind == "hatch":
 		piece(Vector3(0, 0.79, -0.48), Vector3(1.55, 0.45, 2.55), paint)
 		piece(Vector3(0, 0.66, 1.24), Vector3(1.65, 0.08, 1.0), trim)
 		for x in [-0.84, 0.84]:
 			piece(Vector3(x, 0.82, 1.24), Vector3(0.12, 0.36, 1.0), paint)
-		var hatch := panel_hinge(Vector3(0, roof_y + 0.02, body_length / 2.0), Vector3(1.8, 0.6, 0.1), Vector3(0, -0.7, 0), paint, "RearHatch")
+		var hatch := panel_hinge(
+			Vector3(0, roof_y + 0.02, body_length / 2.0),
+			Vector3(1.8, 0.6, 0.1),
+			Vector3(0, -0.7, 0),
+			paint,
+			"RearHatch"
+		)
 		piece(Vector3(0, -0.22, 0), Vector3(1.65, 0.38, 0.04), glass, hatch)
-		add_part(hatch, "Heckklappe", "trunk", Vector3(0, -0.5, 0), Vector3(1.8, 1.0, 0.24), Vector3.RIGHT, -1.85)
+		add_part(
+			hatch,
+			"Heckklappe",
+			"trunk",
+			Vector3(0, -0.5, 0),
+			Vector3(1.8, 1.0, 0.24),
+			Vector3.RIGHT,
+			-1.85
+		)
 	var cabin_y := (1.04 + roof_y) / 2.0
 	var door_length := minf(1.25, cabin_length * 0.65)
 	var front_z := cabin_z - cabin_length / 2.0
@@ -172,8 +234,16 @@ func _ready() -> void:
 		window_ends.append(cabin_z + cabin_length / 2.0)
 	for z in window_ends:
 		piece(Vector3(0, cabin_y, z), Vector3(1.6, roof_y - 1.0, 0.035), glass)
-	piece(Vector3(0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
-	piece(Vector3(-0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0), Vector3(0.035, roof_y - 1.0, cabin_length - door_length), glass)
+	piece(
+		Vector3(0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0),
+		Vector3(0.035, roof_y - 1.0, cabin_length - door_length),
+		glass
+	)
+	piece(
+		Vector3(-0.8, cabin_y, front_z + door_length + (cabin_length - door_length) / 2.0),
+		Vector3(0.035, roof_y - 1.0, cabin_length - door_length),
+		glass
+	)
 	piece(Vector3(0, roof_y, cabin_z), Vector3(1.7, 0.12, cabin_length + 0.1), paint)
 	piece(Vector3(0, cabin_y, front_z + door_length), Vector3(1.65, roof_y - 0.95, 0.08), paint)
 	driver_door = AnimatableBody3D.new()
@@ -184,8 +254,18 @@ func _ready() -> void:
 	add_child(driver_door)
 	driver_door.position = Vector3(-0.91, 0, front_z)
 	piece(Vector3(0, 0.82, door_length / 2.0), Vector3(0.10, 0.48, door_length), paint, driver_door)
-	piece(Vector3(0, cabin_y, door_length / 2.0), Vector3(0.035, roof_y - 1.0, door_length), glass, driver_door)
-	piece(Vector3(0, roof_y - 0.02, door_length / 2.0), Vector3(0.07, 0.06, door_length), paint, driver_door)
+	piece(
+		Vector3(0, cabin_y, door_length / 2.0),
+		Vector3(0.035, roof_y - 1.0, door_length),
+		glass,
+		driver_door
+	)
+	piece(
+		Vector3(0, roof_y - 0.02, door_length / 2.0),
+		Vector3(0.07, 0.06, door_length),
+		paint,
+		driver_door
+	)
 	piece(Vector3(-0.065, 0.98, door_length * 0.8), Vector3(0.04, 0.04, 0.16), trim, driver_door)
 	var door_hit := CollisionShape3D.new()
 	var door_box := BoxShape3D.new()
@@ -197,16 +277,44 @@ func _ready() -> void:
 	passenger.name = "PassengerDoor"
 	add_child(passenger)
 	passenger.position.x = 0.91
-	add_part(passenger, "Beifahrertuer", "passenger_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, 1.15)
-	add_part(driver_door, "Fahrertuer", "driver_door", Vector3(0, 0.82, door_length / 2.0), Vector3(0.24, 0.5, door_length), Vector3.UP, -1.15)
+	add_part(
+		passenger,
+		"Beifahrertuer",
+		"passenger_door",
+		Vector3(0, 0.82, door_length / 2.0),
+		Vector3(0.24, 0.5, door_length),
+		Vector3.UP,
+		1.15
+	)
+	add_part(
+		driver_door,
+		"Fahrertuer",
+		"driver_door",
+		Vector3(0, 0.82, door_length / 2.0),
+		Vector3(0.24, 0.5, door_length),
+		Vector3.UP,
+		-1.15
+	)
 	for z in [-body_length / 2.0, body_length / 2.0]:
 		piece(Vector3(0, 0.52, z), Vector3(1.82, 0.14, 0.14), trim)
 	for x in [-0.96, 0.96]:
 		piece(Vector3(x, cabin_y, cabin_z - cabin_length * 0.3), Vector3(0.2, 0.18, 0.3), paint)
 	brake_material = material("862c2b")
 	for x in [-0.61, 0.61]:
-		piece(Vector3(x, 0.82, -body_length / 2.0 - 0.01), Vector3(0.42, 0.2, 0.04), material("fff0c7"))
-		piece(Vector3(signf(x) * 0.86 if model_kind in ["van", "hatch"] else x, 0.82, body_length / 2.0 + 0.01), Vector3(0.14 if model_kind in ["van", "hatch"] else 0.42, 0.2, 0.04), brake_material)
+		piece(
+			Vector3(x, 0.82, -body_length / 2.0 - 0.01),
+			Vector3(0.42, 0.2, 0.04),
+			material("fff0c7")
+		)
+		piece(
+			Vector3(
+				signf(x) * 0.86 if model_kind in ["van", "hatch"] else x,
+				0.82,
+				body_length / 2.0 + 0.01
+			),
+			Vector3(0.14 if model_kind in ["van", "hatch"] else 0.42, 0.2, 0.04),
+			brake_material
+		)
 	for x in [-0.92, 0.92]:
 		for z in [-body_length * 0.32, body_length * 0.32]:
 			var steer := Node3D.new()
@@ -260,6 +368,8 @@ func _ready() -> void:
 	add_child(hit_surfaces)
 	hit_surfaces.build(self)
 
+
+## Ersetzt die Fahrkurve aus Weltpunkten und setzt den zurückgelegten Routenweg zurück.
 func set_route(points: Array[Vector3]) -> void:
 	route = Curve3D.new()
 	route.bake_interval = 0.08
@@ -270,6 +380,8 @@ func set_route(points: Array[Vector3]) -> void:
 		route.add_point(points[i], -tangent, tangent)
 	distance = 0.0
 
+
+## Setzt Fahrzeug, Fahrer, Türen und Ausrollstatus auf eine neue Durchfahrt zurück.
 func new_test_drive() -> void:
 	death_coasting = false
 	for part in parts:
@@ -286,33 +398,76 @@ func new_test_drive() -> void:
 	set_route([position, Vector3(2, 0.08, -64)])
 	state_changed.emit()
 
-func can_stop() -> bool:
-	return not driver.is_dead() and not driver.surrendered and state == State.DRIVING and position.z > 28.0
 
+## Prüft, ob das fahrende Fahrzeug noch einen Kontrollauftrag annehmen kann.
+func can_stop() -> bool:
+	return (
+		not driver.is_dead()
+		and not driver.surrendered
+		and state == State.DRIVING
+		and position.z > 28.0
+	)
+
+
+## Legt die Einfahrtroute zum Kontrollplatz an und markiert das Fahrzeug.
 func request_stop() -> bool:
 	if not can_stop():
 		return false
 	state = State.PULLING_OVER
 	marker.visible = true
-	set_route([position, Vector3(2, 0.08, 28), Vector3(4, 0.08, 22),
-		Vector3(6.8, 0.08, 17), Vector3(7.1, 0.08, 12), Vector3(7.1, 0.08, 5)])
+	set_route(
+		[
+			position,
+			Vector3(2, 0.08, 28),
+			Vector3(4, 0.08, 22),
+			Vector3(6.8, 0.08, 17),
+			Vector3(7.1, 0.08, 12),
+			Vector3(7.1, 0.08, 5)
+		]
+	)
 	state_changed.emit()
 	return true
 
+
+## Startet die Abfahrtroute nur bei freigegebenem Fahrer und geschlossenem Fahrzeug.
 func release() -> bool:
-	if state != State.PARKED or not driver.can_drive() or not all_parts_closed() or cargo_search_active or officer_aboard or driver.arrested:
+	if (
+		state != State.PARKED
+		or not driver.can_drive()
+		or not all_parts_closed()
+		or cargo_search_active
+		or officer_aboard
+		or driver.arrested
+	):
 		return false
 	state = State.LEAVING
 	if surrender_stop:
-		set_route([position, position + Vector3(0, 0, -6), Vector3(2, 0.08, minf(position.z - 14, -40)), Vector3(2, 0.08, minf(position.z - 24, -64))])
+		set_route(
+			[
+				position,
+				position + Vector3(0, 0, -6),
+				Vector3(2, 0.08, minf(position.z - 14, -40)),
+				Vector3(2, 0.08, minf(position.z - 24, -64))
+			]
+		)
 		surrender_stop = false
 		state_changed.emit()
 		return true
-	set_route([position, Vector3(7.1, 0.08, -12), Vector3(6.8, 0.08, -17),
-		Vector3(4, 0.08, -22), Vector3(2, 0.08, -28), Vector3(2, 0.08, -64)])
+	set_route(
+		[
+			position,
+			Vector3(7.1, 0.08, -12),
+			Vector3(6.8, 0.08, -17),
+			Vector3(4, 0.08, -22),
+			Vector3(2, 0.08, -28),
+			Vector3(2, 0.08, -64)
+		]
+	)
 	state_changed.emit()
 	return true
 
+
+## Führt Route, Verkehrsgeschwindigkeit und gegebenenfalls Ausrollen nach Fahrertod weiter.
 func _physics_process(delta: float) -> void:
 	if driver.surrendered and state == State.PARKED and driver.state == driver.State.SEATED:
 		driver.request_exit()
@@ -325,7 +480,9 @@ func _physics_process(delta: float) -> void:
 		death_coasting = true
 		# No steering after death; leave enough straight route to coast even near
 		# the end of a traffic route, instead of despawning or stopping abruptly.
-		var coast: Array[Vector3] = [position,position-global_basis.z*(speed*speed/(2*COAST_DECELERATION)+3)]
+		var coast: Array[Vector3] = [
+			position, position - global_basis.z * (speed * speed / (2 * COAST_DECELERATION) + 3)
+		]
 		set_route(coast)
 	var remaining := route.get_baked_length() - distance
 	var target := ROAD_SPEED
@@ -338,12 +495,15 @@ func _physics_process(delta: float) -> void:
 		target = minf(target, hit_surfaces.speed_cap())
 	if driver.surrendered or driver.is_dead():
 		target = 0
-	var deceleration := COAST_DECELERATION if driver.is_dead() else (4.0 if driver.surrendered else 1.6)
+	var deceleration := (
+		COAST_DECELERATION if driver.is_dead() else (4.0 if driver.surrendered else 1.6)
+	)
 	speed = move_toward(speed, target, deceleration * delta)
 	if (driver.surrendered or driver.is_dead()) and speed <= 0.05:
 		speed = 0
 		state = State.PARKED
-		if not driver.is_injured(): driver.request_exit()
+		if not driver.is_injured():
+			driver.request_exit()
 		state_changed.emit()
 		return
 	var travel := minf(speed * delta, remaining)
@@ -359,7 +519,14 @@ func _physics_process(delta: float) -> void:
 		wheel.rotation.x -= travel / 0.35
 	for wheel in front_wheels:
 		wheel.rotation.y = clampf(angle_difference(old_yaw, rotation.y) * 15.0, -0.35, 0.35)
-	brake_material.albedo_color = Color("ff5646") if not driver.is_dead() and (driver.surrendered or state == State.PULLING_OVER or speed > target + 0.05) else Color("862c2b")
+	brake_material.albedo_color = (
+		Color("ff5646")
+		if (
+			not driver.is_dead()
+			and (driver.surrendered or state == State.PULLING_OVER or speed > target + 0.05)
+		)
+		else Color("862c2b")
+	)
 	if remaining <= 0.025:
 		position = route.sample_baked(route.get_baked_length())
 		speed = 0
@@ -374,7 +541,16 @@ func _physics_process(delta: float) -> void:
 		state_changed.emit()
 
 
-func add_part(hinge: AnimatableBody3D, label: String, kind: String, at: Vector3, size: Vector3, axis: Vector3, opening: float) -> void:
+## Verknüpft ein Scharnier mit seiner interaktiven Fläche und Öffnungsrichtung.
+func add_part(
+	hinge: AnimatableBody3D,
+	label: String,
+	kind: String,
+	at: Vector3,
+	size: Vector3,
+	axis: Vector3,
+	opening: float
+) -> void:
 	var part := VehiclePart.new()
 	part.vehicle = self
 	part.pivot = hinge
@@ -391,6 +567,8 @@ func add_part(hinge: AnimatableBody3D, label: String, kind: String, at: Vector3,
 	part.position = at
 	parts.append(part)
 
+
+## Meldet, ob sämtliche bedienbaren Fahrzeugöffnungen geschlossen sind.
 func all_parts_closed() -> bool:
 	for part in parts:
 		if not part.is_closed():
@@ -398,7 +576,10 @@ func all_parts_closed() -> bool:
 	return true
 
 
-func panel_hinge(at: Vector3, size: Vector3, center: Vector3, mat: Material, label: String) -> AnimatableBody3D:
+## Erzeugt einen beweglichen Karosserieteil mit passender Kollisionsform.
+func panel_hinge(
+	at: Vector3, size: Vector3, center: Vector3, mat: Material, label: String
+) -> AnimatableBody3D:
 	var hinge := AnimatableBody3D.new()
 	hinge.name = label
 	hinge.sync_to_physics = false
@@ -416,12 +597,15 @@ func panel_hinge(at: Vector3, size: Vector3, center: Vector3, mat: Material, lab
 	return hinge
 
 
+## Prüft, ob die aktuelle Hecköffnung Zugang zur Ladung erlaubt.
 func cargo_accessible() -> bool:
 	for part in parts:
 		if part.kind == "trunk" and absf(part.angle()) > 0.5:
 			return true
 	return false
 
+
+## Erzeugt sichtbare Ladung und ihre einzelnen Interaktionsziele aus dem Fahrzeuginventar.
 func build_cargo() -> void:
 	var rear := body_length / 2.0
 	var floor_y := 0.72
@@ -481,7 +665,9 @@ func build_cargo() -> void:
 			cargo_hit.position = Vector3(-0.52, y, 1.025)
 			solid.add_child(cargo_hit)
 	if cargo_inventory != null:
-		var catalog = preload("res://game/inventory/item_inventory.gd").for_vehicle(driver_name, plate_number)
+		var catalog = preload("res://game/inventory/item_inventory.gd").for_vehicle(
+			driver_name, plate_number
+		)
 		for i in range(catalog.items.size()):
 			var item: Dictionary = catalog.items[i]
 			for actual in cargo_inventory.items:
@@ -492,15 +678,23 @@ func build_cargo() -> void:
 			prop.set_meta("data", item)
 			cargo_props.add_child(prop)
 			prop.scale = Vector3.ONE * 0.45
-			prop.position = Vector3(-0.43 if i == 0 else 0.43 if i == 1 else 0.0, floor_y + 0.13, rear - (0.35 if i < 2 else 0.68))
+			prop.position = Vector3(
+				-0.43 if i == 0 else 0.43 if i == 1 else 0.0,
+				floor_y + 0.13,
+				rear - (0.35 if i < 2 else 0.68)
+			)
 			if model_kind == "van":
 				if i < 3:
 					prop.scale = Vector3.ONE * 0.48
-					prop.position = Vector3(-0.52, (1.40 if i == 1 else 0.81) + 0.13, 0.65 if i == 2 else 1.48)
+					prop.position = Vector3(
+						-0.52, (1.40 if i == 1 else 0.81) + 0.13, 0.65 if i == 2 else 1.48
+					)
 				else:
 					prop.position = Vector3(0.48, floor_y + 0.13, 0.65)
 			elif model_kind == "pickup":
-				prop.position = Vector3(-0.45 if i == 0 else 0.4, floor_y + 0.13, 0.85 if i == 0 else 0.7)
+				prop.position = Vector3(
+					-0.45 if i == 0 else 0.4, floor_y + 0.13, 0.85 if i == 0 else 0.7
+				)
 				if item.icon == "ladder":
 					prop.scale = Vector3.ONE
 					prop.position = Vector3(0.38, floor_y + 0.1, 1.25)
@@ -513,8 +707,16 @@ func build_cargo() -> void:
 			target.prop = prop
 			target.item = item
 			var box := BoxShape3D.new()
-			box.size = Vector3(1.6, 0.75, 1.0) if item.get("container_type") in ["toolbox", "cooler"] else Vector3(1.0, 1.3 if item.icon == "water_barrel" else 1.05, 1.0)
-			var item_center_y := 0.05 if item.get("container_type") in ["toolbox", "cooler"] else 0.3 if item.icon == "water_barrel" else 0.15
+			box.size = (
+				Vector3(1.6, 0.75, 1.0)
+				if item.get("container_type") in ["toolbox", "cooler"]
+				else Vector3(1.0, 1.3 if item.icon == "water_barrel" else 1.05, 1.0)
+			)
+			var item_center_y := (
+				0.05
+				if item.get("container_type") in ["toolbox", "cooler"]
+				else 0.3 if item.icon == "water_barrel" else 0.15
+			)
 			var cargo_hit := CollisionShape3D.new()
 			cargo_hit.shape = box
 			cargo_hit.position.y = item_center_y
@@ -530,6 +732,8 @@ func build_cargo() -> void:
 			prop.add_child(target)
 	refresh_cargo_props()
 
+
+## Baut das zum Gegenstand passende prozedurale Ladungsmodell auf.
 func build_item_model(prop: Node3D, item: Dictionary) -> void:
 	var previous := prop.get_node_or_null("Model")
 	if previous != null:
@@ -550,7 +754,12 @@ func build_item_model(prop: Node3D, item: Dictionary) -> void:
 		for x in [-0.19, 0.19]:
 			piece(Vector3(x, 0, 0), Vector3(0.055, 0.06, 1.8), material("acb5b5"), model)
 		for i in range(6):
-			piece(Vector3(0, 0, -0.75 + i * 0.3), Vector3(0.38, 0.045, 0.06), material("acb5b5"), model)
+			piece(
+				Vector3(0, 0, -0.75 + i * 0.3),
+				Vector3(0.38, 0.045, 0.06),
+				material("acb5b5"),
+				model
+			)
 	elif item.icon == "receipt":
 		piece(Vector3(0, -0.27, 0), Vector3(0.4, 0.02, 0.55), material("e1ddbf"), model)
 	else:
@@ -560,6 +769,8 @@ func build_item_model(prop: Node3D, item: Dictionary) -> void:
 			node.set_highlight(false)
 			node.refresh_surfaces()
 
+
+## Blendet entnommene Ladung aus und gleicht den Zustand sichtbarer Behälter ab.
 func refresh_cargo_props() -> void:
 	if cargo_props == null or cargo_inventory == null:
 		return
@@ -575,6 +786,7 @@ func refresh_cargo_props() -> void:
 				build_item_model(prop, item)
 
 
+## Ergänzt eine einfache Fahrzeugkollision für begehbare oder begrenzende Flächen.
 func physical_box(at: Vector3, size: Vector3) -> void:
 	var hit := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
@@ -584,6 +796,7 @@ func physical_box(at: Vector3, size: Vector3) -> void:
 	add_child(hit)
 
 
+## Kombiniert bei Bedarf Einsteigen und anschließende Abfahrt, ohne eine zweite Ansprache.
 func request_departure() -> bool:
 	if state != State.PARKED or driver.arrested or officer_aboard or cargo_search_active:
 		return false
@@ -597,6 +810,8 @@ func request_departure() -> bool:
 		return true
 	return false
 
+
+## Fordert Aufgabe an und verhindert widersprüchliches Weiterfahren oder Einsteigen.
 func request_surrender() -> bool:
 	if is_patrol or state == State.FINISHED or not driver.request_surrender():
 		return false

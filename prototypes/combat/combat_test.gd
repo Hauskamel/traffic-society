@@ -1,5 +1,7 @@
+## Isolierte Ego-Konfrontation mit einem Auto, Fahrer und Spieler.
+## Besitzt Reaktionszeitlupe, Gesundheit und vollständigen Szenenreset mit R.
+
 extends "res://game/world/main.gd"
-## Isolated first-person scenario; main gameplay keeps R for reload.
 const Health = preload("res://game/player/player_health.gd")
 const Gunfight = preload("res://prototypes/combat/npc_gunfight.gd")
 const SLOW_SPEED := .22
@@ -14,26 +16,29 @@ var health_bar: ProgressBar
 var test_status: Label
 var damage_overlay: ColorRect
 var slow_filter: ColorRect
+
+
+## Übernimmt die Kontrollplatz-Basis und richtet genau eine reproduzierbare Ego-Begegnung ein.
 func _ready() -> void:
 	super._ready()
 	traffic.set_physics_process(false)
 	test_car = traffic.cars[0]
-	for i in range(traffic.cars.size()-1,0,-1):
+	for i in range(traffic.cars.size() - 1, 0, -1):
 		var other = traffic.cars.pop_back()
 		other.free()
 	test_car.driver_name = "Testfahrer"
-	test_car.position = Vector3(7.1,.08,5)
+	test_car.position = Vector3(7.1, .08, 5)
 	test_car.state = test_car.State.PARKED
 	test_car.speed = 0
 	test_car.driver.reset()
 	traffic.controlled_car = test_car
 	traffic.selected_car = null
 	aerial = false
-	player.position = Vector3(4.4,.05,7.0)
+	player.position = Vector3(4.4, .05, 7.0)
 	var target: Vector3 = test_car.window_point.global_position
-	var offset: Vector3 = target-eyes.global_position
-	player.rotation.y = atan2(-offset.x,-offset.z)
-	pitch = atan2(offset.y,Vector2(offset.x,offset.z).length())
+	var offset: Vector3 = target - eyes.global_position
+	player.rotation.y = atan2(-offset.x, -offset.z)
+	pitch = atan2(offset.y, Vector2(offset.x, offset.z).length())
 	eyes.rotation.x = pitch
 	update_camera()
 	health = Health.new()
@@ -48,10 +53,13 @@ func _ready() -> void:
 	equipment.tick(0)
 	refresh_encounter_ui()
 	_process(0)
+
+
+## Erzeugt Gesundheitsanzeige, Szenenstatus und die beiden Treffer-/Zeitlupenfilter.
 func build_test_ui() -> void:
 	health_bar = ProgressBar.new()
-	health_bar.position = Vector2(24,24)
-	health_bar.size = Vector2(210,26)
+	health_bar.position = Vector2(24, 24)
+	health_bar.size = Vector2(210, 26)
 	health_bar.value = 100
 	ui_layer.add_child(health_bar)
 	test_status = Label.new()
@@ -64,7 +72,7 @@ func build_test_ui() -> void:
 	damage_overlay = ColorRect.new()
 	damage_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	damage_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	damage_overlay.color = Color(1,.06,.03,0)
+	damage_overlay.color = Color(1, .06, .03, 0)
 	ui_layer.add_child(damage_overlay)
 	var layer := CanvasLayer.new()
 	layer.layer = 0
@@ -79,37 +87,65 @@ func build_test_ui() -> void:
 	slow_filter.material = material
 	layer.add_child(slow_filter)
 	slow_filter.hide()
+
+
+## Speichert das vorherige Tempo und startet das begrenzte Reaktionsfenster.
 func begin_reaction_window() -> void:
-	if slowing or health.dead: return
+	if slowing or health.dead:
+		return
 	previous_speed = Engine.time_scale
 	slowing = true
 	reaction_remaining = REACTION_SECONDS
-	Engine.time_scale = previous_speed*SLOW_SPEED
+	Engine.time_scale = previous_speed * SLOW_SPEED
 	slow_filter.show()
+
+
+## Stellt das vorherige Welttempo wieder her und entfernt den Zeitlupenfilter.
 func end_reaction_window() -> void:
-	if not slowing: return
+	if not slowing:
+		return
 	Engine.time_scale = previous_speed
 	slowing = false
 	reaction_remaining = 0
-	if is_instance_valid(slow_filter): slow_filter.hide()
+	if is_instance_valid(slow_filter):
+		slow_filter.hide()
+
+
+## Verkürzt das verbleibende Reaktionsfenster um reale, unskalierte Sekunden.
 func advance_reaction(real_delta: float) -> void:
 	if slowing:
 		reaction_remaining -= real_delta
-		if reaction_remaining <= 0: end_reaction_window()
+		if reaction_remaining <= 0:
+			end_reaction_window()
+
+
+## Aktualisiert Reaktionszeit, Gesundheitsanzeige und Treffer-/Zeitlupenfeedback.
 func _process(delta: float) -> void:
-	if not is_instance_valid(health): return
-	advance_reaction(delta/maxf(Engine.time_scale,.001))
+	if not is_instance_valid(health):
+		return
+	advance_reaction(delta / maxf(Engine.time_scale, .001))
 	health_bar.value = health.value
-	damage_overlay.color.a = .18 if health.dead else health.hit_feedback*.18
-	test_status.text = ("Du bist kampfunfaehig." if health.dead else combat.report)+"\n[R] Ganze Szene neu starten   [F] Nachladen   [F10] Zum Spiel"
+	damage_overlay.color.a = .18 if health.dead else health.hit_feedback * .18
+	test_status.text = (
+		("Du bist kampfunfaehig." if health.dead else combat.report)
+		+ "\n[R] Ganze Szene neu starten   [F] Nachladen   [F10] Zum Spiel"
+	)
+
+
+## Verarbeitet Spielerhandlungen und ergänzt die unskalierte Waffenzeit während der Zeitlupe.
 func _physics_process(delta: float) -> void:
-	if not is_instance_valid(health): return
+	if not is_instance_valid(health):
+		return
 	if health.dead:
 		player.velocity = Vector3.ZERO
 		return
 	# Drawing/reloading the player's weapon remains responsive in real time.
-	if slowing: equipment.tick(delta*(1.0/maxf(Engine.time_scale,.001)-1.0))
+	if slowing:
+		equipment.tick(delta * (1.0 / maxf(Engine.time_scale, .001) - 1.0))
 	super._physics_process(delta)
+
+
+## Beendet Zeitlupe und Waffenhaltung und sperrt die Spielerhandlungen.
 func on_player_died() -> void:
 	end_reaction_window()
 	equipment.cancel()
@@ -119,9 +155,15 @@ func on_player_died() -> void:
 	close_interaction()
 	player.velocity = Vector3.ZERO
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+## Lädt die gesamte Testszene neu, einschließlich NPC, Fahrzeug, Gesundheit und Munition.
 func reset_scenario() -> void:
 	end_reaction_window()
 	get_tree().reload_current_scene()
+
+
+## Behandelt szenenweite Eingaben vor nachgelagerten UI- und Waffenaktionen.
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_R:
@@ -131,21 +173,30 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			end_reaction_window()
 			get_tree().change_scene_to_file("res://game/world/main.tscn")
+
+
+## Verarbeitet nicht von UI-Elementen verbrauchte Tastatur- und Mausaktionen dieser Szene.
 func _unhandled_input(event: InputEvent) -> void:
-	if health.dead: return
+	if health.dead:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode in [KEY_TAB,KEY_T,KEY_I,KEY_SPACE,KEY_F9]: return
+		if event.keycode in [KEY_TAB, KEY_T, KEY_I, KEY_SPACE, KEY_F9]:
+			return
 		if event.keycode == KEY_F:
 			equipment.pistol_action.start_reload()
 			return
 		if event.keycode == KEY_E and test_car.driver.state == test_car.driver.State.SEATED:
-			if eyes.global_position.distance_to(test_car.window_point.global_position)<3:
+			if eyes.global_position.distance_to(test_car.window_point.global_position) < 3:
 				test_car.driver.request_exit()
 			return
 		if event.keycode == KEY_E:
 			if combat.phase == combat.Phase.SURRENDERED:
-				var target: Vector3 = test_car.driver.physical_actor.bodies.pelvis.global_position if test_car.driver.is_injured() else test_car.driver.global_position
-				if player.global_position.distance_to(target)<2.3:
+				var target: Vector3 = (
+					test_car.driver.physical_actor.bodies.pelvis.global_position
+					if test_car.driver.is_injured()
+					else test_car.driver.global_position
+				)
+				if player.global_position.distance_to(target) < 2.3:
 					equipment.cancel()
 					if test_car.driver.is_injured():
 						test_car.driver.arrested = true
@@ -159,17 +210,28 @@ func _unhandled_input(event: InputEvent) -> void:
 		super._unhandled_input(slowed)
 	else:
 		super._unhandled_input(event)
+
+
+## Stellt das vorübergehend geänderte globale Welttempo beim Entfernen wieder her.
 func _exit_tree() -> void:
 	end_reaction_window()
 
+
+## Deaktiviert normale Fahrzeugteil-Interaktionen innerhalb des isolierten Konfrontationstests.
 func update_part_focus() -> void:
 	# The isolated encounter has only exit/cuff interactions.
-	if is_instance_valid(hovered_part): hovered_part.set_highlight(false)
+	if is_instance_valid(hovered_part):
+		hovered_part.set_highlight(false)
 	hovered_part = null
 
+
+## Ersetzt allgemeine Kontrollhinweise durch Aussteigen oder Sichern im Konfrontationstest.
 func refresh_encounter_ui() -> void:
 	super.refresh_encounter_ui()
-	if not is_instance_valid(combat): return
-	interact_hint.text = "[E] Fahrer aussteigen lassen" if combat.phase == combat.Phase.SEATED else ""
+	if not is_instance_valid(combat):
+		return
+	interact_hint.text = (
+		"[E] Fahrer aussteigen lassen" if combat.phase == combat.Phase.SEATED else ""
+	)
 	if combat.phase == combat.Phase.SURRENDERED and not test_car.driver.arrested:
 		interact_hint.text = "[E] Handschellen anlegen (nahe herangehen)"

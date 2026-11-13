@@ -1,17 +1,23 @@
+## Aufgabe durch Bedrohung und nahes Anlegen von Handschellen.
+## Lässt spezialisierte Konfrontationen ihre eigenen Reaktionsfenster verwalten.
+
 extends Node
-## Deterministic compliance: no damage, flee chance or combat AI.
 const AIM_RANGE := 25.0
 const AIM_TIME := 0.25
 var scene: Node3D
 var candidate: Node3D
 var aim_clock := 0.0
 
+
+## Sammelt die Kollisions-RIDs eines Teilbaums für eine Sichtlinienabfrage.
 func ignored_bodies(node: Node, result: Array[RID]) -> void:
 	if node is CollisionObject3D:
 		result.append(node.get_rid())
 	for child in node.get_children():
 		ignored_bodies(child, result)
 
+
+## Prüft freie Sicht zum Ziel unter Berücksichtigung der besonderen Kabinenkollision.
 func visible_point(car: Node3D, point: Vector3) -> bool:
 	var ignored: Array[RID] = [scene.player.get_rid()]
 	# Vehicle colliders currently include the transparent cabin. Ignore only the
@@ -20,9 +26,18 @@ func visible_point(car: Node3D, point: Vector3) -> bool:
 	var query := PhysicsRayQueryParameters3D.create(scene.eyes.global_position, point, 7, ignored)
 	return scene.get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
+
+## Findet den unverletzten Fahrer im Zielkegel der vollständig gezogenen Glock.
 func aimed_car() -> Node3D:
 	var gear = scene.equipment
-	if not gear.allowed() or gear.selected != 0 or gear.state != gear.State.AIMING or gear.draw < 0.95 or gear.pistol_action.reloading or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if (
+		not gear.allowed()
+		or gear.selected != 0
+		or gear.state != gear.State.AIMING
+		or gear.draw < 0.95
+		or gear.pistol_action.reloading
+		or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED
+	):
 		return null
 	var origin: Vector3 = scene.eyes.global_position
 	var forward: Vector3 = -scene.eyes.global_basis.z
@@ -30,7 +45,15 @@ func aimed_car() -> Node3D:
 	var nearest := AIM_RANGE
 	for car in scene.traffic.cars:
 		var driver = car.driver
-		if car.is_patrol or car.state == car.State.FINISHED or driver.arrested or driver.is_injured() or is_instance_valid(driver.combat) or car.pickup_reserved or driver.state in [driver.State.SEARCHING, driver.State.IN_CUSTODY]:
+		if (
+			car.is_patrol
+			or car.state == car.State.FINISHED
+			or driver.arrested
+			or driver.is_injured()
+			or is_instance_valid(driver.combat)
+			or car.pickup_reserved
+			or driver.state in [driver.State.SEARCHING, driver.State.IN_CUSTODY]
+		):
 			continue
 		for point in [driver.head.global_position, driver.torso.global_position]:
 			var offset: Vector3 = point - origin
@@ -42,6 +65,8 @@ func aimed_car() -> Node3D:
 				best = car
 	return best
 
+
+## Prüft gehaltenes Zielen und fordert nach der Bedrohungsdauer die Aufgabe an.
 func tick(delta: float) -> void:
 	var target := aimed_car()
 	if target != candidate:
@@ -53,28 +78,54 @@ func tick(delta: float) -> void:
 	if aim_clock >= AIM_TIME:
 		candidate.request_surrender()
 
+
+## Findet eine nahe Person für Aufgabe-Nachkontrolle oder Handschellen.
 func nearby_car(only_surrendered := false) -> Node3D:
-	if scene.aerial or scene.document_mode.active or scene.inventory_view.visible or scene.radio_open or scene.interaction_open or scene.climber.active or is_instance_valid(scene.climber.car) or is_instance_valid(scene.searching_driver) or is_instance_valid(scene.cargo_search_car) or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if (
+		scene.aerial
+		or scene.document_mode.active
+		or scene.inventory_view.visible
+		or scene.radio_open
+		or scene.interaction_open
+		or scene.climber.active
+		or is_instance_valid(scene.climber.car)
+		or is_instance_valid(scene.searching_driver)
+		or is_instance_valid(scene.cargo_search_car)
+		or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED
+	):
 		return null
 	var best: Node3D
 	var nearest := 2.3
 	for car in scene.traffic.cars:
 		var driver = car.driver
-		if car.is_patrol or car.pickup_reserved or car.state != car.State.PARKED or driver.state != driver.State.OUTSIDE:
+		if (
+			car.is_patrol
+			or car.pickup_reserved
+			or car.state != car.State.PARKED
+			or driver.state != driver.State.OUTSIDE
+		):
 			continue
 		if only_surrendered and (not driver.surrendered or driver.arrested):
 			continue
-		if not only_surrendered and not (driver.surrendered or driver.arrested or car.surrender_stop):
+		if (
+			not only_surrendered
+			and not (driver.surrendered or driver.arrested or car.surrender_stop)
+		):
 			continue
 		var target: Vector3 = driver.interaction_point()
 		var difference: Vector3 = target - scene.eyes.global_position
-		if difference.length() >= nearest or (-scene.eyes.global_basis.z).dot(difference.normalized()) < 0.8:
+		if (
+			difference.length() >= nearest
+			or (-scene.eyes.global_basis.z).dot(difference.normalized()) < 0.8
+		):
 			continue
 		if visible_point(car, target):
 			best = car
 			nearest = difference.length()
 	return best
 
+
+## Legt einer erreichbaren aufgegebenen Person Handschellen an.
 func handcuff() -> bool:
 	var car := nearby_car(true)
 	if not is_instance_valid(car):

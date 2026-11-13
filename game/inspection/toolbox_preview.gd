@@ -1,3 +1,6 @@
+## Interaktiver 3D-Viewport für Werkzeugkasten und andere Behälter.
+## Löst Mauspositionen in Modellteile auf und verwaltet deren Hervorhebung.
+
 extends "res://game/inventory/item_preview.gd"
 signal picked(part: String)
 signal hovered(part: String)
@@ -7,15 +10,21 @@ var crate: ToolboxModel
 var current_part := ""
 var highlighted: Array[MeshInstance3D] = []
 
+
+## Richtet Modell-Viewport, Kamera und Mausinteraktion der Behälteransicht ein.
 func _ready() -> void:
 	super._ready()
 	mouse_exited.connect(end_hover)
 
+
+## Entfernt Modellhervorhebung und zugehörigen Hinweis beim Verlassen der Vorschau.
 func end_hover() -> void:
 	dragging = false
 	clear_highlight()
 	hovered.emit("")
 
+
+## Übernimmt einen Behälterzustand und baut dessen Vorschau neu auf.
 func set_container(item: Dictionary) -> void:
 	clear_highlight()
 	if is_instance_valid(model):
@@ -28,6 +37,8 @@ func set_container(item: Dictionary) -> void:
 	crate.configure(item, true)
 	reset_view()
 
+
+## Ersetzt das Behältermodell anhand seines aktuellen gespeicherten Zustands.
 func rebuild() -> void:
 	clear_highlight()
 	var data: Dictionary = crate.item
@@ -37,23 +48,40 @@ func rebuild() -> void:
 	model.add_child(crate)
 	crate.configure(data, true)
 
+
+## Stellt Kameradistanz und Modellorientierung der Vorschau zurück.
 func reset_view() -> void:
-	distance = 4.1 if is_instance_valid(crate) and crate.item.get("container_type") != "toolbox" else 3.5
+	distance = (
+		4.1 if is_instance_valid(crate) and crate.item.get("container_type") != "toolbox" else 3.5
+	)
 	if is_instance_valid(model):
 		model.rotation = Vector3.ZERO
 	update_camera()
 
+
+## Übernimmt die aktuellen Kamera- und Perspektivparameter.
 func update_camera() -> void:
 	if is_instance_valid(camera):
 		var elevation := 0.65
 		if is_instance_valid(crate):
 			match crate.item.get("container_type"):
-				"paint_bucket": elevation = 1.4
-				"water_barrel": elevation = 2.0
-				"cooler": elevation = 1.05
+				"paint_bucket":
+					elevation = 1.4
+				"water_barrel":
+					elevation = 2.0
+				"cooler":
+					elevation = 1.05
 		camera.position = Vector3(0.35, elevation, 1).normalized() * distance
-		camera.look_at(Vector3(0.2, 0.3, 0) if is_instance_valid(crate) and crate.item.get("container_type") != "toolbox" else Vector3(0, 0.25, 0))
+		camera.look_at(
+			(
+				Vector3(0.2, 0.3, 0)
+				if is_instance_valid(crate) and crate.item.get("container_type") != "toolbox"
+				else Vector3(0, 0.25, 0)
+			)
+		)
 
+
+## Übersetzt eine Mausposition per 3D-Strahlabfrage in einen benannten Modellteil.
 func pick(at: Vector2) -> String:
 	if not is_instance_valid(crate) or size.x <= 0 or size.y <= 0:
 		return ""
@@ -72,6 +100,8 @@ func pick(at: Vector2) -> String:
 		return ""
 	return token
 
+
+## Entfernt sämtliche temporären Materialüberlagerungen der Vorschau.
 func clear_highlight() -> void:
 	for mesh in highlighted:
 		if is_instance_valid(mesh):
@@ -79,6 +109,8 @@ func clear_highlight() -> void:
 	highlighted.clear()
 	current_part = ""
 
+
+## Hebt ausschließlich die zum gewählten Modellteil gehörenden Meshes hervor.
 func mark(part: String) -> void:
 	if part == current_part:
 		return
@@ -101,14 +133,20 @@ func mark(part: String) -> void:
 				surface.material_overlay = glow
 				highlighted.append(surface)
 
+
+## Verarbeitet Drehen, Zoomen und gegebenenfalls Auswahl innerhalb der 3D-Vorschau.
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			dragging = event.pressed
 		elif event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			picked.emit(pick(event.position))
-		elif event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
-			distance = clampf(distance + (-0.2 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.2), 2.0, 5.0)
+		elif (
+			event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]
+		):
+			distance = clampf(
+				distance + (-0.2 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.2), 2.0, 5.0
+			)
 			update_camera()
 		accept_event()
 	elif event is InputEventMouseMotion:

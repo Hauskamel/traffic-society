@@ -1,15 +1,24 @@
+## Integrationsprüfung: fundamentals.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 ## Run: godot --headless --path . --script res://tests/traffic/fundamentals_test.gd
 var errors: Array[String] = []
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(condition: bool, message: String) -> void:
 	if not condition:
 		errors.append(message)
 		push_error(message)
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Führt die Fahrzeugbewegung bis zum erwarteten Zustand oder Schrittlimit weiter.
 func advance_car(car: Node, until: int, frames := 6000) -> void:
 	for i in range(frames):
 		car._physics_process(1.0 / 60.0)
@@ -17,6 +26,8 @@ func advance_car(car: Node, until: int, frames := 6000) -> void:
 			return
 	check(false, "Car did not reach requested state before timeout")
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	var scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
@@ -34,7 +45,10 @@ func run() -> void:
 	check(not car.request_stop(), "Duplicate stop request must be rejected")
 	check(not scene.can_interact(), "Car cannot be released while entering the bay")
 	advance_car(car, car.State.PARKED)
-	check(car.position.distance_to(Vector3(7.1, 0.08, 5)) < 0.05, "Car must park in the designated space")
+	check(
+		car.position.distance_to(Vector3(7.1, 0.08, 5)) < 0.05,
+		"Car must park in the designated space"
+	)
 	check(car.speed == 0, "Parked car must be stationary")
 	check(absf(car.rotation.y) < 0.01, "Parked car must face the exit")
 	check(not scene.can_interact(), "Overview must not allow releasing at a distance")

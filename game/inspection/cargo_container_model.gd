@@ -1,8 +1,21 @@
+## Prozedurale Behältermodelle für Eimer, Fass und Kühlbox.
+## Stellt Öffnungen, Inhalt und optional anklickbare Modellteile dar.
+
 extends "res://game/inspection/toolbox_model.gd"
 var insert: Node3D
 var cylindrical := false
 
-func cylinder(parent: Node3D, at: Vector3, radius: float, height: float, color: String, token := "body", solid := true) -> MeshInstance3D:
+
+## Erzeugt einen Zylinder mit optionaler Trefferfläche für einen Behälterteil.
+func cylinder(
+	parent: Node3D,
+	at: Vector3,
+	radius: float,
+	height: float,
+	color: String,
+	token := "body",
+	solid := true
+) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
 	var shape := CylinderMesh.new()
 	shape.top_radius = radius
@@ -27,6 +40,8 @@ func cylinder(parent: Node3D, at: Vector3, radius: float, height: float, color: 
 		mesh.add_child(body)
 	return mesh
 
+
+## Baut das Modell anhand des Behälterzustands und der gewünschten Interaktivität auf.
 func configure(data: Dictionary, enable_input := false) -> void:
 	item = data
 	interactive = enable_input
@@ -39,7 +54,12 @@ func configure(data: Dictionary, enable_input := false) -> void:
 		cylinder(self, Vector3(0, -0.25, 0), radius, 0.06, tint)
 		for i in range(20):
 			var angle := TAU * i / 20
-			var wall := piece(self, Vector3(sin(angle) * radius, (top - 0.25) / 2, cos(angle) * radius), Vector3(radius * 0.33, top + 0.25, 0.045), tint)
+			var wall := piece(
+				self,
+				Vector3(sin(angle) * radius, (top - 0.25) / 2, cos(angle) * radius),
+				Vector3(radius * 0.33, top + 0.25, 0.045),
+				tint
+			)
 			wall.rotation.y = angle
 		lid = Node3D.new()
 		lid.position.y = top + 0.035
@@ -49,7 +69,9 @@ func configure(data: Dictionary, enable_input := false) -> void:
 		latch = Node3D.new()
 		add_child(latch)
 		if barrel:
-			var water := cylinder(self, Vector3(0, 0.26, 0), radius - 0.04, 0.01, "5aabb9", "body", false)
+			var water := cylinder(
+				self, Vector3(0, 0.26, 0), radius - 0.04, 0.01, "5aabb9", "body", false
+			)
 			water.material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			water.material_override.albedo_color.a = 0.32
 		else:
@@ -87,6 +109,8 @@ func configure(data: Dictionary, enable_input := false) -> void:
 		piece(prop, Vector3(0, 0.065, 0), Vector3(0.08, 0.012, 0.29), "ab916b", inside.id)
 	apply_pose(true)
 
+
+## Überträgt den Öffnungs- oder Übergangsfortschritt auf die sichtbaren Modellteile.
 func apply_pose(snap := false, delta := 0.0) -> void:
 	if cylindrical:
 		var closed_y := 0.785 if item.container_type == "water_barrel" else 0.435
@@ -111,6 +135,8 @@ func apply_pose(snap := false, delta := 0.0) -> void:
 			for node in insert.find_children("*", "StaticBody3D", true, false):
 				node.collision_layer = 1 if insert.visible else 0
 
+
+## Führt die sichtbare Öffnungsbewegung des Behälters weiter.
 func _process(delta: float) -> void:
 	if not item.is_empty():
 		apply_pose(false, delta)

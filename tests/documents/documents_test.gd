@@ -1,11 +1,23 @@
+## Integrationsprüfung: documents.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 var failures: Array[String] = []
+
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
+
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
+
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	var scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
@@ -24,7 +36,9 @@ func run() -> void:
 		await physics_frame
 		await physics_frame
 		scene.open_interaction()
-		check(scene.interaction_actions.has("Dokumente anfordern"), "Seated driver offers documents")
+		check(
+			scene.interaction_actions.has("Dokumente anfordern"), "Seated driver offers documents"
+		)
 		scene.interaction_index = scene.interaction_actions.find("Dokumente anfordern")
 		scene.confirm_interaction()
 		if not scene.document_view.visible:
@@ -32,15 +46,39 @@ func run() -> void:
 			return
 		check(scene.document_view.visible and not scene.interaction_open, "Menu opens documents")
 		check(is_equal_approx(Engine.time_scale, 0.18), "World runs at 18 percent speed")
-		check(not scene.ui_layer.visible and scene.player_avatar.visible, "Document camera shows player and hides normal HUD")
+		check(
+			not scene.ui_layer.visible and scene.player_avatar.visible,
+			"Document camera shows player and hides normal HUD"
+		)
 		var world_before: float = scene.patrol.elapsed
 		await create_timer(0.7, true, false, true).timeout
-		check(scene.patrol.elapsed - world_before > 0.01 and scene.patrol.elapsed - world_before < 0.5, "World clocks continue in slow motion while UI transition uses real time")
-		check(scene.document_mode.camera.current and scene.document_mode.camera.global_position.y > 15, "Inspection camera reaches overview above controlled vehicle")
-		check(scene.document_view.documents.license.Name == car.driver_name, "Document identity matches driver")
-		check(scene.document_view.documents.registration.Kennzeichen == car.plate_number, "Registration matches plate")
+		check(
+			(
+				scene.patrol.elapsed - world_before > 0.01
+				and scene.patrol.elapsed - world_before < 0.5
+			),
+			"World clocks continue in slow motion while UI transition uses real time"
+		)
+		check(
+			(
+				scene.document_mode.camera.current
+				and scene.document_mode.camera.global_position.y > 15
+			),
+			"Inspection camera reaches overview above controlled vehicle"
+		)
+		check(
+			scene.document_view.documents.license.Name == car.driver_name,
+			"Document identity matches driver"
+		)
+		check(
+			scene.document_view.documents.registration.Kennzeichen == car.plate_number,
+			"Registration matches plate"
+		)
 		check(scene.document_view.cards.size() == 2, "Two documents displayed together")
-		check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and not scene.can_interact(), "Documents lock world interactions and free mouse")
+		check(
+			Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and not scene.can_interact(),
+			"Documents lock world interactions and free mouse"
+		)
 		await process_frame
 		await process_frame
 		var view = scene.document_view
@@ -60,15 +98,24 @@ func run() -> void:
 		scene._unhandled_input(event)
 		check(is_equal_approx(Engine.time_scale, 1.0), "Closing immediately restores world speed")
 		await scene.document_mode.transition.finished
-		check(scene.eyes.current and scene.ui_layer.visible and not scene.player_avatar.visible, "Return transition restores ego camera, HUD and hidden player mesh")
-		check(not view.visible and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "Escape returns documents and restores camera input")
+		check(
+			scene.eyes.current and scene.ui_layer.visible and not scene.player_avatar.visible,
+			"Return transition restores ego camera, HUD and hidden player mesh"
+		)
+		check(
+			not view.visible and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED,
+			"Escape returns documents and restores camera input"
+		)
 		car.driver.request_exit()
 		for i in range(300):
 			car.driver._physics_process(1.0 / 60.0)
 		scene.player.position = Vector3(3.8, 0.1, car.driver.global_position.z)
 		scene.eyes.look_at(car.driver.interaction_point())
 		scene.open_interaction()
-		check(scene.interaction_actions.has("Dokumente anfordern"), "Outside driver also offers documents")
+		check(
+			scene.interaction_actions.has("Dokumente anfordern"),
+			"Outside driver also offers documents"
+		)
 		scene.close_interaction()
 	Engine.time_scale = 0.75
 	scene.document_view.open_view(scene.traffic.cars[0])
@@ -78,8 +125,13 @@ func run() -> void:
 	scene.document_view.open_view(scene.traffic.cars[0])
 	scene.queue_free()
 	await process_frame
-	check(is_equal_approx(Engine.time_scale, 0.75), "Scene cleanup restores speed even during inspection")
+	check(
+		is_equal_approx(Engine.time_scale, 0.75),
+		"Scene cleanup restores speed even during inspection"
+	)
 	Engine.time_scale = 1.0
 	if failures.is_empty():
-		print("PASS: four document pairs, overview transitions, slow world clock, foreground cards, input lock, return and cleanup")
+		print(
+			"PASS: four document pairs, overview transitions, slow world clock, foreground cards, input lock, return and cleanup"
+		)
 	quit(0 if failures.is_empty() else 1)

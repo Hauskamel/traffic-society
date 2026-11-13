@@ -1,3 +1,6 @@
+## Gemeinsame Dauern für Durchsuchungen, Ein-/Aussteigen und Türbewegungen.
+## Zeiten sind Simulationssekunden; Scharniergeschwindigkeit ist Radiant pro Sekunde.
+
 extends RefCounted
 const DRIVER_TRANSITION := 3.6
 const PERSON_SEARCH := 3.2

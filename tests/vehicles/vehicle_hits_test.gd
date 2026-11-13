@@ -1,15 +1,30 @@
+## Integrationsprüfung: vehicle hits.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 const HitSurface = preload("res://game/vehicles/vehicle_hit_surface.gd")
 var failures: Array[String] = []
 var scene: Node
+
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
+
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
+
+
+## Prüft mit einem echten Physikstrahl die Trefferfläche am Testziel.
 func trace(point: Vector3, direction: Vector3) -> Dictionary:
 	return scene.equipment.pistol_action.shot_query(point + direction * 3, point - direction)
+
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
@@ -28,7 +43,10 @@ func run() -> void:
 		var tire_zone: HitSurface
 		var roof_zone: HitSurface
 		for zone in car.hit_surfaces.zones:
-			check(zone.collision_layer == 16 and zone.collision_mask == 0, "Hit shapes must not interfere with movement")
+			check(
+				zone.collision_layer == 16 and zone.collision_mask == 0,
+				"Hit shapes must not interfere with movement"
+			)
 			if zone.surface.get_parent() == car.driver_door:
 				if zone.kind == "glass":
 					glass_zone = zone
@@ -36,9 +54,17 @@ func run() -> void:
 					body_zone = zone
 			if zone.kind == "tire" and tire_zone == null:
 				tire_zone = zone
-			if zone.surface.get_parent() == car and zone.kind == "body" and zone.surface.position.y > 1.5 and zone.surface.mesh.size.x > 1:
+			if (
+				zone.surface.get_parent() == car
+				and zone.kind == "body"
+				and zone.surface.position.y > 1.5
+				and zone.surface.mesh.size.x > 1
+			):
 				roof_zone = zone
-		check(body_zone != null and glass_zone != null and tire_zone != null and roof_zone != null, "All four models have body, glass, tire and roof shot surfaces")
+		check(
+			body_zone != null and glass_zone != null and tire_zone != null and roof_zone != null,
+			"All four models have body, glass, tire and roof shot surfaces"
+		)
 		await physics_frame
 		await physics_frame
 		for zone in [body_zone, glass_zone, roof_zone, tire_zone]:
@@ -47,24 +73,52 @@ func run() -> void:
 			if zone == tire_zone:
 				point.z += 0.23
 			var hit := trace(point, direction)
-			check(not hit.is_empty() and hit.collider is HitSurface and hit.collider.kind == zone.kind, "Precise shot classification: " + car.model_kind + " / " + zone.kind)
+			check(
+				(
+					not hit.is_empty()
+					and hit.collider is HitSurface
+					and hit.collider.kind == zone.kind
+				),
+				"Precise shot classification: " + car.model_kind + " / " + zone.kind
+			)
 			if hit.is_empty():
 				continue
 			hit.collider.register_hit(hit.position, hit.normal)
-			check(car.hit_surfaces.marks.back().get_parent() == hit.collider.surface, "Mark attaches to actual hit mesh")
+			check(
+				car.hit_surfaces.marks.back().get_parent() == hit.collider.surface,
+				"Mark attaches to actual hit mesh"
+			)
 		var hit := trace(body_zone.surface.global_position, Vector3.LEFT)
 		hit.collider.register_hit(hit.position, hit.normal)
 		var mark: MeshInstance3D = car.hit_surfaces.marks.back()
 		var local_before := mark.transform
 		var global_before := mark.global_position
 		car.driver_door.rotation.y = -1.15
-		check(mark.transform.is_equal_approx(local_before) and mark.global_position.distance_to(global_before) > 0.1, "Door opening moves the mark without sliding")
+		check(
+			(
+				mark.transform.is_equal_approx(local_before)
+				and mark.global_position.distance_to(global_before) > 0.1
+			),
+			"Door opening moves the mark without sliding"
+		)
 		await physics_frame
 		await physics_frame
-		var opened := trace(body_zone.surface.global_position, body_zone.surface.global_basis * Vector3.LEFT)
-		check(not opened.is_empty() and opened.collider is HitSurface and opened.collider.surface.get_parent() == car.driver_door, "Shot geometry follows opened door")
+		var opened := trace(
+			body_zone.surface.global_position, body_zone.surface.global_basis * Vector3.LEFT
+		)
+		check(
+			(
+				not opened.is_empty()
+				and opened.collider is HitSurface
+				and opened.collider.surface.get_parent() == car.driver_door
+			),
+			"Shot geometry follows opened door"
+		)
 		car.position += Vector3(3, 0, -2)
-		check(mark.transform.is_equal_approx(local_before), "Moving car preserves local mark transform")
+		check(
+			mark.transform.is_equal_approx(local_before),
+			"Moving car preserves local mark transform"
+		)
 		car.driver_door.rotation.y = 0
 		car.position = Vector3(50, 0.08, 50)
 	var car = scene.traffic.cars[0]
@@ -74,7 +128,11 @@ func run() -> void:
 	scene.player.position = Vector3(4.5, 0.1, 5)
 	var zone: HitSurface
 	for candidate in car.hit_surfaces.zones:
-		if candidate.surface.get_parent() == car.driver_door and candidate.kind == "body" and candidate.surface.mesh.size.y > 0.3:
+		if (
+			candidate.surface.get_parent() == car.driver_door
+			and candidate.kind == "body"
+			and candidate.surface.mesh.size.y > 0.3
+		):
 			zone = candidate
 	scene.eyes.look_at(zone.surface.global_position)
 	scene.equipment.state = scene.equipment.State.AIMING
@@ -83,7 +141,9 @@ func run() -> void:
 	await physics_frame
 	var before: int = car.hit_surfaces.marks.size()
 	check(gun.fire(), "Actual aimed shot fires")
-	check(car.hit_surfaces.marks.size() == before + 1, "Actual pistol creates permanent vehicle mark")
+	check(
+		car.hit_surfaces.marks.size() == before + 1, "Actual pistol creates permanent vehicle mark"
+	)
 	if DisplayServer.get_name() != "headless":
 		# A closer view makes the small surface detail reviewable.
 		scene.player.position.x = 5.8
@@ -114,5 +174,7 @@ func run() -> void:
 	scene.queue_free()
 	await process_frame
 	if failures.is_empty():
-		print("PASS: four models, separate body/glass/tire/roof hits, real gun shot, surface-attached marks, moving doors/cars, wall occlusion and bounded marks")
+		print(
+			"PASS: four models, separate body/glass/tire/roof hits, real gun shot, surface-attached marks, moving doors/cars, wall occlusion and bounded marks"
+		)
 	quit(0 if failures.is_empty() else 1)

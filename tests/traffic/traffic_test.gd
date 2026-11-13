@@ -1,3 +1,6 @@
+## Integrationsprüfung: traffic.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 ## Run: godot --headless --path . --script res://tests/traffic/traffic_test.gd
 var errors: Array[String] = []
@@ -5,21 +8,30 @@ var scene: Node
 var traffic: Node
 var seen_plates: Dictionary = {}
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok and not errors.has(message):
 		errors.append(message)
 		push_error(message)
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Führt einen definierten Aktualisierungsschritt der Testszene aus.
 func step() -> void:
 	traffic._physics_process(1.0 / 60.0)
 	var identities: Dictionary = {}
 	for car in traffic.cars:
 		car.set_physics_process(false)
 		car._physics_process(1.0 / 60.0)
-		check(not identities.has(car.driver_name), "Driver must never appear in two cars simultaneously")
+		check(
+			not identities.has(car.driver_name),
+			"Driver must never appear in two cars simultaneously"
+		)
 		identities[car.driver_name] = true
 		seen_plates[car.plate_number] = true
 	for i in range(traffic.cars.size()):
@@ -28,9 +40,14 @@ func step() -> void:
 			var b = traffic.cars[j]
 			if a.state == a.State.FINISHED or b.state == b.State.FINISHED:
 				continue
-			var overlap: bool = absf(a.position.x - b.position.x) < 1.8 and absf(a.position.z - b.position.z) < (a.body_length + b.body_length) / 2.0 - 0.1
+			var overlap: bool = (
+				absf(a.position.x - b.position.x) < 1.8
+				and absf(a.position.z - b.position.z) < (a.body_length + b.body_length) / 2.0 - 0.1
+			)
 			check(not overlap, "Moving cars must not overlap")
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
@@ -48,9 +65,15 @@ func run() -> void:
 	for i in range(7200):
 		step()
 		for car in traffic.cars:
-			check(car.state == car.State.DRIVING or car.state == car.State.FINISHED, "No car may stop for a control without an order")
+			check(
+				car.state == car.State.DRIVING or car.state == car.State.FINISHED,
+				"No car may stop for a control without an order"
+			)
 	check(seen_plates.size() == 4, "All prepared identities must circulate")
-	check(traffic.cars.size() > 0 and traffic.cars.size() <= 4, "Traffic must remain replenished and bounded")
+	check(
+		traffic.cars.size() > 0 and traffic.cars.size() <= 4,
+		"Traffic must remain replenished and bounded"
+	)
 	# Select an eligible car, but do not issue a stop yet.
 	var target: Node
 	for i in range(800):
@@ -120,11 +143,15 @@ func run() -> void:
 			step()
 			if traffic.controlled_car == null:
 				break
-		check(traffic.controlled_car == null, "Every model must merge without getting stuck: " + kind)
+		check(
+			traffic.controlled_car == null, "Every model must merge without getting stuck: " + kind
+		)
 		phase += 1
 
 	scene.queue_free()
 	await process_frame
 	if errors.is_empty():
-		print("PASS: continuous traffic, four models, no automatic controls, unique drivers, spacing, bay reservation, release and replenishment")
+		print(
+			"PASS: continuous traffic, four models, no automatic controls, unique drivers, spacing, bay reservation, release and replenishment"
+		)
 	quit(0 if errors.is_empty() else 1)

@@ -1,6 +1,7 @@
+## Zentrale Geschwindigkeiten in km/h für Spieler und Verkehr.
+## Bei der Verwendung durch 3,6 teilen: Eine Godot-Einheit entspricht einem Meter.
+
 extends RefCounted
-## World scale: 1 Godot unit = 1 metre. Divide km/h by 3.6 for m/s.
-## Relative multiplier applies only to cruising traffic, not parking or walking.
 const BASE_TRAFFIC_SPEED_KMH := 10.8
 const TRAFFIC_SPEED_FACTOR := 2.0
 const TRAFFIC_SPEED_KMH := BASE_TRAFFIC_SPEED_KMH * TRAFFIC_SPEED_FACTOR

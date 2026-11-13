@@ -1,8 +1,22 @@
+## Zustandsautomat für Anforderung und Abtransport durch eine Streife.
+## Koordiniert Verzögerung, zweite Parkstelle, Beamtenwege und Übergabe.
+
 extends Node3D
-## Authored pickup sequence. The 20-second delay precedes spawning the patrol.
 const TrafficCar = preload("res://game/vehicles/traffic_car.gd")
 const Visuals = preload("res://game/police/police_visuals.gd")
-enum Stage { IDLE, WAITING, APPROACHING, EXITING, WALKING, ESCORTING, BOARDING, RETURNING, ENTERING, DEPARTING, COMPLETE }
+enum Stage {
+	IDLE,
+	WAITING,
+	APPROACHING,
+	EXITING,
+	WALKING,
+	ESCORTING,
+	BOARDING,
+	RETURNING,
+	ENTERING,
+	DEPARTING,
+	COMPLETE
+}
 const RESPONSE_DELAY := 20.0
 var scene: Node3D
 var stage: Stage = Stage.IDLE
@@ -17,11 +31,23 @@ var boarding_time := 0.0
 var boarding_start := Vector3.ZERO
 var report := "Funk bereit. Fuer eine Abholung zuerst eine Person festnehmen."
 
+
+## Meldet, ob eine Streifenanforderung noch läuft.
 func active() -> bool:
 	return stage != Stage.IDLE and stage != Stage.COMPLETE
 
+
+## Reserviert eine zulässige festgenommene Person und startet die Anforderungszeit.
 func request_pickup(car: TrafficCar) -> bool:
-	if active() or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED or car.officer_aboard or car.cargo_search_active or not car.driver.arrested or car.driver.state != car.driver.State.OUTSIDE:
+	if (
+		active()
+		or not is_instance_valid(car)
+		or car.state != TrafficCar.State.PARKED
+		or car.officer_aboard
+		or car.cargo_search_active
+		or not car.driver.arrested
+		or car.driver.state != car.driver.State.OUTSIDE
+	):
 		return false
 	source = car
 	source.pickup_reserved = true
@@ -34,6 +60,8 @@ func request_pickup(car: TrafficCar) -> bool:
 	report = "Abholung bestaetigt: " + car.driver_name
 	return true
 
+
+## Bricht eine noch wartende Anforderung ab und löst ihre Reservierung.
 func cancel_waiting() -> bool:
 	if stage != Stage.WAITING:
 		return false
@@ -45,6 +73,8 @@ func cancel_waiting() -> bool:
 	report = "Abholung abgebrochen."
 	return true
 
+
+## Liefert den kurzen Funktext passend zur aktuellen Einsatzphase.
 func display_text() -> String:
 	match stage:
 		Stage.WAITING:
@@ -59,6 +89,8 @@ func display_text() -> String:
 			return "FUNK\nBEREIT"
 	return "STREIFE\nABHOLUNG"
 
+
+## Erzeugt die Streife und legt ihre Route zur zweiten Parkstelle an.
 func spawn_patrol() -> bool:
 	for car in scene.traffic.cars:
 		if source.surrender_stop:
@@ -81,9 +113,25 @@ func spawn_patrol() -> bool:
 	if source.surrender_stop:
 		patrol.position.x = 9.05
 	# Pass the occupied first space on its curb side, away from the driver.
-	patrol.set_route([patrol.position, Vector3(2, 0.08, 28), Vector3(4, 0.08, 22), Vector3(9.05, 0.08, 15), Vector3(9.05, 0.08, 0), Vector3(7.1, 0.08, -5)])
+	patrol.set_route(
+		[
+			patrol.position,
+			Vector3(2, 0.08, 28),
+			Vector3(4, 0.08, 22),
+			Vector3(9.05, 0.08, 15),
+			Vector3(9.05, 0.08, 0),
+			Vector3(7.1, 0.08, -5)
+		]
+	)
 	if source.surrender_stop:
-		patrol.set_route([patrol.position, Vector3(9.05, 0.08, 30), Vector3(9.05, 0.08, 0), Vector3(7.1, 0.08, -5)])
+		patrol.set_route(
+			[
+				patrol.position,
+				Vector3(9.05, 0.08, 30),
+				Vector3(9.05, 0.08, 0),
+				Vector3(7.1, 0.08, -5)
+			]
+		)
 	for i in range(patrol.route.point_count):
 		if patrol.route.get_point_position(i).x > 9:
 			patrol.route.set_point_in(i, Vector3(0, 0, 1.2))
@@ -103,10 +151,14 @@ func spawn_patrol() -> bool:
 	report = "Streife unterwegs zu Stellplatz 2."
 	return true
 
+
+## Übernimmt eine neue Wegpunktfolge für die Einsatzbewegung.
 func set_walk(points: Array[Vector3]) -> void:
 	waypoints = points
 	waypoint = 0
 
+
+## Bewegt eine Figur entlang ihrer Wegpunkte und meldet das Erreichen des Ziels.
 func walk(actor: Node3D, delta: float, speed := 1.6) -> bool:
 	if waypoint >= waypoints.size():
 		for i in [0, 1]:
@@ -123,6 +175,8 @@ func walk(actor: Node3D, delta: float, speed := 1.6) -> bool:
 		actor.limbs[i].rotation.x = sin(elapsed * 8 + i * PI) * 0.35
 	return false
 
+
+## Führt den Einsatzstatus vom Warten bis zur abgeschlossenen Übergabe weiter.
 func _physics_process(delta: float) -> void:
 	elapsed += delta
 	if not active():
@@ -134,7 +188,8 @@ func _physics_process(delta: float) -> void:
 	if suspect.is_injured() or (is_instance_valid(officer) and officer.is_injured()):
 		report = "Abholung abgebrochen: Person verletzt. Medizinische Hilfe noch nicht verfuegbar."
 		stage = Stage.COMPLETE
-		if is_instance_valid(source): source.pickup_reserved = false
+		if is_instance_valid(source):
+			source.pickup_reserved = false
 		return
 	match stage:
 		Stage.WAITING:
@@ -170,7 +225,9 @@ func _physics_process(delta: float) -> void:
 				stage = Stage.BOARDING
 		Stage.BOARDING:
 			boarding_time = minf(1, boarding_time + delta / 2.0)
-			suspect.global_position = boarding_start.lerp(patrol.to_global(Vector3(0.43, 0.12, 0.65)), smoothstep(0, 1, boarding_time))
+			suspect.global_position = boarding_start.lerp(
+				patrol.to_global(Vector3(0.43, 0.12, 0.65)), smoothstep(0, 1, boarding_time)
+			)
 			suspect.rig.scale = Vector3.ONE * lerpf(1, 0.78, boarding_time)
 			if boarding_time >= 1:
 				suspect.reparent(patrol, true)
@@ -181,7 +238,9 @@ func _physics_process(delta: float) -> void:
 				for part in patrol.parts:
 					if part.kind == "passenger_door" and part.opened:
 						part.toggle()
-				set_walk([Vector3(8.6, 0, -1), Vector3(5, 0, -1), patrol.to_global(officer.outside)])
+				set_walk(
+					[Vector3(8.6, 0, -1), Vector3(5, 0, -1), patrol.to_global(officer.outside)]
+				)
 				stage = Stage.RETURNING
 		Stage.RETURNING:
 			if walk(officer, delta):
@@ -203,6 +262,8 @@ func _physics_process(delta: float) -> void:
 				if scene.traffic.controlled_car == source:
 					scene.traffic.controlled_car = null
 
+
+## Erzeugt die Wegpunkte des Beamten zur festgenommenen Person.
 func approach_suspect() -> Array[Vector3]:
 	var at: Vector3 = suspect.global_position
 	var points: Array[Vector3] = [Vector3(5, 0, -1)]
@@ -213,6 +274,8 @@ func approach_suspect() -> Array[Vector3]:
 	points.append(Vector3(at.x, 0, at.z))
 	return points
 
+
+## Erzeugt die Wegpunkte für die Begleitung zur Streife.
 func escort_suspect() -> Array[Vector3]:
 	var at: Vector3 = suspect.global_position
 	var points: Array[Vector3] = []

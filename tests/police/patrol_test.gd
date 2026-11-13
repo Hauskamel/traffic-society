@@ -1,16 +1,25 @@
+## Integrationsprüfung: patrol.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 var failures: Array[String] = []
 var scene: Node
 var stages: Dictionary = {}
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
 
+
+## Führt einen definierten Aktualisierungsschritt der Testszene aus.
 func step() -> void:
 	scene.traffic._physics_process(1.0 / 60.0)
 	for car in scene.traffic.cars:
@@ -24,6 +33,8 @@ func step() -> void:
 	scene.patrol._physics_process(1.0 / 60.0)
 	stages[scene.patrol.stage] = true
 
+
+## Prüft den gewählten Fahrerfall einschließlich optionaler Kontrolle am Straßenrand.
 func scenario(index: int, roadside := false) -> void:
 	stages.clear()
 	scene = load("res://game/world/main.tscn").instantiate()
@@ -55,7 +66,10 @@ func scenario(index: int, roadside := false) -> void:
 	for i in range(600):
 		step()
 	check(scene.patrol.patrol == null, "Patrol must not spawn after only ten seconds")
-	check(scene.patrol.cancel_waiting() and not source.pickup_reserved, "Pending request can be cancelled")
+	check(
+		scene.patrol.cancel_waiting() and not source.pickup_reserved,
+		"Pending request can be cancelled"
+	)
 	check(scene.patrol.request_pickup(source), "Cancelled request can be requested again")
 	for i in range(1190):
 		step()
@@ -65,16 +79,33 @@ func scenario(index: int, roadside := false) -> void:
 	for i in range(15000):
 		step()
 		if scene.patrol.stage == scene.PatrolDispatch.Stage.EXITING and not parked_checked:
-			check(scene.patrol.patrol.position.distance_to(Vector3(7.1, 0.08, -5)) < 0.1, "Patrol must park in space two ahead of the source")
+			check(
+				scene.patrol.patrol.position.distance_to(Vector3(7.1, 0.08, -5)) < 0.1,
+				"Patrol must park in space two ahead of the source"
+			)
 			parked_checked = true
 		if scene.patrol.stage == scene.PatrolDispatch.Stage.COMPLETE:
 			break
 	check(parked_checked, "Patrol must reach the second space")
-	check(stages.has(scene.PatrolDispatch.Stage.ESCORTING) and stages.has(scene.PatrolDispatch.Stage.BOARDING), "Officer must escort and board the suspect")
+	check(
+		(
+			stages.has(scene.PatrolDispatch.Stage.ESCORTING)
+			and stages.has(scene.PatrolDispatch.Stage.BOARDING)
+		),
+		"Officer must escort and board the suspect"
+	)
 	check(stages.has(scene.PatrolDispatch.Stage.DEPARTING), "Patrol must depart with the suspect")
-	check(scene.patrol.stage == scene.PatrolDispatch.Stage.COMPLETE, "Pickup must finish without getting stuck")
-	check(scene.traffic.in_custody.has(arrested_name), "Collected driver must be recorded in custody")
-	check(scene.traffic.controlled_car == (bay_car if roadside else null), "Pickup cleanup preserves any other ongoing bay control")
+	check(
+		scene.patrol.stage == scene.PatrolDispatch.Stage.COMPLETE,
+		"Pickup must finish without getting stuck"
+	)
+	check(
+		scene.traffic.in_custody.has(arrested_name), "Collected driver must be recorded in custody"
+	)
+	check(
+		scene.traffic.controlled_car == (bay_car if roadside else null),
+		"Pickup cleanup preserves any other ongoing bay control"
+	)
 	for i in range(3000):
 		step()
 	for car in scene.traffic.cars:
@@ -82,10 +113,14 @@ func scenario(index: int, roadside := false) -> void:
 	scene.queue_free()
 	await process_frame
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	for index in range(4):
 		await scenario(index)
 	await scenario(0, true)
 	if failures.is_empty():
-		print("PASS: arrest, duplicate/cancel guards, 20-second spawn delay, second space, officer exit/escort/boarding/return, departure and custody cleanup")
+		print(
+			"PASS: arrest, duplicate/cancel guards, 20-second spawn delay, second space, officer exit/escort/boarding/return, departure and custody cleanup"
+		)
 	quit(0 if failures.is_empty() else 1)

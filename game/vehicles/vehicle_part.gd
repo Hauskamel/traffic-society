@@ -1,3 +1,6 @@
+## Interaktionsfläche einer beweglichen Fahrzeugtür oder Hecköffnung.
+## Trennt Hervorhebung und Bedienbarkeit von der eigentlichen Scharnierbewegung.
+
 extends Area3D
 const Timings = preload("res://game/config/interaction_timings.gd")
 ## A named physical target under the crosshair, with a reversible hinge animation.
@@ -13,6 +16,8 @@ var highlighted := false
 var surfaces: Array[MeshInstance3D] = []
 var highlight_material: StandardMaterial3D
 
+
+## Konfiguriert die Interaktionsfläche und sammelt hervorhebbare Teil-Meshes.
 func _ready() -> void:
 	collision_layer = 8
 	collision_mask = 0
@@ -26,6 +31,8 @@ func _ready() -> void:
 		if child is MeshInstance3D:
 			surfaces.append(child)
 
+
+## Schaltet die farbige Hervorhebung der sichtbaren Ziel-Meshes um.
 func set_highlight(value: bool) -> void:
 	if highlighted == value:
 		return
@@ -33,8 +40,11 @@ func set_highlight(value: bool) -> void:
 	for mesh in surfaces:
 		mesh.material_overlay = highlight_material if value else null
 
+
+## Prüft Entfernung und zustandsabhängige Bedienbarkeit des Interaktionsziels.
 func can_use(origin: Vector3) -> bool:
-	if kind == "driver_door" and vehicle.driver.is_corpse_exiting(): return false
+	if kind == "driver_door" and vehicle.driver.is_corpse_exiting():
+		return false
 	if vehicle.state != vehicle.State.PARKED or vehicle.driver.is_busy():
 		return false
 	if origin.distance_to(global_position) > 2.8:
@@ -49,8 +59,11 @@ func can_use(origin: Vector3) -> bool:
 			return local.z > vehicle.body_length / 2.0 - 0.2
 	return false
 
+
+## Wechselt den Öffnungszustand, sofern die Fahrzeugaktion aktuell zulässig ist.
 func toggle() -> bool:
-	if kind == "driver_door" and vehicle.driver.is_corpse_exiting(): return false
+	if kind == "driver_door" and vehicle.driver.is_corpse_exiting():
+		return false
 	if kind == "trunk" and opened and vehicle.officer_aboard:
 		return false
 	if vehicle.state != vehicle.State.PARKED or vehicle.driver.is_busy():
@@ -58,18 +71,26 @@ func toggle() -> bool:
 	opened = not opened
 	return true
 
+
+## Liefert den aktuellen Öffnungswinkel auf der konfigurierten Scharnierachse.
 func angle() -> float:
 	return pivot.rotation.x if axis == Vector3.RIGHT else pivot.rotation.y
 
+
+## Prüft Öffnungsabsicht und tatsächlichen Scharnierwinkel.
 func is_closed() -> bool:
 	return absf(angle()) < 0.01 and not opened
 
+
+## Stellt den Anfangszustand wieder her und entfernt temporäre Verletzungs-/Darstellungszustände.
 func reset() -> void:
 	opened = false
 	pivot.rotation = Vector3.ZERO
 	pivot.collision_layer = 4
 	set_highlight(false)
 
+
+## Bewegt das Scharnier zum Öffnungsziel und passt die Übergangskollision an.
 func _physics_process(delta: float) -> void:
 	if kind == "driver_door" and vehicle.driver.is_busy():
 		driver_was_busy = true

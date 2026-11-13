@@ -1,3 +1,6 @@
+## Prozeduraler Werkzeugkasten mit Deckel, Verschluss und sichtbarem Inhalt.
+## Wird von Weltgegenständen und der Detailansicht gemeinsam verwendet.
+
 extends Node3D
 const Visuals = preload("res://game/police/police_visuals.gd")
 var item: Dictionary
@@ -7,7 +10,11 @@ var contents_root: Node3D
 var interactive := false
 var moving := false
 
-func piece(parent: Node3D, at: Vector3, size: Vector3, color: String, token := "body") -> MeshInstance3D:
+
+## Erzeugt einen benannten Modellbaustein an der übergebenen Position.
+func piece(
+	parent: Node3D, at: Vector3, size: Vector3, color: String, token := "body"
+) -> MeshInstance3D:
 	var mesh := Visuals.box(parent, at, size, color)
 	if interactive:
 		var body := StaticBody3D.new()
@@ -20,6 +27,8 @@ func piece(parent: Node3D, at: Vector3, size: Vector3, color: String, token := "
 		mesh.add_child(body)
 	return mesh
 
+
+## Baut das Modell anhand des Behälterzustands und der gewünschten Interaktivität auf.
 func configure(data: Dictionary, enable_input := false) -> void:
 	item = data
 	interactive = enable_input
@@ -53,13 +62,17 @@ func configure(data: Dictionary, enable_input := false) -> void:
 			tool.add_child(body)
 			var hit := CollisionShape3D.new()
 			var shape := BoxShape3D.new()
-			shape.size = Vector3(0.40, 0.12, 0.65) if inside.icon == "hammer" else Vector3(0.7, 0.1, 0.17)
+			shape.size = (
+				Vector3(0.40, 0.12, 0.65) if inside.icon == "hammer" else Vector3(0.7, 0.1, 0.17)
+			)
 			hit.shape = shape
 			body.add_child(hit)
 	lid.rotation.x = -1.95 if item.opened else 0.0
 	latch.rotation.x = -1.2 if item.unlocked else 0.0
 	contents_root.visible = item.opened
 
+
+## Erzeugt das vereinfachte Werkzeug- oder Fundmodell im Behälter.
 static func build_tool(parent: Node3D, kind: String) -> void:
 	if kind == "hammer":
 		Visuals.box(parent, Vector3(0, 0, 0.04), Vector3(0.065, 0.065, 0.54), "a27b4e")
@@ -71,8 +84,12 @@ static func build_tool(parent: Node3D, kind: String) -> void:
 		var tip := MeshInstance3D.new()
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var top := [Vector3(0.22, 0.015, -0.045), Vector3(0.42, 0.015, 0), Vector3(0.22, 0.015, 0.045)]
-		var bottom := [Vector3(0.22, -0.015, -0.045), Vector3(0.42, -0.015, 0), Vector3(0.22, -0.015, 0.045)]
+		var top := [
+			Vector3(0.22, 0.015, -0.045), Vector3(0.42, 0.015, 0), Vector3(0.22, 0.015, 0.045)
+		]
+		var bottom := [
+			Vector3(0.22, -0.015, -0.045), Vector3(0.42, -0.015, 0), Vector3(0.22, -0.015, 0.045)
+		]
 		for vertex in [top[0], top[2], top[1], bottom[0], bottom[1], bottom[2]]:
 			surface.add_vertex(vertex)
 		for i in range(3):
@@ -86,11 +103,15 @@ static func build_tool(parent: Node3D, kind: String) -> void:
 		tip.material_override = steel
 		parent.add_child(tip)
 		Visuals.box(parent, Vector3(-0.08, 0, 0), Vector3(0.025, 0.09, 0.14), "87979c")
-		for at in [Vector3(0.04, 0.018, 0), Vector3(0.16, 0.018, 0.02), Vector3(0.25, 0.018, -0.01)]:
+		for at in [
+			Vector3(0.04, 0.018, 0), Vector3(0.16, 0.018, 0.02), Vector3(0.25, 0.018, -0.01)
+		]:
 			Visuals.box(parent, at, Vector3(0.055, 0.007, 0.045), "782c2a")
 		for x in [-0.3, -0.16]:
 			Visuals.box(parent, Vector3(x, 0.036, 0), Vector3(0.018, 0.008, 0.018), "aeb7b5")
 
+
+## Animiert den Deckel passend zum gespeicherten Öffnungszustand.
 func _process(delta: float) -> void:
 	if not is_instance_valid(lid):
 		return

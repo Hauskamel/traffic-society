@@ -1,3 +1,6 @@
+## Verschiebbare Dokumentkarten im Vordergrund der Spielwelt.
+## Verwaltet Anordnung und Mausbedienung, nicht die Welt-Zeitlupe.
+
 extends Control
 signal closed
 signal opened(car: Node)
@@ -8,6 +11,8 @@ var workspace: Control
 var dragging: PanelContainer
 var drag_offset := Vector2.ZERO
 
+
+## Erzeugt ein formatiertes Textlabel innerhalb einer Dokumentkarte.
 func text(value: String, size: int, parent: Node, color := Color("263b42")) -> Label:
 	var label := Label.new()
 	label.text = value
@@ -17,6 +22,8 @@ func text(value: String, size: int, parent: Node, color := Color("263b42")) -> L
 	parent.add_child(label)
 	return label
 
+
+## Baut den Dokumenten-Arbeitsbereich und seine Schließaktion auf.
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var background := ColorRect.new()
@@ -34,7 +41,12 @@ func _ready() -> void:
 	layout.add_theme_constant_override("separation", 12)
 	add_child(layout)
 	text("DOKUMENTENKONTROLLE", 28, layout, Color("e9e5d6"))
-	text("Dokumente an der Titelleiste ziehen und nebeneinander ansehen. Welt in Zeitlupe / 18 %.", 16, layout, Color("c3ceca"))
+	text(
+		"Dokumente an der Titelleiste ziehen und nebeneinander ansehen. Welt in Zeitlupe / 18 %.",
+		16,
+		layout,
+		Color("c3ceca")
+	)
 	workspace = Control.new()
 	workspace.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(workspace)
@@ -54,6 +66,8 @@ func _ready() -> void:
 	workspace.resized.connect(arrange)
 	visible = false
 
+
+## Baut eine Dokumentkarte aus Titel, Feldern, Farbe und optionalem Porträt auf.
 func card(title: String, fields: Dictionary, tint: Color, portrait: bool) -> void:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(450, 510)
@@ -92,7 +106,14 @@ func card(title: String, fields: Dictionary, tint: Color, portrait: bool) -> voi
 		photo.custom_minimum_size = Vector2(85, 96)
 		photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(photo)
-		for shape in [[Rect2(0, 0, 85, 96), "a4b7b7"], [Rect2(10, 65, 65, 31), "b79b69"], [Rect2(23, 15, 39, 50), "d7b49a"], [Rect2(23, 10, 39, 12), "514638"], [Rect2(31, 34, 5, 5), "24323b"], [Rect2(50, 34, 5, 5), "24323b"]]:
+		for shape in [
+			[Rect2(0, 0, 85, 96), "a4b7b7"],
+			[Rect2(10, 65, 65, 31), "b79b69"],
+			[Rect2(23, 15, 39, 50), "d7b49a"],
+			[Rect2(23, 10, 39, 12), "514638"],
+			[Rect2(31, 34, 5, 5), "24323b"],
+			[Rect2(50, 34, 5, 5), "24323b"]
+		]:
 			var patch := ColorRect.new()
 			patch.position = shape[0].position
 			patch.size = shape[0].size
@@ -107,6 +128,8 @@ func card(title: String, fields: Dictionary, tint: Color, portrait: bool) -> voi
 		text(key.to_upper(), 12, field, Color("56696b"))
 		text(str(fields[key]), 20, field)
 
+
+## Verarbeitet Ziehen und Anheben einer einzelnen Dokumentkarte.
 func handle_input(event: InputEvent, panel: PanelContainer) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
@@ -116,18 +139,30 @@ func handle_input(event: InputEvent, panel: PanelContainer) -> void:
 		else:
 			dragging = null
 
+
+## Behandelt szenenweite Eingaben vor nachgelagerten UI- und Waffenaktionen.
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+	if (
+		event is InputEventMouseButton
+		and event.button_index == MOUSE_BUTTON_LEFT
+		and not event.pressed
+	):
 		dragging = null
 	if event is InputEventMouseMotion and is_instance_valid(dragging):
 		move_card(dragging, get_global_mouse_position() - workspace.global_position - drag_offset)
 		get_viewport().set_input_as_handled()
 
-func move_card(panel: PanelContainer, at: Vector2) -> void:
-	panel.position = at.clamp(Vector2.ZERO, (workspace.size - panel.size * panel.scale).max(Vector2.ZERO))
 
+## Verschiebt eine Dokumentkarte innerhalb des sichtbaren Arbeitsbereichs.
+func move_card(panel: PanelContainer, at: Vector2) -> void:
+	panel.position = at.clamp(
+		Vector2.ZERO, (workspace.size - panel.size * panel.scale).max(Vector2.ZERO)
+	)
+
+
+## Ordnet die geöffneten Dokumentkarten für die aktuelle Fenstergröße an.
 func arrange() -> void:
 	dragging = null
 	var factor := minf(1.0, minf((workspace.size.x - 24) / 924.0, workspace.size.y / 600.0))
@@ -136,6 +171,8 @@ func arrange() -> void:
 		cards[i].scale = Vector2.ONE * factor
 		move_card(cards[i], Vector2((workspace.size.x - 924 * factor) * 0.5 + i * 474 * factor, 8))
 
+
+## Öffnet die Ansicht mit den übergebenen Zustands- oder Inventardaten.
 func open_view(car: Node) -> bool:
 	documents = Data.for_car(car)
 	if documents.is_empty():
@@ -152,6 +189,8 @@ func open_view(car: Node) -> bool:
 	opened.emit(car)
 	return true
 
+
+## Schließt die Ansicht und gibt ihre Eingabe-/Darstellungszustände zurück.
 func close_view() -> void:
 	dragging = null
 	visible = false

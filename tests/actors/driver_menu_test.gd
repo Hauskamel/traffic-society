@@ -1,32 +1,47 @@
+## Integrationsprüfung: driver menu.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 ## Graphical test: godot --path . --script res://tests/actors/driver_menu_test.gd
 var failures: Array[String] = []
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
 
+
+## Übergibt ein Tastaturereignis an die getestete Eingabesteuerung.
 func key(scene: Node, code: int) -> void:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.pressed = true
 	scene._unhandled_input(event)
 
+
+## Übergibt einen Mausradschritt an die Menü- oder Kamerasteuerung.
 func wheel(scene: Node, button: int) -> void:
 	var event := InputEventMouseButton.new()
 	event.button_index = button
 	event.pressed = true
 	scene._unhandled_input(event)
 
+
+## Speichert im grafischen Modus einen Screenshot des aktuellen Testzustands.
 func capture(name: String) -> void:
 	await process_frame
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("user://" + name + ".png")
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	var scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
@@ -48,7 +63,10 @@ func run() -> void:
 	check(scene.interaction_open, "E must open menu")
 	var zoom: float = scene.overview.size
 	wheel(scene, MOUSE_BUTTON_WHEEL_UP)
-	check(scene.interaction_index == scene.interaction_actions.size() - 1, "Wheel up wraps to last action")
+	check(
+		scene.interaction_index == scene.interaction_actions.size() - 1,
+		"Wheel up wraps to last action"
+	)
 	wheel(scene, MOUSE_BUTTON_WHEEL_DOWN)
 	check(scene.interaction_index == 0, "Wheel down wraps to first action")
 	check(scene.overview.size == zoom, "Menu scrolling must not change overview zoom")
@@ -57,9 +75,15 @@ func run() -> void:
 	var mouse := InputEventMouseMotion.new()
 	mouse.relative = Vector2(50, 50)
 	scene._unhandled_input(mouse)
-	check(scene.player.rotation.y == yaw and scene.eyes.rotation.x == pitch, "Menu must pause mouse look")
+	check(
+		scene.player.rotation.y == yaw and scene.eyes.rotation.x == pitch,
+		"Menu must pause mouse look"
+	)
 	key(scene, KEY_ESCAPE)
-	check(not scene.interaction_open and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "Escape closes menu and retains game control")
+	check(
+		not scene.interaction_open and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED,
+		"Escape closes menu and retains game control"
+	)
 	key(scene, KEY_E)
 	scene.refresh_encounter_ui()
 	await capture("driver-menu-seated")
@@ -75,13 +99,22 @@ func run() -> void:
 	check(car.driver.state == car.driver.State.OUTSIDE, "Driver must stand outside")
 	scene.eyes.look_at(car.driver.interaction_point())
 	key(scene, KEY_E)
-	check(scene.interaction_actions.has("Einsteigen lassen") and scene.interaction_actions.has("Person durchsuchen"), "Outside menu must offer entry and search")
+	check(
+		(
+			scene.interaction_actions.has("Einsteigen lassen")
+			and scene.interaction_actions.has("Person durchsuchen")
+		),
+		"Outside menu must offer entry and search"
+	)
 	scene.refresh_encounter_ui()
 	await capture("driver-menu-outside")
 	wheel(scene, MOUSE_BUTTON_WHEEL_DOWN)
 	wheel(scene, MOUSE_BUTTON_WHEEL_DOWN)
 	key(scene, KEY_E)
-	check(not scene.interaction_open and car.driver.state == car.driver.State.OUTSIDE, "End conversation must leave driver waiting")
+	check(
+		not scene.interaction_open and car.driver.state == car.driver.State.OUTSIDE,
+		"End conversation must leave driver waiting"
+	)
 	key(scene, KEY_E)
 	wheel(scene, MOUSE_BUTTON_WHEEL_DOWN)
 	key(scene, KEY_E)
@@ -98,5 +131,7 @@ func run() -> void:
 	wheel(scene, MOUSE_BUTTON_WHEEL_UP)
 	check(scene.overview.size < zoom, "Mouse wheel must still zoom overview")
 	if failures.is_empty():
-		print("PASS: E menu, wheel navigation/wrap, frozen look, Esc, exit, outside actions, re-entry, release and overview zoom")
+		print(
+			"PASS: E menu, wheel navigation/wrap, frozen look, Esc, exit, outside actions, re-entry, release and overview zoom"
+		)
 	quit(0 if failures.is_empty() else 1)

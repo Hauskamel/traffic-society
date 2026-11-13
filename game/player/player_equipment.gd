@@ -1,3 +1,6 @@
+## Inventarleiste sowie Holster-, Griff- und Zielzustand der Spielerwaffen.
+## Delegiert Schüsse und Magazinwechsel an PistolAction.
+
 extends Node
 const Models = preload("res://game/weapons/weapon_visuals.gd")
 const Visuals = preload("res://game/police/police_visuals.gd")
@@ -21,6 +24,8 @@ const PistolAction = preload("res://game/weapons/pistol_action.gd")
 var pistol_action: PistolAction
 var busy := false
 
+
+## Baut Holster, Ego-Waffenmodelle und die Inventarleiste auf.
 func _ready() -> void:
 	for i in range(2):
 		var holster := Node3D.new()
@@ -33,7 +38,9 @@ func _ready() -> void:
 		belt_guns.append(gun)
 	hand = Node3D.new()
 	scene.eyes.add_child(hand)
-	var sleeve := Visuals.box(hand, Vector3(0.035, -0.10, 0.15), Vector3(0.085, 0.09, 0.27), "365a78")
+	var sleeve := Visuals.box(
+		hand, Vector3(0.035, -0.10, 0.15), Vector3(0.085, 0.09, 0.27), "365a78"
+	)
 	sleeve.rotation.x = -0.15
 	Visuals.box(hand, Vector3(0, -0.04, 0.045), Vector3(0.055, 0.075, 0.07), "d7b49a")
 	for kind in KINDS:
@@ -63,15 +70,32 @@ func _ready() -> void:
 	pistol_action.sync_descriptions()
 	tick(0)
 
+
+## Prüft, ob die angefragte Ausrüstung oder Aktion aktuell verfügbar ist.
 func available(index: int) -> bool:
 	for item in scene.player_inventory.items:
 		if item.id == IDS[index]:
 			return true
 	return false
 
-func allowed() -> bool:
-	return not scene.aerial and not scene.interaction_open and not scene.radio_open and not scene.inventory_view.visible and not scene.document_mode.active and not scene.document_view.visible and not is_instance_valid(scene.searching_driver) and not is_instance_valid(scene.cargo_search_car) and not scene.climber.active and not is_instance_valid(scene.climber.car)
 
+## Prüft UI- und Bewegungszustände, die Waffenbedienung ausschließen.
+func allowed() -> bool:
+	return (
+		not scene.aerial
+		and not scene.interaction_open
+		and not scene.radio_open
+		and not scene.inventory_view.visible
+		and not scene.document_mode.active
+		and not scene.document_view.visible
+		and not is_instance_valid(scene.searching_driver)
+		and not is_instance_valid(scene.cargo_search_car)
+		and not scene.climber.active
+		and not is_instance_valid(scene.climber.car)
+	)
+
+
+## Bricht die Waffenhaltung und einen gegebenenfalls laufenden Magazinwechsel ab.
 func cancel() -> void:
 	if is_instance_valid(pistol_action):
 		pistol_action.cancel_reload()
@@ -81,12 +105,16 @@ func cancel() -> void:
 	reach = 0
 	draw = 0
 
+
+## Wählt eine vorhandene Waffe und setzt vorherige Waffenhaltungen zurück.
 func select(index: int) -> void:
 	if index < 0 or index >= 2 or not available(index):
 		return
 	cancel()
 	selected = index
 
+
+## Verarbeitet waffenbezogene Eingaben und meldet, ob das Ereignis verbraucht wurde.
 func handle(event: InputEvent) -> bool:
 	if not allowed():
 		cancel()
@@ -94,7 +122,12 @@ func handle(event: InputEvent) -> bool:
 	if event is InputEventKey:
 		if event.keycode == KEY_SHIFT:
 			shift_held = event.pressed
-			if shift_held and state == State.HOLSTERED and available(selected) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			if (
+				shift_held
+				and state == State.HOLSTERED
+				and available(selected)
+				and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+			):
 				state = State.REACHING
 			elif not shift_held and state == State.REACHING:
 				cancel()
@@ -130,6 +163,8 @@ func handle(event: InputEvent) -> bool:
 			return true
 	return false
 
+
+## Führt Waffenhaltung, Nachladen und sichtbare Ausrüstung mit der übergebenen Zeit weiter.
 func tick(delta: float) -> void:
 	if not allowed() or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or not available(selected):
 		cancel()
@@ -154,14 +189,38 @@ func tick(delta: float) -> void:
 		var arm: Node3D = scene.player_avatar.get_node("Arm" + str(i))
 		arm.rotation.x = -1.3 * draw - 0.22 * reach if i == 1 else -0.6 * draw
 		arm.rotation.z = -0.30 * reach if i == 1 and selected == 1 else 0.0
-		buttons[i].text = str(i + 1) + "  " + NAMES[i] + ("\nZielen" if i == selected and state == State.AIMING else "\nGriff" if i == selected and state == State.REACHING else "\nHolster")
+		buttons[i].text = (
+			str(i + 1)
+			+ "  "
+			+ NAMES[i]
+			+ (
+				"\nZielen"
+				if i == selected and state == State.AIMING
+				else "\nGriff" if i == selected and state == State.REACHING else "\nHolster"
+			)
+		)
 		if i == 0:
-			buttons[i].text = "1  Glock 19\n" + ("Nachladen ..." if pistol_action.reloading else "%d/15 | %d Mag." % [pistol_action.rounds(), pistol_action.spare_count()])
+			buttons[i].text = (
+				"1  Glock 19\n"
+				+ (
+					"Nachladen ..."
+					if pistol_action.reloading
+					else "%d/15 | %d Mag." % [pistol_action.rounds(), pistol_action.spare_count()]
+				)
+			)
 		buttons[i].modulate = Color("efd58b") if i == selected else Color("b5c0c5")
 		buttons[i].disabled = not available(i)
-	bar.visible = not scene.aerial and not scene.inventory_view.visible and not scene.radio_open and not scene.interaction_open and not scene.document_mode.active
+	bar.visible = (
+		not scene.aerial
+		and not scene.inventory_view.visible
+		and not scene.radio_open
+		and not scene.interaction_open
+		and not scene.document_mode.active
+	)
 	busy = state != State.HOLSTERED
 
+
+## Bricht Waffenhaltungen bei verlorenem Anwendungsfokus ab.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		cancel()

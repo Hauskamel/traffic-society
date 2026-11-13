@@ -2,7 +2,7 @@
 
 Stand: **13. November 2026**. Die farbigen Linien zeigen die tatsächlichen Abzweigungen und Zusammenführungen der Spielfunktionen. GitHub stellt das Mermaid-Diagramm direkt als Grafik dar.
 
-Die Übersicht zeigt den **Spielstand nach dem Merge von PR #5**. Sie fasst Zwischenstände zusammen; die angegebenen Commit-IDs bezeichnen Spielstände. Die anschließenden reinen Dokumentationscommits auf den einzelnen Branches sind nicht eingezeichnet.
+Die Übersicht zeigt den **Spielstand nach PR #5 und den Beginn der Strukturüberarbeitung**. Sie fasst Zwischenstände zusammen; die angegebenen Commit-IDs bezeichnen Spielstände. Die anschließenden reinen Dokumentationscommits auf den einzelnen Branches sind nicht eingezeichnet.
 
 ```mermaid
 gitGraph LR:
@@ -42,6 +42,10 @@ gitGraph LR:
     commit id: "8a70f82" tag: "Glasdurchschuesse"
     checkout develop
     merge "feature/bodPhysics" id: "860cb75"
+    commit id: "4fe35d6" tag: "Dokumentation"
+    branch "feature/projectStructure"
+    checkout "feature/projectStructure"
+    commit id: "62ef72a" tag: "Projektstruktur"
 ```
 
 **So liest du die Buslinie:** Jede Linie ist ein Branch, Punkte sind ausgewählte Commits. Eine Abzweigung startet einen Feature-Branch; eine zurücklaufende Verbindung übernimmt Änderungen. Die Verbindung von `develop` zu `feature/vehicleDamage` zeigt die damalige Aktualisierung des Feature-Branches mit der erweiterten Fahrzeugdurchsuchung, bevor die Fahrzeugschäden nach `develop` übernommen wurden.
@@ -52,6 +56,7 @@ gitGraph LR:
 | --- | --- | --- |
 | `main` | Stabiler Ausgangsstand; spätere Spielfunktionen noch nicht übernommen | `efe140c` – Straße und Parkbucht |
 | `develop` | Integrationsbranch inklusive Körperphysik und bewaffneter NPC-Testszene | `860cb75` – PR #5 übernommen |
+| `feature/projectStructure` | Laufende Struktur- und Dokumentationsüberarbeitung von `develop` | `62ef72a` – Ordner und Ressourcenpfade geordnet |
 | `feature/bodPhysics` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `8a70f82` – Körperphysik, NPC-Test, Ausrollen und Glasdurchschüsse |
 | `feature/vehicleDamage` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `d7db46c` – Fahrzeugschäden inklusive damaligem `develop` |
 | `feature/extendedVehicleSearch` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `5384bec` – Gegenstände direkt im Fahrzeug untersuchen |

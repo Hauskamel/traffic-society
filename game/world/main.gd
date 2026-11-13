@@ -1,3 +1,6 @@
+## Einstieg der Kontrollplatz-Szene und Koordination ihrer Spielsysteme.
+## Erzeugt Welt, Spieler und UI; delegiert Fachlogik an Verkehr, Inventar und Polizei.
+
 extends Node3D
 
 const SpeedSettings = preload("res://game/config/speed_settings.gd")
@@ -59,12 +62,16 @@ var cargo_start_pitch := 0.0
 var feedback := ""
 var feedback_time := 0.0
 
+
+## Erzeugt ein mattes Material aus einer Hex-Farbe.
 func mat(hex: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(hex)
 	m.roughness = 1.0
 	return m
 
+
+## Erzeugt ein Quader-Mesh und ergänzt bei Bedarf die zugehörige Kollision.
 func block(pos: Vector3, size: Vector3, material: Material, solid := false) -> void:
 	var mesh := MeshInstance3D.new()
 	var cube := BoxMesh.new()
@@ -82,6 +89,8 @@ func block(pos: Vector3, size: Vector3, material: Material, solid := false) -> v
 		body.add_child(hit)
 		mesh.add_child(body)
 
+
+## Erzeugt Kontrollplatz, Spieler und alle angeschlossenen UI-/Spielsysteme.
 func _ready() -> void:
 	var world := WorldEnvironment.new()
 	var environment := Environment.new()
@@ -117,9 +126,12 @@ func _ready() -> void:
 
 	# Parkbucht mit schraeger Ein- und Ausfahrt.
 	var vertices := [
-		Vector3(4, 0.09, -23), Vector3(10, 0.09, -15),
-		Vector3(10, 0.09, 15), Vector3(4, 0.09, -23),
-		Vector3(10, 0.09, 15), Vector3(4, 0.09, 23)
+		Vector3(4, 0.09, -23),
+		Vector3(10, 0.09, -15),
+		Vector3(10, 0.09, 15),
+		Vector3(4, 0.09, -23),
+		Vector3(10, 0.09, 15),
+		Vector3(4, 0.09, 23)
 	]
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -328,6 +340,8 @@ func _ready() -> void:
 	update_camera()
 	refresh_encounter_ui()
 
+
+## Übernimmt die aktuellen Kamera- und Perspektivparameter.
 func update_camera() -> void:
 	close_interaction()
 	set_radio_open(false)
@@ -336,6 +350,8 @@ func update_camera() -> void:
 	eyes.current = not aerial
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
 
+
+## Verarbeitet nicht von UI-Elementen verbrauchte Tastatur- und Mausaktionen dieser Szene.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10:
 		get_tree().change_scene_to_file("res://prototypes/combat/combat_test.tscn")
@@ -346,23 +362,48 @@ func _unhandled_input(event: InputEvent) -> void:
 	if climber.active:
 		return
 	if document_view.visible:
-		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		if (
+			event is InputEventKey
+			and event.pressed
+			and not event.echo
+			and event.keycode == KEY_ESCAPE
+		):
 			document_view.close_view()
 		return
 	if document_mode.active:
 		return
 	if radio_open:
-		if event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_T, KEY_ESCAPE]:
+		if (
+			event is InputEventKey
+			and event.pressed
+			and not event.echo
+			and event.keycode in [KEY_T, KEY_ESCAPE]
+		):
 			set_radio_open(false)
 		return
-	if inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
-		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+	if (
+		inventory_view.visible
+		or is_instance_valid(searching_driver)
+		or is_instance_valid(cargo_search_car)
+	):
+		if (
+			event is InputEventKey
+			and event.pressed
+			and not event.echo
+			and event.keycode == KEY_ESCAPE
+		):
 			if inventory_view.visible:
 				inventory_view.back()
 			else:
 				finish_search()
 		return
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E and compliance.handcuff():
+	if (
+		event is InputEventKey
+		and event.pressed
+		and not event.echo
+		and event.keycode == KEY_E
+		and compliance.handcuff()
+	):
 		return
 	if equipment.handle(event):
 		return
@@ -394,7 +435,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		elif event.keycode == KEY_I and not aerial:
 			close_interaction()
-			inventory_view.open_player_view(player_inventory, traffic.controlled_car, eyes.global_position)
+			inventory_view.open_player_view(
+				player_inventory, traffic.controlled_car, eyes.global_position
+			)
 	if event is InputEventMouseButton and event.pressed:
 		if interaction_open:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -417,55 +460,106 @@ func _unhandled_input(event: InputEvent) -> void:
 				overview.size = minf(85, overview.size + 3)
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event is InputEventMouseMotion and not aerial and not interaction_open and not inventory_view.visible and not is_instance_valid(searching_driver) and not is_instance_valid(cargo_search_car) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if (
+		event is InputEventMouseMotion
+		and not aerial
+		and not interaction_open
+		and not inventory_view.visible
+		and not is_instance_valid(searching_driver)
+		and not is_instance_valid(cargo_search_car)
+		and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	):
 		player.rotation.y -= event.relative.x * 0.0025
 		pitch = clampf(pitch - event.relative.y * 0.0025, -1.35, 1.35)
 		eyes.rotation.x = pitch
 
+
+## Liefert 1, wenn eine der beiden alternativen Bewegungstasten gedrückt ist.
 func held(a: int, b: int) -> float:
 	return 1.0 if Input.is_physical_key_pressed(a) or Input.is_physical_key_pressed(b) else 0.0
 
+
+## Aktualisiert Waffen, Interaktionen und Spielerbewegung mit dem aktuellen Simulationsschritt.
 func _physics_process(delta: float) -> void:
 	equipment.tick(delta)
 	compliance.tick(delta)
 	avatar_clock += delta
 	var walking := Vector2(player.velocity.x, player.velocity.z).length() > 0.1
 	for i in range(2):
-		player_avatar.get_node("Leg" + str(i)).rotation.x = sin(avatar_clock * 8 + i * PI) * 0.35 if walking else 0.0
+		player_avatar.get_node("Leg" + str(i)).rotation.x = (
+			sin(avatar_clock * 8 + i * PI) * 0.35 if walking else 0.0
+		)
 	player_avatar.scale.y = climber.shape().shape.height / 1.8
 	update_radio()
 	climber.tick(delta)
 	if climber.active:
 		refresh_encounter_ui()
 		return
-	var move := Vector2(
-		held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
-		held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
-	).normalized()
-	if document_mode.active or document_view.visible or radio_open or interaction_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car):
+	var move := (
+		Vector2(
+			held(KEY_D, KEY_RIGHT) - held(KEY_A, KEY_LEFT),
+			held(KEY_S, KEY_DOWN) - held(KEY_W, KEY_UP)
+		)
+		. normalized()
+	)
+	if (
+		document_mode.active
+		or document_view.visible
+		or radio_open
+		or interaction_open
+		or inventory_view.visible
+		or is_instance_valid(searching_driver)
+		or is_instance_valid(cargo_search_car)
+	):
 		move = Vector2.ZERO
-	if is_instance_valid(searching_driver) and searching_driver.search_ready and not inventory_view.visible:
-		inventory_view.open_view(player_inventory, searching_car.inventory, searching_car.driver_name)
+	if (
+		is_instance_valid(searching_driver)
+		and searching_driver.search_ready
+		and not inventory_view.visible
+	):
+		inventory_view.open_view(
+			player_inventory, searching_car.inventory, searching_car.driver_name
+		)
 	if is_instance_valid(cargo_search_car) and not inventory_view.visible:
 		cargo_search_clock = minf(Timings.VEHICLE_SEARCH, cargo_search_clock + delta)
-		eyes.rotation.x = cargo_start_pitch + sin(cargo_search_clock / Timings.VEHICLE_SEARCH * PI) * 0.055
+		eyes.rotation.x = (
+			cargo_start_pitch + sin(cargo_search_clock / Timings.VEHICLE_SEARCH * PI) * 0.055
+		)
 		if cargo_search_clock >= Timings.VEHICLE_SEARCH:
 			eyes.rotation.x = cargo_start_pitch
-			inventory_view.open_view(player_inventory, cargo_search_car.cargo_inventory, "Fahrzeug " + cargo_search_car.plate_number, "Fahrzeug " + cargo_search_car.plate_number, true)
+			inventory_view.open_view(
+				player_inventory,
+				cargo_search_car.cargo_inventory,
+				"Fahrzeug " + cargo_search_car.plate_number,
+				"Fahrzeug " + cargo_search_car.plate_number,
+				true
+			)
 	feedback_time = maxf(0, feedback_time - delta)
 	if interaction_open and not can_interact():
 		close_interaction()
 	if aerial:
 		var forward := -overview.global_basis.z
 		forward.y = 0
-		overview.position += (overview.global_basis.x * move.x - forward.normalized() * move.y) * delta * 20
+		overview.position += (
+			(overview.global_basis.x * move.x - forward.normalized() * move.y) * delta * 20
+		)
 		overview.position.x = clampf(overview.position.x, -10, 65)
 		overview.position.z = clampf(overview.position.z, -15, 85)
 		player.velocity.x = 0
 		player.velocity.z = 0
 	else:
 		var direction := player.basis * Vector3(move.x, 0, move.y)
-		var speed := (SpeedSettings.SPRINT_SPEED_KMH if Input.is_physical_key_pressed(KEY_CTRL) and equipment.state == equipment.State.HOLSTERED else SpeedSettings.WALK_SPEED_KMH) / 3.6
+		var speed := (
+			(
+				SpeedSettings.SPRINT_SPEED_KMH
+				if (
+					Input.is_physical_key_pressed(KEY_CTRL)
+					and equipment.state == equipment.State.HOLSTERED
+				)
+				else SpeedSettings.WALK_SPEED_KMH
+			)
+			/ 3.6
+		)
 		player.velocity.x = direction.x * speed
 		player.velocity.z = direction.z * speed
 	if not player.is_on_floor():
@@ -477,10 +571,14 @@ func _physics_process(delta: float) -> void:
 	player.position.z = clampf(player.position.z, -80, 80)
 	refresh_encounter_ui()
 
+
+## Fordert die Kontrolle des in der Vogelperspektive ausgewählten Fahrzeugs an.
 func order_stop() -> void:
 	if aerial:
 		traffic.request_control()
 
+
+## Liefert das aktuelle Gesprächsziel oder das kontrollierte Fahrzeug.
 func interaction_car() -> Node3D:
 	# While a menu is open, retain its original subject.
 	if interaction_open and is_instance_valid(menu_car):
@@ -488,37 +586,94 @@ func interaction_car() -> Node3D:
 	var nearby := compliance.nearby_car()
 	return nearby if is_instance_valid(nearby) else traffic.controlled_car
 
+
+## Prüft Spielzustand, Entfernung und Blickrichtung für ein Fahrergespräch.
 func can_interact() -> bool:
 	var car := interaction_car()
-	if equipment.state != equipment.State.HOLSTERED or document_mode.active or document_view.visible or radio_open or inventory_view.visible or is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car) or aerial or not is_instance_valid(car) or car.state != TrafficCar.State.PARKED:
+	if (
+		equipment.state != equipment.State.HOLSTERED
+		or document_mode.active
+		or document_view.visible
+		or radio_open
+		or inventory_view.visible
+		or is_instance_valid(searching_driver)
+		or is_instance_valid(cargo_search_car)
+		or aerial
+		or not is_instance_valid(car)
+		or car.state != TrafficCar.State.PARKED
+	):
 		return false
 	if car.pickup_reserved and patrol.stage != PatrolDispatch.Stage.WAITING:
 		return false
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or car.driver.is_busy() or car.driver.is_injured():
+	if (
+		Input.mouse_mode != Input.MOUSE_MODE_CAPTURED
+		or car.driver.is_busy()
+		or car.driver.is_injured()
+	):
 		return false
 	var outside: bool = car.driver.state == car.driver.State.OUTSIDE
-	var target: Vector3 = car.driver.interaction_point() if outside else car.window_point.global_position
+	var target: Vector3 = (
+		car.driver.interaction_point() if outside else car.window_point.global_position
+	)
 	var difference: Vector3 = target - eyes.global_position
 	var facing := -eyes.global_basis.z
-	return difference.length() < 2.2 and facing.dot(difference.normalized()) > 0.72 and (outside or car.to_local(player.global_position).x < -0.9)
+	return (
+		difference.length() < 2.2
+		and facing.dot(difference.normalized()) > 0.72
+		and (outside or car.to_local(player.global_position).x < -0.9)
+	)
 
+
+## Aktualisiert Fadenkreuz, Suchfortschritt und kontextbezogene Bedienhinweise.
 func refresh_encounter_ui() -> void:
 	update_part_focus()
-	var searching := (is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car)) and not inventory_view.visible
+	var searching := (
+		(is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car))
+		and not inventory_view.visible
+	)
 	search_progress.visible = searching
 	search_progress.size = Vector2(120, 8)
-	crosshair.visible = not searching and not inventory_view.visible and not radio_open and not document_view.visible and not aerial
+	crosshair.visible = (
+		not searching
+		and not inventory_view.visible
+		and not radio_open
+		and not document_view.visible
+		and not aerial
+	)
 	if searching:
-		search_progress.value = (searching_driver.search_clock / searching_driver.SEARCH_DURATION if is_instance_valid(searching_driver) else cargo_search_clock / Timings.VEHICLE_SEARCH) * 100.0
+		search_progress.value = (
+			(
+				searching_driver.search_clock / searching_driver.SEARCH_DURATION
+				if is_instance_valid(searching_driver)
+				else cargo_search_clock / Timings.VEHICLE_SEARCH
+			)
+			* 100.0
+		)
 	var selected := traffic.selected_car
 	var controlled := traffic.controlled_car
 	stop_button.visible = aerial and is_instance_valid(selected)
-	stop_button.disabled = is_instance_valid(controlled) or not is_instance_valid(selected) or not selected.can_stop()
-	interact_hint.text = "[E] Mit %s sprechen" % interaction_car().driver_name if can_interact() and not interaction_open else ""
+	stop_button.disabled = (
+		is_instance_valid(controlled) or not is_instance_valid(selected) or not selected.can_stop()
+	)
+	interact_hint.text = (
+		"[E] Mit %s sprechen" % interaction_car().driver_name
+		if can_interact() and not interaction_open
+		else ""
+	)
 	if is_instance_valid(hovered_part):
-		interact_hint.text = "[E] " + hovered_part.title + " untersuchen" if hovered_part.kind == "cargo_item" else "[E] %s %s" % [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
+		interact_hint.text = (
+			"[E] " + hovered_part.title + " untersuchen"
+			if hovered_part.kind == "cargo_item"
+			else (
+				"[E] %s %s"
+				% [hovered_part.title, "schliessen" if hovered_part.opened else "oeffnen"]
+			)
+		)
 	if climber.available():
-		interact_hint.text += "\n[Leertaste] " + ("Heruntersteigen" if is_instance_valid(climber.car) else "Auf Ladeflaeche klettern")
+		interact_hint.text += (
+			"\n[Leertaste] "
+			+ ("Heruntersteigen" if is_instance_valid(climber.car) else "Auf Ladeflaeche klettern")
+		)
 
 	if is_instance_valid(compliance.nearby_car(true)):
 		interact_hint.text = "[E] Handschellen anlegen"
@@ -526,17 +681,43 @@ func refresh_encounter_ui() -> void:
 		interact_hint.text += ("\n" if not interact_hint.text.is_empty() else "") + feedback
 
 
+## Öffnet die zum Fahrerzustand passenden Gesprächsaktionen.
 func open_interaction() -> void:
 	if not can_interact():
 		return
 	menu_car = interaction_car()
 	var driver = menu_car.driver
 	if driver.arrested:
-		interaction_actions.assign(["Gespraech beenden"] if menu_car.pickup_reserved else ["Person durchsuchen", "Festnahme aufheben", "Gespraech beenden", "Streife anfordern"])
+		interaction_actions.assign(
+			(
+				["Gespraech beenden"]
+				if menu_car.pickup_reserved
+				else [
+					"Person durchsuchen",
+					"Festnahme aufheben",
+					"Gespraech beenden",
+					"Streife anfordern"
+				]
+			)
+		)
 	else:
-		interaction_actions.assign(["Person durchsuchen", "Einsteigen lassen", "Gespraech beenden", "Weiterfahren lassen", "Festnehmen"] if driver.state == driver.State.OUTSIDE else ["Aussteigen lassen", "Weiterfahren lassen"])
+		interaction_actions.assign(
+			(
+				[
+					"Person durchsuchen",
+					"Einsteigen lassen",
+					"Gespraech beenden",
+					"Weiterfahren lassen",
+					"Festnehmen"
+				]
+				if driver.state == driver.State.OUTSIDE
+				else ["Aussteigen lassen", "Weiterfahren lassen"]
+			)
+		)
 	if driver.surrendered:
-		interaction_actions.assign(["Handschellen anlegen", "Person durchsuchen", "Gespraech beenden"])
+		interaction_actions.assign(
+			["Handschellen anlegen", "Person durchsuchen", "Gespraech beenden"]
+		)
 	if not menu_car.pickup_reserved:
 		interaction_actions.append("Dokumente anfordern")
 	interaction_index = 0
@@ -544,18 +725,31 @@ func open_interaction() -> void:
 	interaction_panel.visible = true
 	refresh_interaction()
 
+
+## Schließt das Gespräch und gibt die Maussteuerung wieder frei.
 func close_interaction() -> void:
 	interaction_open = false
 	if is_instance_valid(interaction_panel):
 		interaction_panel.visible = false
 
+
+## Stellt die aktuelle Menüauswahl und ihre Hervorhebung neu dar.
 func refresh_interaction() -> void:
 	var text := "AKTION WAEHLEN\n\n"
 	for i in range(interaction_actions.size()):
-		text += ("[color=#efd58b]>  " + interaction_actions[i] + "[/color]" if i == interaction_index else "    " + interaction_actions[i]) + "\n"
+		text += (
+			(
+				"[color=#efd58b]>  " + interaction_actions[i] + "[/color]"
+				if i == interaction_index
+				else "    " + interaction_actions[i]
+			)
+			+ "\n"
+		)
 	text += "\nMausrad: Auswahl\nE: Bestaetigen  |  Esc: Zurueck"
 	interaction_rows.text = text
 
+
+## Führt die gewählte Fahreraktion aus und startet gegebenenfalls die Suche.
 func confirm_interaction() -> void:
 	if not interaction_open or not can_interact():
 		close_interaction()
@@ -588,15 +782,35 @@ func confirm_interaction() -> void:
 				searching_driver = car.driver
 				searching_car = car
 	if not succeeded:
-		feedback = "Bitte zuerst die Ladeflaeche verlassen." if car.officer_aboard else ("Bitte zuerst alle Tueren und Klappen schliessen." if not car.all_parts_closed() else "Aktion momentan nicht moeglich.")
+		feedback = (
+			"Bitte zuerst die Ladeflaeche verlassen."
+			if car.officer_aboard
+			else (
+				"Bitte zuerst alle Tueren und Klappen schliessen."
+				if not car.all_parts_closed()
+				else "Aktion momentan nicht moeglich."
+			)
+		)
 		feedback_time = 6.0
 	close_interaction()
 
 
+## Ermittelt das vom Fadenkreuz getroffene und erreichbare Fahrzeugteil.
 func update_part_focus() -> void:
 	var target: VehiclePart
 	var car := traffic.controlled_car
-	if equipment.state == equipment.State.HOLSTERED and not aerial and not interaction_open and not inventory_view.visible and not is_instance_valid(searching_driver) and not is_instance_valid(cargo_search_car) and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and is_instance_valid(car) and car.state == TrafficCar.State.PARKED and not car.driver.is_busy():
+	if (
+		equipment.state == equipment.State.HOLSTERED
+		and not aerial
+		and not interaction_open
+		and not inventory_view.visible
+		and not is_instance_valid(searching_driver)
+		and not is_instance_valid(cargo_search_car)
+		and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+		and is_instance_valid(car)
+		and car.state == TrafficCar.State.PARKED
+		and not car.driver.is_busy()
+	):
 		var origin := eyes.global_position
 		var end := origin - eyes.global_basis.z * 2.8
 		var query := PhysicsRayQueryParameters3D.create(origin, end, 8)
@@ -624,6 +838,7 @@ func update_part_focus() -> void:
 			hovered_part.set_highlight(true)
 
 
+## Beendet Such- und Inventarzustände und gibt betroffene Fahrzeuge wieder frei.
 func finish_search() -> void:
 	if is_instance_valid(inspected_vehicle):
 		inspected_vehicle.cargo_search_active = false
@@ -640,23 +855,36 @@ func finish_search() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if aerial else Input.MOUSE_MODE_CAPTURED
 
 
+## Behandelt den früheren Ladeflächen-Sucheinstieg; einzelne Gegenstände haben Vorrang.
 func begin_cargo_search(_car: Node3D) -> bool:
-	return false # Replaced by direct object selection.
+	return false  # Replaced by direct object selection.
 
+
+## Startet die Untersuchung des fokussierten sichtbaren Ladungsgegenstands.
 func begin_item_inspection(target: Node3D) -> bool:
-	if aerial or inventory_view.visible or not target.can_use(eyes.global_position) or target.vehicle.driver.is_busy():
+	if (
+		aerial
+		or inventory_view.visible
+		or not target.can_use(eyes.global_position)
+		or target.vehicle.driver.is_busy()
+	):
 		return false
 	close_interaction()
 	inspected_vehicle = target.vehicle
 	inspected_vehicle.cargo_search_active = true
-	inventory_view.open_world_item(player_inventory, inspected_vehicle.cargo_inventory, target.item, target.title)
+	inventory_view.open_world_item(
+		player_inventory, inspected_vehicle.cargo_inventory, target.item, target.title
+	)
 	return true
 
+
+## Gleicht sichtbare Fahrzeugladung mit den aktuellen Inventardaten ab.
 func refresh_cargo_visuals() -> void:
 	for car in traffic.cars:
 		car.refresh_cargo_props()
 
 
+## Öffnet oder schließt das Funkgerät und aktualisiert die Eingabesperren.
 func set_radio_open(value: bool) -> void:
 	if value:
 		radio_car = interaction_car()
@@ -669,15 +897,26 @@ func set_radio_open(value: bool) -> void:
 		close_interaction()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if value or aerial else Input.MOUSE_MODE_CAPTURED
 
+
+## Aktualisiert Funkanzeige und verfügbare Abholaktionen.
 func update_radio() -> void:
 	if not is_instance_valid(radio_status):
 		return
 	radio_status.text = patrol.report + "\n" + patrol.display_text().replace("\n", " / ")
 	radio_model.get_meta("screen").text = patrol.display_text()
 	var car := radio_car if radio_open and is_instance_valid(radio_car) else interaction_car()
-	radio_call_button.disabled = patrol.active() or not is_instance_valid(car) or not car.driver.arrested or car.driver.state != car.driver.State.OUTSIDE or car.officer_aboard or car.cargo_search_active
+	radio_call_button.disabled = (
+		patrol.active()
+		or not is_instance_valid(car)
+		or not car.driver.arrested
+		or car.driver.state != car.driver.State.OUTSIDE
+		or car.officer_aboard
+		or car.cargo_search_active
+	)
 	radio_cancel_button.visible = patrol.stage == PatrolDispatch.Stage.WAITING
 
+
+## Übergibt den aktuell ausgewählten Festgenommenen an die Streifenanforderung.
 func call_patrol() -> void:
 	patrol.request_pickup(radio_car if is_instance_valid(radio_car) else interaction_car())
 	update_radio()

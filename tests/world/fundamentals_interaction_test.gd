@@ -1,20 +1,31 @@
+## Integrationsprüfung: fundamentals interaction.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 ## Run with a display: godot --path . --script res://tests/world/fundamentals_interaction_test.gd
 var failed := false
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, text: String) -> void:
 	if not ok:
 		failed = true
 		push_error(text)
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Speichert einen Screenshot als visuelle Prüfspur des Testzustands.
 func screenshot(name: String) -> void:
 	await process_frame
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("user://" + name + ".png")
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	var scene = load("res://game/world/main.tscn").instantiate()
 	root.add_child(scene)
@@ -36,7 +47,9 @@ func run() -> void:
 	check(scene.traffic.selected_car == car, "Click must select the correct car")
 	check(car.state == scene.TrafficCar.State.DRIVING, "Selection alone must never stop the car")
 	scene.stop_button.pressed.emit()
-	check(car.state == scene.TrafficCar.State.PULLING_OVER, "Stop button must send the explicit order")
+	check(
+		car.state == scene.TrafficCar.State.PULLING_OVER, "Stop button must send the explicit order"
+	)
 	# Avoid a hanging test if picking fails.
 	if car.state == scene.TrafficCar.State.DRIVING:
 		scene.order_stop()
@@ -78,7 +91,12 @@ func run() -> void:
 	scene._unhandled_input(wheel)
 	check(scene.interaction_index == 1, "Mouse wheel must select release")
 	scene._unhandled_input(interact)
-	check(car.state == scene.TrafficCar.State.LEAVING, "Confirming release with E must release the car")
+	check(
+		car.state == scene.TrafficCar.State.LEAVING,
+		"Confirming release with E must release the car"
+	)
 	if not failed:
-		print("PASS: vehicle picking, visible spawn, camera switch, window distance/side/look, E release")
+		print(
+			"PASS: vehicle picking, visible spawn, camera switch, window distance/side/look, E release"
+		)
 	quit(1 if failed else 0)

@@ -1,21 +1,32 @@
+## Integrationsprüfung: climbing.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 const CargoItem = preload("res://game/inspection/cargo_item.gd")
 var failures: Array[String] = []
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Übergibt ein Tastaturereignis an die getestete Eingabesteuerung.
 func key(scene: Node, code: int) -> void:
 	var event := InputEventKey.new()
 	event.keycode = code
 	event.pressed = true
 	scene._unhandled_input(event)
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	for index in [2, 3]:
 		var scene = load("res://game/world/main.tscn").instantiate()
@@ -64,7 +75,10 @@ func run() -> void:
 		check(scene.climber.active, "Space must start the climb")
 		for i in range(65):
 			scene._physics_process(1.0 / 60.0)
-		check(not scene.climber.active and scene.climber.car == car and car.officer_aboard, "Climb must finish on the vehicle: " + car.model_kind)
+		check(
+			not scene.climber.active and scene.climber.car == car and car.officer_aboard,
+			"Climb must finish on the vehicle: " + car.model_kind
+		)
 		check(scene.player.position.y > 0.7, "Player must stand above ground on the load floor")
 		check(not scene.search_progress.visible, "Climbing must not show a loading bar")
 		check(not car.release(), "Car cannot leave with officer aboard")
@@ -83,17 +97,32 @@ func run() -> void:
 			if node is CargoItem:
 				target = node
 		scene.eyes.look_at(target.global_position)
-		check(not car.cargo_zone.can_use(scene.eyes.global_position), "Floor is no longer searchable from inside")
+		check(
+			not car.cargo_zone.can_use(scene.eyes.global_position),
+			"Floor is no longer searchable from inside"
+		)
 		check(scene.begin_item_inspection(target), "Individual cargo can be inspected while aboard")
-		check(scene.inventory_view.visible and not scene.search_progress.visible, "Direct object inspection has no loading bar")
+		check(
+			scene.inventory_view.visible and not scene.search_progress.visible,
+			"Direct object inspection has no loading bar"
+		)
 		key(scene, KEY_ESCAPE)
 		key(scene, KEY_ESCAPE)
 		check(car.officer_aboard, "Closing inspection preserves aboard state")
 		key(scene, KEY_SPACE)
 		for i in range(65):
 			scene._physics_process(1.0 / 60.0)
-		check(not scene.climber.active and scene.climber.car == null and not car.officer_aboard, "Space must descend and release vehicle")
-		check(scene.player.position.y < 0.2 and is_equal_approx(scene.climber.shape().shape.height, 1.8), "Descent must restore standing capsule on ground")
+		check(
+			not scene.climber.active and scene.climber.car == null and not car.officer_aboard,
+			"Space must descend and release vehicle"
+		)
+		check(
+			(
+				scene.player.position.y < 0.2
+				and is_equal_approx(scene.climber.shape().shape.height, 1.8)
+			),
+			"Descent must restore standing capsule on ground"
+		)
 		# Driver animation alone must never display a search bar.
 		check(car.driver.request_exit(), "Driver exit must still work")
 		scene.refresh_encounter_ui()
@@ -101,5 +130,7 @@ func run() -> void:
 		scene.queue_free()
 		await process_frame
 	if failures.is_empty():
-		print("PASS: van/pickup climb, walkable floors, crouched van capsule, descent, aboard guards, interior search and search-only progress")
+		print(
+			"PASS: van/pickup climb, walkable floors, crouched van capsule, descent, aboard guards, interior search and search-only progress"
+		)
 	quit(0 if failures.is_empty() else 1)

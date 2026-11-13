@@ -1,14 +1,23 @@
+## Integrationsprüfung: parking reservation.
+## Start über Godot --script; fehlgeschlagene Bedingungen ergeben Exitcode 1.
+
 extends SceneTree
 var failures: Array[String] = []
 
+
+## Startet den Testlauf verzögert nach Aufbau des SceneTree.
 func _initialize() -> void:
 	call_deferred("run")
 
+
+## Sammelt eine fehlgeschlagene Bedingung und gibt den zugehörigen Fehler aus.
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures.append(message)
 		push_error(message)
 
+
+## Prüft den vollständigen Szenarioablauf und beendet den Prozess mit dem gesammelten Ergebnis.
 func run() -> void:
 	for index in range(4):
 		var scene = load("res://game/world/main.tscn").instantiate()
@@ -29,18 +38,31 @@ func run() -> void:
 		check(not traffic.request_control(), "Parked car must keep its space reserved")
 		check(departing.release(), "Old control must be released first")
 		departing.position.z = -departing.body_length / 2.0 + 0.1
-		check(not traffic.request_control(), "Rear still inside parking space must block a new order")
+		check(
+			not traffic.request_control(), "Rear still inside parking space must block a new order"
+		)
 		departing.position.z = -(departing.body_length + 0.1) / 2.0 - 0.02
-		check(traffic.request_control(), "New order must succeed immediately after the full rear clears the space")
+		check(
+			traffic.request_control(),
+			"New order must succeed immediately after the full rear clears the space"
+		)
 		check(traffic.controlled_car == arriving, "New vehicle must own the reservation")
-		check(departing.state == departing.State.LEAVING and departing.position.z > -12, "Old car must still be departing within the lay-by")
+		check(
+			departing.state == departing.State.LEAVING and departing.position.z > -12,
+			"Old car must still be departing within the lay-by"
+		)
 		check(traffic.cars.has(departing), "Old car must remain in traffic")
 		# Finishing the old departure must not remove the new reservation.
 		departing.state = departing.State.FINISHED
 		traffic._physics_process(0)
-		check(traffic.controlled_car == arriving, "Old departure cleanup must preserve the new control")
+		check(
+			traffic.controlled_car == arriving,
+			"Old departure cleanup must preserve the new control"
+		)
 		scene.queue_free()
 		await process_frame
 	if failures.is_empty():
-		print("PASS: all four lengths, occupied space, rear clearance, overlapping departure/new control and independent cleanup")
+		print(
+			"PASS: all four lengths, occupied space, rear clearance, overlapping departure/new control and independent cleanup"
+		)
 	quit(0 if failures.is_empty() else 1)

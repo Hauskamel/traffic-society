@@ -1,5 +1,10 @@
+## Prozedurale Darstellung des Spieleravatars und Funkgeräts.
+## Die erzeugten Knoten werden von Spieler- und Funksteuerung animiert.
+
 extends RefCounted
 
+
+## Erzeugt einen farbigen Quader am angegebenen Elternknoten.
 static func box(parent: Node3D, at: Vector3, size: Vector3, color: String) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
 	var cube := BoxMesh.new()
@@ -12,6 +17,8 @@ static func box(parent: Node3D, at: Vector3, size: Vector3, color: String) -> Me
 	mesh.position = at
 	return mesh
 
+
+## Baut den sichtbaren Low-Poly-Spieleravatar mit animierbaren Gliedmaßen auf.
 static func avatar(parent: Node3D) -> Node3D:
 	var rig := Node3D.new()
 	parent.add_child(rig)
@@ -47,6 +54,8 @@ static func avatar(parent: Node3D) -> Node3D:
 	rig.add_child(marker)
 	return rig
 
+
+## Baut das Funkgerätmodell inklusive Display auf.
 static func radio(parent: Node3D) -> Node3D:
 	var handset := Node3D.new()
 	parent.add_child(handset)

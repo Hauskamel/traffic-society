@@ -48,3 +48,7 @@ Nach Übernahme von PR #3 enthält `develop` sowohl die erweiterte Fahrzeugdurch
 ## Körperphysik übernommen
 
 PR #5 ist mit „Merge Körperphysik“ nach `develop` zusammengeführt. Künftige Features starten von diesem aktualisierten Stand. Commit-Betreffzeilen bleiben kurz und beschreiben die Änderung; Einzelheiten gehören in die Dokumentation oder PR-Beschreibung.
+
+## Strukturüberarbeitung
+
+`feature/projectStructure` startet vom aktualisierten `develop`. Verschiebungen und Ressourcenpfade sind im kurzen Commit „Projekt geordnet“ getrennt von Kommentaren und Formatierung nachvollziehbar. Der Branch enthält keine neuen Spielfunktionen.
