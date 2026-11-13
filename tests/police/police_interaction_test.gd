@@ -88,19 +88,13 @@ func run() -> void:
 		"Arrest action must visibly restrain driver"
 	)
 	key(KEY_T)
-	check(
-		scene.radio_open and scene.radio_model.visible, "T must show held walkie-talkie and panel"
-	)
-	scene.radio_call_button.pressed.emit()
+	check(scene.radio_open and scene.radio_panel.visible, "T must show walkie-talkie close-up")
+	for button in scene.radio_panel.service_buttons:
+		button.pressed.emit()
+	check(not scene.patrol.active(), "Preview service buttons must not request an incident")
+	# The established backend is still covered independently of the new inert UI.
+	check(scene.patrol.request_pickup(source), "Existing pickup backend remains usable")
 	scene.update_radio()
-	check(
-		scene.patrol.stage == scene.PatrolDispatch.Stage.WAITING,
-		"Radio button must request a pickup"
-	)
-	check(
-		scene.radio_model.get_meta("screen").text.contains("20"),
-		"Physical display must show the 20-second delay"
-	)
 	await capture("police-radio-request")
 	key(KEY_T)
 	check(

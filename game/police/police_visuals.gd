@@ -61,16 +61,27 @@ static func radio(parent: Node3D) -> Node3D:
 	parent.add_child(handset)
 	box(handset, Vector3.ZERO, Vector3(0.24, 0.38, 0.1), "17232b")
 	box(handset, Vector3(-0.075, 0.3, 0), Vector3(0.025, 0.25, 0.025), "263943")
-	box(handset, Vector3(0, 0.05, 0.056), Vector3(0.19, 0.15, 0.018), "a6c2a0")
+	box(handset, Vector3(0, 0.05, 0.056), Vector3(0.19, 0.15, 0.018), "9ccf45")
 	for y in [-0.08, -0.12, -0.16]:
 		box(handset, Vector3(0, y, 0.057), Vector3(0.17, 0.015, 0.01), "617b83")
 	var screen := Label3D.new()
-	screen.text = "STREIFE\nBEREIT"
-	screen.font_size = 22
+	screen.text = "21-1  BEREIT"
+	screen.font_size = 14
 	screen.pixel_size = 0.0009
 	screen.outline_size = 0
 	screen.modulate = Color("17232b")
-	screen.position = Vector3(0, 0.05, 0.068)
+	screen.position = Vector3(0, 0.105, 0.068)
 	handset.add_child(screen)
+	for i in range(4):
+		var label := Label3D.new()
+		label.text = ["POLIZEI", "FEUERW.", "SANIT.", "VERST."][i]
+		label.font_size = 12
+		label.pixel_size = 0.00075
+		label.outline_size = 0
+		label.modulate = Color("172d10")
+		label.position = Vector3(
+			-0.047 if i % 2 == 0 else 0.047, 0.06 - float(i / 2) * 0.045, 0.068
+		)
+		handset.add_child(label)
 	handset.set_meta("screen", screen)
 	return handset
