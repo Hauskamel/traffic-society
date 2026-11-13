@@ -83,7 +83,7 @@ func run() -> void:
 				glass = zone
 		var head_at: Vector3 = driver.head.global_position
 		var hit: Dictionary = gun.shot_query(head_at+Vector3.LEFT*2,head_at+Vector3.RIGHT*.05)
-		check(not hit.is_empty() and not hit.collider.has_meta("actor"), "Intact cabin surface blocks NPC hit")
+		check(not hit.is_empty() and not hit.collider.has_meta("actor"), "Raw visibility ray finds cabin surface before NPC")
 		glass.register_hit(glass.global_position,Vector3.LEFT)
 		glass.register_hit(glass.global_position,Vector3.LEFT)
 		await frames(2)

@@ -1,6 +1,7 @@
 extends Node
 ## Authored test encounter. Mood/dialogue selection can opt into this later.
 enum Phase { SEATED, WAITING, REACHING, DRAWING, AIMING, SURRENDERED, DISABLED }
+const ProjectileTrace = preload("res://scripts/projectile_trace.gd")
 const Models = preload("res://scripts/weapon_visuals.gd")
 const REACH_SECONDS := .65
 const DRAW_SECONDS := .70
@@ -115,9 +116,13 @@ func fire() -> void:
 	# Small deterministic variation makes the test reproducible, not perfectly
 	# accurate. Obstacles still decide whether the shot reaches the player.
 	var target: Vector3 = aim_target+Vector3(.10*sin(shots*2.1),.08*cos(shots*1.7),0)
-	var hit := shot_query(target)
+	var ignored: Array[RID] = []
+	ignore_bodies(driver,ignored)
+	var origin := gun.to_global(Vector3(0,.023,-.16))
+	var trajectory := ProjectileTrace.trace(scene.get_world_3d(),origin,origin+(target-origin).normalized()*60,1|4|16|32,ignored)
+	var hit: Dictionary = trajectory.hit
 	if not hit.is_empty():
-		if hit.collider == scene.player: scene.health.receive_hit(25,hit.position)
+		if hit.collider == scene.player: scene.health.receive_hit(25*float(trajectory.retention),hit.position)
 		elif hit.collider.has_method("register_hit"): hit.collider.register_hit(hit.position,hit.normal)
 	var end: Vector3 = hit.position if not hit.is_empty() else target
 	var line := MeshInstance3D.new()

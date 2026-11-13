@@ -580,6 +580,14 @@ Der seitliche Kraftanteil ist eine Gameplay-Hilfe für die groben Kabinenmodelle
 
 Neue echte Physiktests in `tests/seated_physics_test.gd` prüfen acht Abläufe: alle vier Fahrzeuge jeweils mit 0 und 100 % Herausfallchance. Geprüft werden Weiterfahrt und Mitführung lebender Verletzter, monotone sanfte Verzögerung nach Tod, Auslaufstrecke, Türöffnung erst im Stand, Körper außerhalb der Kabine am Boden beziehungsweise verbleibend im Sitz, begrenzte Geschwindigkeiten und vollständiges Reset. Der vorhandene NPC-Treffertest wartet nun auf das längere Ausrollen und schaltet zufälliges Herausfallen für seine Sitzprüfung aus. Bestehende Konfrontations-, NPC-/Laborphysik-, Verkehrs-, Fahrer-, Freigabe- und Streifenprüfungen bleiben enthalten. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
 
+## Projektilwirkung durch Fahrzeugglas · feature/bodPhysics
+
+Eine gemeinsame begrenzte Strahlverfolgung (`scripts/projectile_trace.gd`) wird von Spieler-Glock und NPC-Pistole benutzt. Intaktes/angerissenes Glas erhält genau einen Schaden pro Schuss; seine Kollisions-RID wird anschließend nur für diesen Schuss ausgeschlossen. Der Strahl wird erneut bis zur nächsten Fläche geprüft. Der Wirkungsfaktor wird je Scheibe mit 0,8 multipliziert. Nach höchstens 16 Glasebenen endet die Durchdringung; feste Flächen stoppen jederzeit. Sicht- und Zielabfragen bleiben ohne Seiteneffekte.
+
+Beim NPC werden Impuls und regionaler Kraftverlust reduziert. Kopfverlust bleibt bei 95 %, damit der Kopfschuss tödlich ist; sein Impuls wird trotzdem reduziert. Eine Scheibe ergibt am Rumpf 76 % statt 95 % Kraftverlust und beim Spieler 20 statt 25 Gesundheitsschaden. Intaktes und angerissenes Glas bieten damit keine vollständige Deckung mehr. Glaszerstörung, Risse und Fahrzeugeinschussmarkierungen bleiben erhalten. Keine Abpraller, Glasdicken- oder Einfallswinkelsimulation.
+
+`tests/glass_penetration_test.gd` prüft alle vier Modelle, dieselbe Kugel an Glas und dahinterliegendem NPC, reduzierte Rumpfwirkung, weiterhin tödliche Kopfschüsse, durchbrochene Scheiben ohne Wirkungsabzug, zwei Scheiben mit 64 % Wirkung, eine dahinterliegende Wand und NPC-Schüsse auf den Spieler. Vorhandene reine Strahlabfragen dürfen weiterhin Glas als nächstes sichtbares Objekt liefern; die tatsächliche Schussauflösung übernimmt die Durchdringung.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

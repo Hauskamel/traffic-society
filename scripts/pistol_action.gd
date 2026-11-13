@@ -1,5 +1,9 @@
 extends Node
 ## Hitscan with vehicle damage and articulated regional NPC injuries.
+const ProjectileTrace = preload("res://scripts/projectile_trace.gd")
+const ActiveBody = preload("res://scripts/active_body.gd")
+var last_retention := 1.0
+var last_glass_panes := 0
 const CAPACITY := 15
 const RELOAD_SECONDS := 1.8
 const SHOT_INTERVAL := 0.16
@@ -112,24 +116,33 @@ func exclude_vehicle_motion(node: Node, driver: Node, ignored: Array[RID]) -> vo
 	for child in node.get_children():
 		exclude_vehicle_motion(child, driver, ignored)
 
-func shot_query(start: Vector3, end: Vector3) -> Dictionary:
+func shot_exclusions() -> Array[RID]:
 	var ignored: Array[RID] = [scene.player.get_rid()]
 	for car in scene.traffic.cars:
 		exclude_vehicle_motion(car, car.driver, ignored)
 	for driver in scene.get_tree().get_nodes_in_group("shootable_drivers"):
 		ignored.append(driver.body.get_rid())
-	var query := PhysicsRayQueryParameters3D.create(start, end, 1 | 4 | 16 | 32, ignored)
+	return ignored
+
+func shot_query(start: Vector3, end: Vector3) -> Dictionary:
+	var query := PhysicsRayQueryParameters3D.create(start, end, 1 | 4 | 16 | 32, shot_exclusions())
 	return scene.get_world_3d().direct_space_state.intersect_ray(query)
 
 func cast_shot() -> void:
 	var start: Vector3 = scene.eyes.global_position
 	var end: Vector3 = start - scene.eyes.global_basis.z * 120.0
-	last_hit = shot_query(start, end)
+	var trajectory := ProjectileTrace.trace(scene.get_world_3d(),start,end,1|4|16|32,shot_exclusions())
+	last_hit = trajectory.hit
+	last_retention = trajectory.retention
+	last_glass_panes = trajectory.panes
 	if not last_hit.is_empty():
 		end = last_hit.position
 		var actor = last_hit.collider.get_meta("actor") if last_hit.collider.has_meta("actor") else null
 		if is_instance_valid(actor) and actor.has_method("receive_hit"):
-			actor.receive_hit(last_hit.collider.get_meta("region", "torso"), last_hit.position, (end-start).normalized()*preload("res://scripts/active_body.gd").DEFAULT_IMPULSE)
+			var region: String = last_hit.collider.get_meta("region", "torso")
+			# Keep lethal headshots while reducing local muscle loss elsewhere.
+			var severity := ActiveBody.DEFAULT_STRENGTH_LOSS if region == "head" else ActiveBody.DEFAULT_STRENGTH_LOSS*last_retention
+			actor.receive_hit(region,last_hit.position,(end-start).normalized()*ActiveBody.DEFAULT_IMPULSE*last_retention,severity)
 		if last_hit.collider.has_method("register_hit"):
 			last_hit.collider.register_hit(last_hit.position, last_hit.normal)
 		var mark := MeshInstance3D.new()
