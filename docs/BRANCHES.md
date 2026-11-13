@@ -2,7 +2,7 @@
 
 Stand: **13. November 2026**. Die farbigen Linien zeigen die tatsächlichen Abzweigungen und Zusammenführungen der Spielfunktionen. GitHub stellt das Mermaid-Diagramm direkt als Grafik dar.
 
-Die Übersicht zeigt den **Spielstand nach PR #5 und den Beginn der Strukturüberarbeitung**. Sie fasst Zwischenstände zusammen; die angegebenen Commit-IDs bezeichnen Spielstände. Die anschließenden reinen Dokumentationscommits auf den einzelnen Branches sind nicht eingezeichnet.
+Die Übersicht zeigt den **Spielstand nach Übernahme der Projektstruktur mit PR #6**. Sie fasst Zwischenstände zusammen; die angegebenen Commit-IDs bezeichnen Spielstände. Die anschließenden reinen Dokumentationscommits auf den einzelnen Branches sind nicht eingezeichnet.
 
 ```mermaid
 gitGraph LR:
@@ -46,6 +46,9 @@ gitGraph LR:
     branch "feature/projectStructure"
     checkout "feature/projectStructure"
     commit id: "62ef72a" tag: "Projektstruktur"
+    commit id: "4f5cee5" tag: "Code-Dokumentation"
+    checkout develop
+    merge "feature/projectStructure" id: "10a85f7"
 ```
 
 **So liest du die Buslinie:** Jede Linie ist ein Branch, Punkte sind ausgewählte Commits. Eine Abzweigung startet einen Feature-Branch; eine zurücklaufende Verbindung übernimmt Änderungen. Die Verbindung von `develop` zu `feature/vehicleDamage` zeigt die damalige Aktualisierung des Feature-Branches mit der erweiterten Fahrzeugdurchsuchung, bevor die Fahrzeugschäden nach `develop` übernommen wurden.
@@ -55,15 +58,16 @@ gitGraph LR:
 | Branch | Rolle / Status | Letzter Spielstand vor der Doku-Ergänzung |
 | --- | --- | --- |
 | `main` | Stabiler Ausgangsstand; spätere Spielfunktionen noch nicht übernommen | `efe140c` – Straße und Parkbucht |
-| `develop` | Integrationsbranch inklusive Körperphysik und bewaffneter NPC-Testszene | `860cb75` – PR #5 übernommen |
-| `feature/projectStructure` | Laufende Struktur- und Dokumentationsüberarbeitung von `develop` | `62ef72a` – Ordner und Ressourcenpfade geordnet |
-| `feature/bodPhysics` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `8a70f82` – Körperphysik, NPC-Test, Ausrollen und Glasdurchschüsse |
+| `develop` | Integrationsbranch inklusive Körperphysik, NPC-Testszene und neuer Projektstruktur | `10a85f7` – PR #6 übernommen |
+| `feature/projectStructure` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `4f5cee5` – Projektstruktur und Code-Dokumentation |
 | `feature/vehicleDamage` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `d7db46c` – Fahrzeugschäden inklusive damaligem `develop` |
 | `feature/extendedVehicleSearch` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `5384bec` – Gegenstände direkt im Fahrzeug untersuchen |
 
-`feature/fundamentals` und `feature/vehicleSearches` sind auf GitHub bereits gelöscht. Ihre historischen Linien bleiben im Diagramm sichtbar. Die Dokumentation legt diese Branches nicht erneut an. `feature/bodPhysics` ist die tatsächliche Schreibweise des vorhandenen Branches.
+`feature/fundamentals`, `feature/vehicleSearches` und `feature/bodPhysics` sind auf GitHub bereits gelöscht. Ihre historischen Linien bleiben im Diagramm sichtbar. Die Dokumentation legt diese Branches nicht erneut an. `feature/bodPhysics` ist die tatsächliche Schreibweise des vorhandenen Branches.
 
 ## Zusammenführungen
+
+- [PR #6](https://github.com/Hauskamel/traffic-society/pull/6): `feature/projectStructure` → `develop`, zusammengeführt.
 
 - [PR #1](https://github.com/Hauskamel/traffic-society/pull/1): `feature/fundamentals` → `develop`, zusammengeführt.
 - [PR #2](https://github.com/Hauskamel/traffic-society/pull/2): `feature/vehicleSearches` → `develop`, zusammengeführt.

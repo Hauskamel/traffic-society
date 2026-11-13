@@ -602,6 +602,10 @@ Alle Laufzeitskripte haben eine Verantwortungsbeschreibung. Haupt- und Hilfsfunk
 
 Prüfung: Die Syntaxbäume aller 65 GDScripts stimmen nach Normalisierung der neuen Ressourcenpfade mit dem vorherigen Stand überein. Alle vorhandenen Skript-UIDs sind erhalten. Import und Tests liefen zusätzlich in einer frischen Projektkopie ohne vorhandenen `.godot`-Cache. Alle 31 vorhandenen Testskripte bestanden, einschließlich grafischer UI-, Waffen-, Dokumenten- und Vorschautests. Die Konfrontation wurde grafisch mit bedarfsweisem Rendern der Screenshots geprüft; dies ist kein FPS-Benchmark. Ressourcen-/Dokumentationsprüfung und Formatter melden keine Abweichungen. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu prüfen.
 
+## Projektstruktur nach develop übernommen
+
+PR #6 wurde konfliktfrei mit „Merge Projektstruktur“ (`10a85f7`) nach `develop` übernommen. Der Spielstand entspricht dem zuvor geprüften Feature-Branch. Ordnerstruktur, Ressourcenpfade, Code-Kommentare und Entwicklungswerkzeuge sind damit Bestandteil von `develop`. Die Branch-Buslinie ist aktualisiert.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
