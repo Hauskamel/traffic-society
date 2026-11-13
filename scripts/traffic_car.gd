@@ -31,6 +31,8 @@ const ROAD_SPEED := SpeedSettings.TRAFFIC_SPEED_KMH / 3.6
 const BAY_SPEED := SpeedSettings.PARKING_SPEED_KMH / 3.6
 const EXIT_SPEED := SpeedSettings.EXIT_SPEED_KMH / 3.6
 var state: State = State.DRIVING
+const COAST_DECELERATION := 1.2
+var death_coasting := false
 var speed := ROAD_SPEED
 var route: Curve3D
 var distance := 0.0
@@ -269,6 +271,7 @@ func set_route(points: Array[Vector3]) -> void:
 	distance = 0.0
 
 func new_test_drive() -> void:
+	death_coasting = false
 	for part in parts:
 		part.reset()
 	driver.reset()
@@ -284,7 +287,7 @@ func new_test_drive() -> void:
 	state_changed.emit()
 
 func can_stop() -> bool:
-	return not driver.surrendered and state == State.DRIVING and position.z > 28.0
+	return not driver.is_dead() and not driver.surrendered and state == State.DRIVING and position.z > 28.0
 
 func request_stop() -> bool:
 	if not can_stop():
@@ -318,6 +321,12 @@ func _physics_process(delta: float) -> void:
 		release()
 	if state == State.PARKED or state == State.FINISHED:
 		return
+	if driver.is_dead() and not death_coasting:
+		death_coasting = true
+		# No steering after death; leave enough straight route to coast even near
+		# the end of a traffic route, instead of despawning or stopping abruptly.
+		var coast: Array[Vector3] = [position,position-global_basis.z*(speed*speed/(2*COAST_DECELERATION)+3)]
+		set_route(coast)
 	var remaining := route.get_baked_length() - distance
 	var target := ROAD_SPEED
 	if state == State.PULLING_OVER:
@@ -327,10 +336,11 @@ func _physics_process(delta: float) -> void:
 	target = minf(target, speed_limit)
 	if is_instance_valid(hit_surfaces):
 		target = minf(target, hit_surfaces.speed_cap())
-	if driver.surrendered or driver.is_injured():
+	if driver.surrendered or driver.is_dead():
 		target = 0
-	speed = move_toward(speed, target, (4.0 if driver.surrendered or driver.is_injured() else 1.6) * delta)
-	if (driver.surrendered or driver.is_injured()) and speed <= 0.05:
+	var deceleration := COAST_DECELERATION if driver.is_dead() else (4.0 if driver.surrendered else 1.6)
+	speed = move_toward(speed, target, deceleration * delta)
+	if (driver.surrendered or driver.is_dead()) and speed <= 0.05:
 		speed = 0
 		state = State.PARKED
 		if not driver.is_injured(): driver.request_exit()
@@ -349,11 +359,11 @@ func _physics_process(delta: float) -> void:
 		wheel.rotation.x -= travel / 0.35
 	for wheel in front_wheels:
 		wheel.rotation.y = clampf(angle_difference(old_yaw, rotation.y) * 15.0, -0.35, 0.35)
-	brake_material.albedo_color = Color("ff5646") if driver.surrendered or state == State.PULLING_OVER or speed > target + 0.05 else Color("862c2b")
+	brake_material.albedo_color = Color("ff5646") if not driver.is_dead() and (driver.surrendered or state == State.PULLING_OVER or speed > target + 0.05) else Color("862c2b")
 	if remaining <= 0.025:
 		position = route.sample_baked(route.get_baked_length())
 		speed = 0
-		if state == State.PULLING_OVER or driver.surrendered:
+		if state == State.PULLING_OVER or driver.surrendered or driver.is_dead():
 			state = State.PARKED
 			rotation.y = 0
 			for wheel in front_wheels:

@@ -2,6 +2,14 @@ extends Node3D
 ## Procedural interaction poses; regional hits transfer to an articulated body.
 enum State { SEATED, EXITING, OUTSIDE, ENTERING, SEARCHING, IN_CUSTODY, INJURED }
 const ActiveBody = preload("res://scripts/active_body.gd")
+enum CorpseExit { NONE, OPENING, FALLING, DONE }
+var seated_physics := false
+var corpse_exit_chance := .35
+var corpse_exit_rolled := false
+var corpse_exit_selected := false
+var corpse_exit_stage: CorpseExit = CorpseExit.NONE
+var corpse_exit_clock := 0.0
+var seat_pelvis_local := Vector3.ZERO
 var combat: Node
 var physical_actor: Node3D
 var region_meshes: Dictionary = {}
@@ -105,10 +113,17 @@ func region_piece(region: String, at: Vector3, size: Vector3, color: String, par
 func is_injured() -> bool:
 	return is_instance_valid(physical_actor)
 
+func is_dead() -> bool:
+	return is_injured() and physical_actor.dead
+
+func is_corpse_exiting() -> bool:
+	return corpse_exit_stage in [CorpseExit.OPENING, CorpseExit.FALLING]
+
 func receive_hit(region: String, point: Vector3, impulse: Vector3, severity := ActiveBody.DEFAULT_STRENGTH_LOSS) -> void:
 	if not region_meshes.has(region): return
 	if not is_injured():
 		var in_vehicle := state in [State.SEATED, State.IN_CUSTODY] or (state in [State.ENTERING, State.EXITING] and rig.scale.x < .9)
+		seated_physics = in_vehicle
 		var velocity := measured_velocity
 		var car := get_parent()
 		if in_vehicle and car is AnimatableBody3D:
@@ -152,6 +167,10 @@ func receive_hit(region: String, point: Vector3, impulse: Vector3, severity := A
 		search_ready = false
 		state = State.INJURED
 	physical_actor.receive_hit(region, point, impulse, severity)
+	if is_dead() and seated_physics and not corpse_exit_rolled and get_parent() is AnimatableBody3D and get_parent().get("driver") == self:
+		corpse_exit_rolled = true
+		var chance := clampf(corpse_exit_chance,0,1)
+		corpse_exit_selected = chance >= 1 or (chance > 0 and randf() < chance)
 	if is_instance_valid(combat): combat.on_body_hit(region)
 
 func build_seat_support(car: Node3D, factor: float) -> void:
@@ -170,8 +189,53 @@ func build_seat_support(car: Node3D, factor: float) -> void:
 		shape.position = data[0] * factor
 		support.add_child(shape)
 	physical_actor.seat_support = support
+	seat_pelvis_local = support.to_local(physical_actor.bodies.pelvis.global_position)
+
+func update_seated_physics(delta: float) -> void:
+	if not seated_physics: return
+	var car := get_parent()
+	if not car is AnimatableBody3D: return
+	var pelvis: RigidBody3D = physical_actor.bodies.pelvis
+	var seat_support: Node3D = physical_actor.seat_support
+	if corpse_exit_stage in [CorpseExit.NONE, CorpseExit.OPENING] and is_instance_valid(seat_support):
+		# Soft seat restraint carries the passive articulated body with a moving
+		# cabin. The torso and limbs remain free to slump and react to impulses.
+		var target: Vector3 = seat_support.to_global(seat_pelvis_local)
+		var velocity: Vector3 = -car.global_basis.z*car.speed
+		var force: Vector3 = ((target-pelvis.global_position)*45-(pelvis.linear_velocity-velocity)*7)*physical_actor.total_mass
+		pelvis.apply_central_force(force.limit_length(physical_actor.total_mass*45))
+	if not is_dead() or not corpse_exit_selected: return
+	if car.speed > .05 or car.state != car.State.PARKED: return
+	if corpse_exit_stage == CorpseExit.NONE:
+		corpse_exit_stage = CorpseExit.OPENING
+		for part in car.parts:
+			if part.kind == "driver_door": part.opened = true
+	if corpse_exit_stage == CorpseExit.OPENING:
+		if absf(door.rotation.y) < 1.0: return
+		corpse_exit_stage = CorpseExit.FALLING
+		corpse_exit_clock = 0
+		if is_instance_valid(seat_support): seat_support.queue_free()
+		physical_actor.seat_support = null
+	if corpse_exit_stage == CorpseExit.FALLING:
+		corpse_exit_clock += delta
+		var left: Vector3 = -car.global_basis.x
+		var goal: Vector3 = car.to_global(Vector3(-1.8,0,seat.z))
+		var gap: float = (goal-pelvis.global_position).dot(left)
+		# Short outward assistance clears simplified cabin geometry; gravity and
+		# articulated joints produce the fall, without teleport or exit animation.
+		var acceleration := clampf(gap*16-pelvis.linear_velocity.dot(left)*5,-5,8)
+		for region in ["pelvis","torso"]:
+			var segment: RigidBody3D = physical_actor.bodies[region]
+			segment.apply_central_force(left*acceleration*segment.mass*2)
+		if corpse_exit_clock >= 2.0:
+			corpse_exit_stage = CorpseExit.DONE
 
 func reset() -> void:
+	seated_physics = false
+	corpse_exit_rolled = false
+	corpse_exit_selected = false
+	corpse_exit_stage = CorpseExit.NONE
+	corpse_exit_clock = 0
 	if is_injured():
 		physical_actor.queue_free()
 		physical_actor = null
@@ -265,7 +329,9 @@ func end_search() -> void:
 func _physics_process(delta: float) -> void:
 	measured_velocity = (global_position - last_world_position) / maxf(delta, .0001)
 	last_world_position = global_position
-	if is_injured(): return
+	if is_injured():
+		update_seated_physics(delta)
+		return
 	var car := get_parent()
 	if state == State.OUTSIDE and car is AnimatableBody3D and car.get("hit_surfaces") != null and car.hit_surfaces.flat_tires > 0:
 		global_position.y = 0

@@ -528,7 +528,7 @@ Beim ersten Glock-Treffer erstellt der Fahrer den gemeinsamen ActiveBody, überg
 
 Die Physikfigur ist ein Top-Level-Kind des Fahrers und wird daher nicht starr mit dem Fahrzeug verschoben, beim Entfernen des Fahrers aber mit aufgeräumt. Sitzende Körper erhalten keine Stehregelung. Da die bisherigen Interaktionskollisionen keine ausmodellierte Kabine bilden, werden eigene grobe Fahrzeugkollisionen ausgenommen und Sitzfläche, Lehne und Fußboden als unsichtbare Stützen auf Layer 64 ergänzt. Diese Helfer folgen dem Fahrzeug und werden beim Reset oder Entfernen des Physikkörpers entfernt.
 
-Jeder verletzte Fahrer bremst mit 4 m/s² bis zum Stillstand und führt keine Aussteige-/Freigabeanimation mehr aus. Verletzte Personen sind vorerst von normalen Personeninteraktionen ausgeschlossen; ein laufender Streifenabtransport endet bei verletztem Verdächtigen oder Beamten. Sanitätsdienst, Wiederaufstehen, weitere Verletzteninteraktionen und medizinische Genauigkeit sind nicht Teil dieses Schritts.
+Der anfängliche Stand bremste jeden verletzten Fahrer mit 4 m/s² ab. Der folgende Schritt „Sitzphysik und Ausrollen“ ersetzt das durch Weiterfahren bei nicht tödlichen Treffern und sanftes Ausrollen erst nach dem Tod. Verletzte Personen sind vorerst von normalen Personeninteraktionen ausgeschlossen; ein laufender Streifenabtransport endet bei verletztem Verdächtigen oder Beamten. Sanitätsdienst, Wiederaufstehen, weitere Verletzteninteraktionen und medizinische Genauigkeit sind nicht Teil dieses Schritts.
 
 ### Prüfung
 
@@ -561,6 +561,24 @@ Aggression, Dialogreaktionen und Charakterentscheidungen sind noch keine neue Ve
 ## Zeitlupe – Fadenkreuzbewegung
 
 Mausbewegungen werden in der Konfrontationstestszene während der Zeitlupe mit demselben Faktor 0,22 wie die Welt skaliert. Dafür wird nur das weitergereichte Mausereignis kopiert und angepasst; die normale Empfindlichkeit bleibt unverändert und gilt nach Ende, Aufgabe oder Reset automatisch wieder. Grafische Eingabetests prüfen die tatsächliche Kameradrehung während und nach dem Reaktionsfenster.
+
+## Sitzphysik und Ausrollen · feature/bodPhysics
+
+### Fahrerverhalten und Mitführung
+
+Sitzende Verletzte bleiben gegliederte Starrkörper. Eine begrenzte Feder-/Dämpfungskraft am Becken hält den Körper an seiner Sitzposition relativ zur bewegten Kabine; vorhandene Geschwindigkeit wird beim Treffer übernommen. Rumpf und Gliedmaßen bleiben passiv und können zusammensacken. Nicht tödliche Treffer lösen keine Bremsung aus. Es gibt noch keine weiteren Fahrreaktionen auf Verletzungen.
+
+Erst `driver.is_dead()` aktiviert das Ausrollen mit `COAST_DECELERATION = 1.2` m/s². Das Fahrzeug folgt ab dann einer ausreichend langen geraden Auslaufstrecke in seiner bisherigen Richtung. Es verschwindet nicht am alten Routenende, bremst nicht sofort auf null und führt keine normale Aussteigeanimation aus. Nach dem Stillstand bleibt es geparkt. Die Bremslichter werden beim passiven Ausrollen nicht künstlich eingeschaltet. Bei 6 m/s sind ungefähr fünf Sekunden und 15 Meter Auslauf vorgesehen. Lebende Fahrer behalten die bisherigen Verkehrs- und Geschwindigkeitsregeln.
+
+### Gelegentliches Herausfallen
+
+Beim ersten tödlichen Treffer im Fahrzeug wird die Auswahl einmalig mit `corpse_exit_chance` (Standard 0,35) getroffen. Die festen Fälle 0 und 1 sind gezielt testbar; weitere Treffer ändern die Auswahl nicht. Nur ausgewählte tote sitzende Personen starten nach dem Stillstand den Ablauf: Fahrertür öffnen → ausreichende Öffnung abwarten → Sitzstütze lösen → zwei Sekunden begrenzte seitliche Kräfte → passiver Körper auf dem Boden. Es werden keine Körperpositionen versetzt und keine Aussteigeclips abgespielt. Während des Öffnens/Fallens ist manuelles Schließen gesperrt. Danach bleibt die Tür geöffnet und wieder normal bedienbar.
+
+Der seitliche Kraftanteil ist eine Gameplay-Hilfe für die groben Kabinenmodelle, keine vollständige Simulation von Gurt und Innenraum. Reset beseitigt Physikkörper, Stützen, Türzustand, Auswahl und Auslaufstatus. Der Konfrontationstest nutzt weiterhin R für den vollständigen Szenenreset.
+
+### Prüfung
+
+Neue echte Physiktests in `tests/seated_physics_test.gd` prüfen acht Abläufe: alle vier Fahrzeuge jeweils mit 0 und 100 % Herausfallchance. Geprüft werden Weiterfahrt und Mitführung lebender Verletzter, monotone sanfte Verzögerung nach Tod, Auslaufstrecke, Türöffnung erst im Stand, Körper außerhalb der Kabine am Boden beziehungsweise verbleibend im Sitz, begrenzte Geschwindigkeiten und vollständiges Reset. Der vorhandene NPC-Treffertest wartet nun auf das längere Ausrollen und schaltet zufälliges Herausfallen für seine Sitzprüfung aus. Bestehende Konfrontations-, NPC-/Laborphysik-, Verkehrs-, Fahrer-, Freigabe- und Streifenprüfungen bleiben enthalten. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
 
 ## Dokumentationsregel
 

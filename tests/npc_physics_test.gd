@@ -43,6 +43,7 @@ func run() -> void:
 		car.state = car.State.PARKED
 		car.speed = 0
 		var driver = car.driver
+		driver.corpse_exit_chance = 0
 		driver.request_exit()
 		await frames(300)
 		if car.model_kind == "pickup": driver.request_surrender()
@@ -97,9 +98,9 @@ func run() -> void:
 			check(is_instance_valid(driver.physical_actor.seat_support), "Cabin has physical seat support")
 			check(driver.physical_actor.last_hit.velocity.length()>5, "Moving seated body inherits vehicle velocity")
 			car.set_physics_process(true)
-			await frames(120)
+			await frames(360)
 			car.set_physics_process(false)
-			check(car.speed == 0 and car.state == car.State.PARKED, "Injured driver brakes to standstill instead of driving on or exiting")
+			check(car.speed == 0 and car.state == car.State.PARKED, "Dead driver coasts to standstill instead of driving on or exiting")
 			await frames(180)
 			check(driver.physical_actor.bodies.pelvis.global_position.distance_to(car.to_global(driver.seat))<2, "Braking vehicle retains seated injured body near cabin")
 			for body in driver.physical_actor.bodies.values():
@@ -129,5 +130,5 @@ func run() -> void:
 	await process_frame
 	# Let the audio mixing thread release stopped WAV playbacks before exit.
 	OS.delay_msec(80)
-	if failures.is_empty(): print("PASS: real Glock shots, regional/dynamic hits, all vehicle models, visible pose transfer, street collapse, cabin occlusion, seated injuries, braking, interaction guards and cleanup")
+	if failures.is_empty(): print("PASS: real Glock shots, regional/dynamic hits, all vehicle models, visible pose transfer, street collapse, cabin occlusion, seated injuries, coasting, interaction guards and cleanup")
 	quit(0 if failures.is_empty() else 1)

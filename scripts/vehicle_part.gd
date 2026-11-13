@@ -34,6 +34,7 @@ func set_highlight(value: bool) -> void:
 		mesh.material_overlay = highlight_material if value else null
 
 func can_use(origin: Vector3) -> bool:
+	if kind == "driver_door" and vehicle.driver.is_corpse_exiting(): return false
 	if vehicle.state != vehicle.State.PARKED or vehicle.driver.is_busy():
 		return false
 	if origin.distance_to(global_position) > 2.8:
@@ -49,6 +50,7 @@ func can_use(origin: Vector3) -> bool:
 	return false
 
 func toggle() -> bool:
+	if kind == "driver_door" and vehicle.driver.is_corpse_exiting(): return false
 	if kind == "trunk" and opened and vehicle.officer_aboard:
 		return false
 	if vehicle.state != vehicle.State.PARKED or vehicle.driver.is_busy():
