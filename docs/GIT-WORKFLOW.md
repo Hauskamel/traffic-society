@@ -40,3 +40,7 @@ Der funktionierende Windows-Stand wurde mit `project.godot`, `main.tscn`, `main.
 ## Aktueller Entwicklungszweig
 
 PR #1, PR #2 und PR #4 wurden nach `develop` übernommen. Der aktive Branch `feature/vehicleDamage` enthält die Fahrzeugschäden und den daraus aktualisierten `develop`-Stand einschließlich direkter Ladungsauswahl und Kühlboxen. PR #3 bleibt der separate Vorschlag zur Übernahme der Fahrzeugschäden nach `develop`. `main` bleibt unverändert.
+
+## Körperphysik-Labor
+
+Nach Übernahme von PR #3 enthält `develop` sowohl die erweiterte Fahrzeugdurchsuchung als auch die Fahrzeugschäden. `feature/bodPhysics` wurde von diesem Stand erstellt und ergänzt ein separates aktives Ragdoll-Testlabor. Änderungen werden separat nach `develop` vorgeschlagen.

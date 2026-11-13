@@ -30,7 +30,7 @@ func aimed_car() -> Node3D:
 	var nearest := AIM_RANGE
 	for car in scene.traffic.cars:
 		var driver = car.driver
-		if car.is_patrol or car.state == car.State.FINISHED or driver.arrested or car.pickup_reserved or driver.state in [driver.State.SEARCHING, driver.State.IN_CUSTODY]:
+		if car.is_patrol or car.state == car.State.FINISHED or driver.arrested or driver.is_injured() or is_instance_valid(driver.combat) or car.pickup_reserved or driver.state in [driver.State.SEARCHING, driver.State.IN_CUSTODY]:
 			continue
 		for point in [driver.head.global_position, driver.torso.global_position]:
 			var offset: Vector3 = point - origin

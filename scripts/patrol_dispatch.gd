@@ -131,6 +131,11 @@ func _physics_process(delta: float) -> void:
 		report = "Abholung beendet: Ziel nicht mehr verfuegbar."
 		stage = Stage.COMPLETE
 		return
+	if suspect.is_injured() or (is_instance_valid(officer) and officer.is_injured()):
+		report = "Abholung abgebrochen: Person verletzt. Medizinische Hilfe noch nicht verfuegbar."
+		stage = Stage.COMPLETE
+		if is_instance_valid(source): source.pickup_reserved = false
+		return
 	match stage:
 		Stage.WAITING:
 			if elapsed >= RESPONSE_DELAY:

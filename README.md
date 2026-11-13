@@ -15,7 +15,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-`develop` enthält die Grundlagen, interaktiven Werkzeugkoffer und die direkte Ladungsauswahl aus PR #4. Der aktive Branch **feature/vehicleDamage** enthält jetzt zusätzlich diesen aktuellen Integrationsstand sowie die Fahrzeugschäden mit Scheibenbruch und platten Reifen. `main` bleibt unverändert.
+`develop` enthält die Grundlagen, direkte Fahrzeugdurchsuchung und Fahrzeugschäden. Der aktive Branch **feature/bodPhysics** ergänzt ein separates Körperphysik-Testlabor und regionale Glock-Treffer mit Körperphysik für die Spiel-NPCs. `main` bleibt unverändert.
 
 Verkehr, Fahreraktionen, Inventare, Dokumentenansicht, Waffen und Streifenabholung bleiben verfügbar. Die folgenden Abschnitte dokumentieren die einzelnen Ausbaustufen.
 
@@ -314,7 +314,7 @@ Die Glock 19 startet mit **15 Patronen im eingesetzten Magazin**. Zusätzlich li
 
 Beim Nachladen wird das Ersatzmagazin mit der meisten Munition gewählt. Es muss mehr Patronen enthalten als das eingesetzte Magazin. Das bisherige Magazin kommt mit seiner Restmunition ins Inventar; auch leere Magazine bleiben erhalten. Ein volles Magazin oder fehlende geeignete Ersatzmagazine verhindern den Wechsel. Holstern, Waffenwechsel oder ein Menü brechen das Nachladen ab, ohne Munition zu verlieren oder hinzuzufügen.
 
-**R setzt den Spieler nicht mehr zurück.** Kein Schaden und keine Taserwirkung. Das Erzwingen der Aufgabe durch Zielen ist separat beschrieben. Es gibt noch keine lose Munition, Magazinbefüllung oder separate Patrone im Patronenlager. Welt-Treffer werden nur für temporäre Effekte ermittelt. Ton und Modelle sind einfache eigene Platzhalter.
+**R setzt den Spieler nicht mehr zurück.** Die Glock verursacht Fahrzeugschäden und regionale NPC-Verletzungen (siehe unten); der Taser bleibt ohne Wirkung. Das Erzwingen der Aufgabe durch Zielen ist separat beschrieben. Es gibt noch keine lose Munition, Magazinbefüllung oder separate Patrone im Patronenlager. Welt-Treffer werden nur für temporäre Effekte ermittelt. Ton und Modelle sind einfache eigene Platzhalter.
 
 Geprüft mit Godot 4.6.3 unter Linux: `tests/shooting_test.gd` (Schüsse, leeres Magazin, Nachladezeit, Teilladungen, Abbruch und Munitionserhaltung), Inventar-/Bedienungstests und 13 Kategorien in der 3D-Vorschau. Windows/Godot 4.7.2 bitte testen.
 
@@ -355,7 +355,7 @@ Auf **feature/vehicleDamage** hinterlassen Glock-Schüsse sichtbare Einschussmar
 
 Bedienung unverändert: Glock wählen, mit Shift greifen, mit Rechtsklick ziehen/zielen und mit Linksklick schießen. Die kleinen dunklen Einschussmarkierungen bleiben am aktuellen Fahrzeug bestehen; pro Fahrzeug maximal 64, danach werden die ältesten ersetzt. Beim Entfernen des Fahrzeugs verschwinden sie. Sie werden in dieser ersten Stufe noch nicht bei einer späteren erneuten Durchfahrt wiederhergestellt.
 
-Technik: eigener Schuss-Layer 16 und geometrienahe Trefferkörper statt der groben Kabinen-/Bewegungskollision. Intaktes oder angerissenes Glas blockiert den Schuss; zerstörte Scheiben geben die Öffnung frei. Texturierte, an der Flächennormalen ausgerichtete Mesh-Flächen funktionieren mit dem GL-Compatibility-Renderer. Karosserietreffer bleiben rein optisch. Die folgenden Scheiben-/Reifenschäden bauen auf diesen Trefferflächen auf; NPC-Verletzungen sind noch nicht enthalten.
+Technik: eigener Schuss-Layer 16 und geometrienahe Trefferkörper statt der groben Kabinen-/Bewegungskollision. Intaktes oder angerissenes Glas lässt Schüsse mit reduzierter Wirkung passieren und wird dabei beschädigt; zerstörte Scheiben schwächen nicht weiter ab. Texturierte, an der Flächennormalen ausgerichtete Mesh-Flächen funktionieren mit dem GL-Compatibility-Renderer. Karosserietreffer bleiben rein optisch. Die folgenden Scheiben-/Reifenschäden bauen auf diesen Trefferflächen auf; Regionale NPC-Verletzungen sind auf `feature/bodPhysics` ergänzt (siehe unten).
 
 Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Modelle, Karosserie/Glas/Reifen/Dach, echte Glock-Schüsse, Wände, bewegte Fahrzeuge/Türen und begrenzte Markierungen. Bestehende Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bitte testen.
 
@@ -365,7 +365,7 @@ Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Mo
 - **Reifen:** Ein Treffer ins Gummi macht genau diesen Reifen platt. Felgentreffer lösen keine Panne aus. Das Ersatzmodell ist breiter und unten abgeflacht; Radnabe und Fahrzeugstand werden abgesenkt. Weitere Treffer zählen denselben Reifen nicht erneut.
 - **Fahrt:** Mit einem platten Reifen gilt maximal **10,8 km/h**, mit zwei **6,48 km/h**, mit drei **3,24 km/h**, mit vier **1,62 km/h**. Es wird gleichmäßig abgebremst. Die bisherigen niedrigeren Limits beim Parken und im Verkehr bleiben wirksam. Das Fahrzeug kann weiterhin aus der Bucht fahren.
 
-Fahrer können sich nach wie vor ergeben, aussteigen und nach Aufheben der Festnahme wieder einsteigen/weiterfahren. Noch keine Unfälle, Schleudern, Reparatur, NPC-Verletzungen oder neue Fahrzeugphysik. Die abgesenkte Stellung ist eine einfache Darstellung auf der ebenen Teststrecke. Scheibenreste/Splitter und Töne sind einfache Platzhalter.
+Fahrer können sich nach wie vor ergeben, aussteigen und nach Aufheben der Festnahme wieder einsteigen/weiterfahren. Noch keine Unfälle, Schleudern, Reparatur oder neue Fahrzeugphysik. NPC-Verletzungen sind auf `feature/bodPhysics` ergänzt. Die abgesenkte Stellung ist eine einfache Darstellung auf der ebenen Teststrecke. Scheibenreste/Splitter und Töne sind einfache Platzhalter.
 
 Schäden bleiben am aktuellen Fahrzeug bestehen, werden aber bei einer späteren neu erzeugten Durchfahrt oder nach Spielneustart noch nicht wiederhergestellt. Prüfung unter Linux/Godot 4.6.3: `tests/vehicle_damage_test.gd` für alle vier Modelle, echte Schüsse auf die Scheibe, Risse/Bruch/freie Öffnung, vier einzelne Reifen, Felgen, Mehrfachtreffer, Tempolimits, Aufgabe und beschädigte Abfahrt. Windows/Godot 4.7.2 bitte testen.
 
@@ -394,3 +394,85 @@ Die Welt läuft weiter; Blick und Bewegung sind während der Ansicht gesperrt. W
 Für tiefer liegende Ladung kannst du auf Pickup und Transporter klettern. Beim Transporter empfiehlt es sich, beide Hecktüren zu öffnen; der Einstieg nutzt die freie rechte Seite neben dem Regal. Gegenstände, Regal und andere Weltobjekte können die Sicht versperren – die Perspektive muss deshalb gegebenenfalls geändert werden.
 
 Prüfung unter Godot 4.6.3/Linux: `tests/extended_search_test.gd` (reale Weltziele, geschlossener Zugang, Wandblockade, einzelne Inventaransicht, Behälterschritte, sichtbares und anklickbares Päckchen, Rückgabe und Zustände), `tests/climbing_test.gd`, Werkzeugkoffer-/Inventar-/Verkehrstests sowie die gemeinsame Vorschau mit 18 Modellkategorien. Windows/Godot 4.7.2 bitte praktisch testen.
+
+## Körperphysik-Testlabor · feature/bodPhysics
+
+**F9 im Spiel** öffnet das Labor. Alternativ `scenes/body_lab/body_lab.tscn` im Editor öffnen und mit F6 starten. Links steht ein Körper, rechts bewegt sich ein gleich aufgebauter Körper auf einer kurzen Strecke.
+
+| Eingabe | Funktion |
+| --- | --- |
+| Dropdown | Körperregion für den Vergleich wählen |
+| Leertaste / Vergleichstreffer | Beide Körper mit gleichem Impuls und Kraftverlust an der gewählten Region treffen |
+| Linksklick auf Körper | Die tatsächlich angeklickte Region einzeln treffen |
+| Schieberegler | Testimpuls und lokalen Kraftverlust getrennt verändern; keine ballistische Kalibrierung |
+| Rechte Maustaste ziehen | Kamera um die Testfläche drehen |
+| Mausrad | Näher heran / weiter weg |
+| R / Zurücksetzen | Beide Körper unverletzt neu aufbauen |
+| F9 / Zum Spiel | Eine neue Sitzung des Hauptspiels starten |
+
+Standardwerte sind **95 % lokaler Kraftverlust** und **3,0 N·s Testimpuls**. Unterschenkel und Fuß bilden jeweils einen gemeinsamen Starrkörper. Sichtbare Hände sind Teil des Unterarm-Starrkörpers. Ein Klick auf Fuß beziehungsweise Hand trifft somit die gemeinsame Unterschenkel-/Fuß- beziehungsweise Unterarm-/Handregion.
+
+Zum Vergleichen etwa drei Sekunden warten, „Linker Oberschenkel“ wählen und die Leertaste drücken. Im geprüften Ablauf kann der stehende Körper über das gesunde Bein ausgleichen, während der bewegte Körper wegen Restgeschwindigkeit und verringerter Stützkraft stürzt. Bei anderem Trefferzeitpunkt oder Impuls kann das Ergebnis anders ausfallen. Ein Oberarmtreffer schwächt Arm und Unterarm, ohne automatisch die Beinstütze abzuschalten.
+
+Jeder Körper besteht aus **11 RigidBody3D-Segmenten und 10 Gelenken**. Es werden keine vorgefertigten Treffer-/Todesanimationen oder AnimationPlayer verwendet. Virtuelle Muskelkräfte versuchen laufend berechnete Haltungs- und Gehziele zu erreichen. Treffer verringern die Kraft einzelner Regionen und wirken als Impuls an der tatsächlichen Trefferstelle. Geschwindigkeit, Bodennähe der Füße, Haltung und regionale Kraftunterschiede beeinflussen die Balancehilfe. Die Anzeigen zeigen gemessene Segmentgeschwindigkeit, Beckenhöhe und die aktuelle Stützregelung.
+
+Schwere Rumpf-, Becken- oder Kopftreffer (höchstens 25 % regionale Restkraft) schalten die gesamte aktive Haltungsregelung ab – auch die sonst gesunden Beine halten den Körper dann nicht mehr künstlich aufrecht. Ein Kopftreffer mit höchstens 10 % Restkraft gilt im Labor als tödlich. Leichtere Treffer schwächen weiterhin abgestuft; ein isolierter Arm- oder Beintreffer ist kein automatischer Tod. Knie und Ellenbogen haben gerichtete Beugegrenzen und eng begrenzte Seitwärts-/Verdrehbewegung. Der passive Körper fällt weiterhin durch Schwerkraft, Impuls und Gelenkkräfte, ohne Trefferanimation. Zurücksetzen stellt alle Zustände wieder her.
+
+**Prototyp-Grenzen:** Die Unterstützung und Gehziele sind vereinfachte prozedurale Regelungen, keine medizinisch genaue Biomechanik oder fertig abgestimmte menschliche Bewegung. Kein Blutungs-, Schmerz-, Heilungs- oder Aufstehsystem. Das Labor nutzt Impulstreffer statt einer Waffen-/Ballistiksimulation. Die Verkehrs-NPCs übernehmen beim ersten Glock-Treffer diesen Physikkörper (siehe unten). Ein Szenenwechsel ins Labor und zurück erhält den laufenden Kontrollfortschritt nicht; F9 zurück startet eine neue Spielsitzung.
+
+Prüfung mit Godot 4.6.3 unter Linux: `tests/body_physics_test.gd` simuliert echte Physikschritte, stabile unverletzte Körper, Bewegung mit Richtungswechsel, regionalen Kraftverlust, den Stand-/Bewegungsvergleich, Arm-/Beinabgrenzung, Zurücksetzen und begrenzte endliche Positionen. `tests/body_lab_entry_test.gd` prüft F9, Wiederherstellung der Zeit nach Dokumentenprüfung und die Rückkehr zum Spiel. Screenshots vor und nach Treffern geprüft. Windows/Godot 4.7.2 bitte testen; Physik-Backend und Solver können das Ergebnis beeinflussen.
+
+Der Impuls ist kein Kraftwert: **3 N·s** entsprechen beispielsweise einer mittleren Kraft von **300 N über 0,01 s** oder **30 N über 0,1 s** (`Impuls = mittlere Kraft × Einwirkdauer`). Das ist eine Einheitenzuordnung für die Meter-/Kilogramm-Simulation, keine Kalibrierung einer realen Schusswirkung. Die 95 % beziehen sich auf die virtuelle lokale Muskelregelung.
+
+
+## Körperphysik im Hauptspiel
+
+Alle vier Fahrzeug-NPC-Modelle und die Streifenpolizisten besitzen regionale Trefferflächen passend zum gegliederten Modell. Glock wie bisher mit **Shift → Rechtsklick → Linksklick** bedienen; **R** lädt nach. Ein Treffer verursacht standardmäßig **95 % lokalen Kraftverlust** und **3 N·s Impuls**, ohne zusätzliche Zufallsentscheidung. Kopf, Rumpf, Becken, linker/rechter Ober-/Unterarm und Ober-/Unterschenkel sind getrennt treffbar; Hände und Füße gehören zu Unterarm bzw. Unterschenkel.
+
+Beim ersten Treffer übernimmt der Physikkörper die aktuelle sichtbare Pose, Blickrichtung und Bewegung. Unverletzte NPCs behalten die bisherigen Interaktionsanimationen. Ein isolierter Arm-/Beintreffer schwächt die entsprechende Kette; schwere Kopf-/Kerntreffer lösen den vollständigen Spannungsverlust aus. Schwere Kopftreffer sind tödlich. Weitere Schüsse treffen die tatsächlich bewegten Segmente, auch am Boden. Haare und Gesicht bleiben beim Modellwechsel erhalten. Erhobene Arme sind nach Verlust der Spannung frei beweglich.
+
+Karosserie stoppt Schüsse weiterhin; Scheiben lassen sie mit reduzierter Wirkung durch. Der Fahrer dahinter kann bereits durch intakte oder angerissene Scheiben getroffen werden. Sitzende Verletzte bleiben passiv in ihrer tatsächlichen Pose; vereinfachte unsichtbare Sitz-/Lehnen-/Bodenflächen stützen sie, statt sie aufstehen zu lassen. Lebende verletzte Fahrer fahren auf ihrer bisherigen Route weiter. Erst nach dem Tod rollt das Auto mit 1,2 m/s² Verzögerung aus; der Fahrer führt keine normale Aussteigeanimation aus. Die physische Figur folgt nicht mehr starr dem Fahrzeugknoten.
+
+**Aktueller Umfang:** Nach einer Verletzung sind normale Gesprächs-, Durchsuchungs-, Einsteige- und Abtransportabläufe für diese Person gesperrt, auch bei einer isolierten Gliedmaßenverletzung. Ein laufender Abtransport wird bei verletztem Verdächtigen oder Beamten abgebrochen. Medizinische Hilfe, Wiederaufstehen, Leichendurchsuchung und Fortschrittsspeicherung fehlen noch. Kabinenstützen sind eine vereinfachte Kollisionshilfe; das Fahrzeug ist weiterhin kein dynamisches Unfallmodell. Selbstkollisionen der Figur bleiben deaktiviert.
+
+`tests/npc_physics_test.gd` prüft alle vier Fahrzeuge mit echten Strahlabfragen: regionale Treffer, Übergabe ohne Positionssprung, Folgetreffer auf den dynamischen Kopf, Zusammenbruch, fallende erhobene Arme, Scheibenabdeckung, sitzende Verletzte, Abbremsen und Aufräumen beim Reset. Im grafischen Modus benutzt der Test `fire()` inklusive Munition; im Headless-Modus wird wegen fehlender Mausaufnahme nur der gleiche Trefferpfad `cast_shot()` aufgerufen. Bestehende Waffen-, Fahrzeugschaden-, Aufgabe-, Fahrer-, Verkehrs- und Streifentests prüfen die unverletzten Abläufe weiter.
+
+
+## Bewaffneter NPC – Ego-Testszene
+
+Im Hauptspiel öffnet **F10** die separate Szene `scenes/combat_test/combat_test.tscn` (alternativ in Godot öffnen und F6 drücken). Sie beginnt aus der Ego-Perspektive mit **einem geparkten Auto, einem sitzenden Testfahrer und dem Spieler**. Kein nachspawnender Verkehr. Die Aggression ist hier ein festes Testszenario und keine neue Eigenschaft der normalen Verkehrs-NPCs.
+
+1. **E** am Fenster fordert den Fahrer zum Aussteigen auf.
+2. Nach dem Aussteigen wartet er kurz und greift sichtbar zur Pistole an seiner Hüfte. Ober-/Unterarm und Waffe bewegen sich prozedural; die Pistole wechselt vom Holster zur Hand.
+3. Beim Griff läuft die Welt für **zwei reale Sekunden mit 22 % Geschwindigkeit**, mit entsättigtem Weltbild. Mausblick und Fadenkreuzbewegung sind ebenfalls auf 22 % verlangsamt und wechseln beim Ende der Zeitlupe sofort zur normalen Empfindlichkeit zurück. Das Waffenziehen bleibt in Echtzeit bedienbar. Mit **Shift, anschließend Rechtsklick** ziehen/zielen.
+4. Während Griff/Ziehen etwa **0,22 Sekunden** mit der vollständig gezogenen Glock auf den sichtbaren NPC zielen: Er gibt auf, hebt die Hände und schießt nicht. Nach Beginn des eigentlichen Ziel-/Schusszustands genügt Drohen im Testszenario nicht mehr.
+5. Ein **Arm- oder Handtreffer** entwaffnet ihn und beendet den Angriff, sofern er nicht bereits zusammengebrochen ist. Die Pistole fällt als Physikobjekt herunter. Kopf-/Kerntreffer nutzen weiterhin die Körperphysik. Andere Verletzungen beenden den Testangriff vorerst ebenfalls; es gibt noch kein Weiterkämpfen mit verletzten Gliedmaßen.
+6. Ohne Eingreifen zieht er, legt an und schießt in Abständen von **0,9 Sekunden**. Sein Ziel folgt dem Spieler mit begrenzter Geschwindigkeit. Feste Deckung und Karosserie blockieren die Trefferstrahlen; Glas lässt abgeschwächte Schüsse durch.
+
+Der Spieler startet mit **100 Gesundheit**. Ein NPC-Treffer verursacht **25 Schaden**, kurzes rotes Trefferfeedback und aktualisiert die Gesundheitsanzeige. Bei null Gesundheit endet die Handlungsfähigkeit; NPC-Schüsse stoppen. Keine automatische Heilung, Rüstung oder regionalen Spielerverletzungen in dieser Version.
+
+**R setzt hier immer die gesamte Szene zurück:** Spielerposition, Gesundheit, Munition, NPC im Auto, Fahrzeugschäden, Waffen auf dem Boden und Zeitlupe. **F lädt hier beim Zielen nach. F10 kehrt zum normalen Spiel zurück.** Im normalen Spiel bleibt R die Nachladetaste. Tab, Inventar, Funk, Klettern und normale Gesprächsmenüs sind in dieser isolierten Testszene ausgeblendet/gesperrt. Nach Aufgabe kann E in der Nähe die Person sichern.
+
+Spätere Begegnungen sollen anhand vorgefertigter Charaktere, ihrer Reaktion auf die Kontrolle und des Gesprächsverlaufs entscheiden, ob sie überhaupt zur Waffe greifen. Ein Wut-/Dialogsystem ist noch nicht implementiert. Die Testfigur greift reproduzierbar nach dem Aussteigen zur Waffe, damit Reaktionsfenster, Ziehbewegung und Trefferverhalten abgestimmt werden können.
+
+Prüfung: `tests/combat_test.gd` testet Ego-Start, Aussteigen, Zeitlupenfenster, Aufgabe durch Zielen, NPC-Schüsse, Deckung, Spielertod, Arm-/Handregion, fallende Waffe und vollständigen R-Reset auch während der Zeitlupe. Globales Zeittempo wird beim Reset und Verlassen wiederhergestellt. Zusätzlich wurden bisherige Körperphysik-, Fahrer- und Streifenabläufe geprüft. Linux/Godot 4.6.3; Windows bitte vor Ort testen.
+
+
+## Sitzende NPCs: Verletzung, Ausrollen und Herausfallen
+
+Sitzende Treffer aktivieren den gegliederten Physikkörper in der tatsächlichen Sitzpose. Eine weiche physikalische Beckenstütze führt ihn mit der Kabine mit; Rumpf und Gliedmaßen können weiterhin nachgeben. **Eine nicht tödliche Verletzung hält den fahrenden Wagen nicht an.** Weitere Reaktionen verletzter Fahrer folgen später. Die bisherigen Regeln für Fahrtroute, Verkehr und Reifenschäden gelten weiter.
+
+**Bei Tod des Fahrers** (derzeit durch einen schweren Kopftreffer) nimmt das Fahrzeug kein Gas mehr an und rollt geradeaus aus. Die Verzögerung beträgt zunächst **1,2 m/s²**: Bei 21,6 km/h ungefähr fünf Sekunden und 15 Meter bis zum Stillstand, ohne abrupten Geschwindigkeitswechsel. Der tote Fahrer steigt nicht über seine normale Animation aus. Das Fahrzeug bleibt auch am Ende seiner vorherigen Route erhalten, statt mit dem Körper zu verschwinden.
+
+Einmal pro sitzendem Todesfall entscheidet eine **35-%-Chance**, ob der Körper herausfällt (`driver.corpse_exit_chance`, 0 bis 1). Weitere Treffer würfeln nicht erneut. Erst nach dem Stillstand öffnet die Fahrertür; sobald die Öffnung groß genug ist, wird die Sitzstütze gelöst. Eine kurze seitliche Kraft hilft dem passiven Körper durch die vereinfachte Kabine. Schwerkraft und Gelenke führen den Fall auf die Straße aus, ohne Teleport oder vorgefertigte Aussteigeanimation. In den übrigen Fällen bleibt der Körper im Auto. Es gibt noch keine detaillierte Gurt-/Sitz- oder Innenraumkollision. Während des Herausfallens lässt sich die Tür nicht manuell schließen.
+
+`tests/seated_physics_test.gd` prüft alle vier Fahrzeugmodelle, Weiterfahren bei nicht tödlicher Verletzung, Mitführen des sitzenden Körpers, sanftes Ausrollen, geschlossene Tür während der Fahrt, beide Ausgangsfälle mit erzwungener 0-/100-%-Chance, Fall auf den Boden und vollständiges Zurücksetzen. Die Tests prüfen Geschwindigkeit und Position über echte Physikschritte. Der normale 35-%-Wert wird dafür nicht zufällig vorausgesetzt.
+
+
+## Schüsse durch Fahrzeugglas
+
+Die Glock und NPC-Pistolen durchschlagen intaktes und angerissenes Fahrzeugglas. Derselbe Schuss beschädigt die Scheibe und wird bis zum nächsten Hindernis weiterverfolgt. **Pro Scheibe bleiben 80 % Wirkung und Impuls erhalten**; zwei Scheiben ergeben 64 %. Eine zerstörte Scheibe verursacht keinen weiteren Abzug. Karosserie, Wände und andere feste Trefferflächen stoppen den Schuss weiterhin. Es gibt noch keine Ablenkung oder winkelabhängige Ballistik.
+
+Bei NPCs reduziert Glas den lokalen Kraftverlust statt eines separaten Lebenspunktewerts: Ein normaler Körpertreffer verursacht weiterhin 95 % Verlust, hinter einer Scheibe 76 %. **Kopfschüsse bleiben auch durch Glas tödlich.** Der Trefferimpuls wird auch beim Kopf abgeschwächt. Spieler erhalten hinter einer Scheibe 20 statt 25 Schaden durch NPC-Schüsse. Der Faktor ist zentral in `scripts/projectile_trace.gd` definiert.
+
+`tests/glass_penetration_test.gd` prüft alle vier Fahrzeuge, reduzierte Rumpftreffer durch intaktes Glas, tödliche Kopftreffer durch angerissenes und zerstörtes Glas, mehrere Scheiben, einmalige Beschädigung je Scheibe, feste Deckung sowie reduzierte NPC-Treffer am Spieler. Reine Sicht-/Zielabfragen bleiben unverändernde Abfragen; nur abgegebene Schüsse beschädigen und durchdringen Glas.

@@ -476,6 +476,118 @@ Weiterhin feste Fälle ohne Zufallsladung, allgemeine Verschachtelung, Flüssigk
 
 PR #4 wurde nach `develop` übernommen. Anschließend wurde der aktualisierte Integrationsstand in `feature/vehicleDamage` zusammengeführt. Dokumentationskonflikte wurden unter Erhaltung beider Funktionsbeschreibungen aufgelöst. Der Branch enthält nun direkte Ladungsauswahl, Behälteruntersuchung und Kühlboxen gemeinsam mit Scheiben-/Reifenschäden. Die gemeinsamen grafischen Tests für Fahrzeugschäden, direkte Durchsuchung und Klettern sowie der Verkehrstest sind unter Godot 4.6.3/Linux bestanden. `main` bleibt unverändert.
 
+## Aktive Körperphysik – separates Testlabor auf feature/bodPhysics
+
+### Aufbau und Bedienung
+
+Der Branch basiert auf `develop` nach Übernahme der Fahrzeugschäden. F9 führt aus dem Hauptspiel in `scenes/body_lab/body_lab.tscn`. Zwei gleich aufgebaute Figuren stehen auf einer ebenen Testfläche: links ohne Bewegungsauftrag, rechts mit prozeduralem Gehauftrag auf kurzer Strecke. Region auswählen und Leertaste gibt beiden denselben Testimpuls und regionalen Kraftverlust. Einzelne Regionen lassen sich auch direkt anklicken. Orbitkamera, Zoom, getrennte Regler für Impuls und lokalen Kraftverlust sowie Zurücksetzen ermöglichen wiederholbare Vergleiche. Rückkehr mit F9 startet eine neue Hauptspiel-Sitzung.
+
+### Physik und Reaktion
+
+`scripts/active_body.gd` baut im aktuellen Stand pro Figur 11 echte RigidBody3D-Segmente für Becken, Rumpf, Kopf, Oberarme, Unterarme inklusive Hände, Oberschenkel und Unterschenkel inklusive Füße. Zehn Generic6DOFJoint3D-Gelenke verbinden sie mit linearen Sperren und Winkelgrenzen. Selbstkollisionen der Figur sind im Prototyp deaktiviert; Boden und andere Figuren bleiben physikalische Kollisionspartner.
+
+Positions- und rotationsabhängige Feder-/Dämpfungskräfte bilden virtuelle Muskeln. Rotationskräfte sind über eine näherungsweise Trägheit der Segmente skaliert; begrenzte Kräfte und gedämpfte Unterstützung vermeiden Explodieren der Glieder. Haltungs- und Gehziele werden mathematisch pro Schritt berechnet, nicht aus AnimationPlayer, AnimationTree oder vorgefertigten Trefferclips abgespielt.
+
+Jede Region hat eine eigene Kraftreserve. Ein Oberschenkeltreffer schwächt auch die zugehörige Unterschenkel-/Fußkette; ein Oberarmtreffer entsprechend den Unterarm. Ein Impuls wirkt am tatsächlichen Treffpunkt und übernimmt die vorhandenen Geschwindigkeiten. Die Balancehilfe hängt kontinuierlich von Rumpf-/Kopfstabilität, Becken, regionaler Asymmetrie, gemessener Geschwindigkeit, Fußnähe zum Boden und tatsächlicher Körperhaltung ab. Zu tief gefallene Körper erhalten keine volle Aufrichtunterstützung. Es gibt keine Auswahl eines vorgefertigten „Beintreffer im Laufen“-Animationsclips und keine Todesanimation. Ein separater tödlicher Kopfverletzungszustand schaltet die aktive Muskelregelung ab.
+
+Im geprüften Vergleich nach drei Sekunden hält die stehende Figur den linken Oberschenkeltreffer über das gesunde Bein aus; die bewegte Figur verliert später die Balance und fällt. Diese Reaktion ist ein Ergebnis der gewählten Regler und des Bewegungszustands, keine Garantie für jeden Trefferzeitpunkt. Die Gehbewegung und biomechanische Plausibilität bleiben experimentell.
+
+### Prüfung und Grenzen
+
+Godot 4.6.3/Linux: echte Physikschritte für beide Gelenkkörper, Stabilität im Stand, tatsächliche Fortbewegung und längeres unverletztes Gehen mit Richtungswechsel. Geprüft wurden lokale Kraftausbreitung, Impuls ohne Positionssprung, unterschiedliche gemessene Bewegung beim Treffer, Stand-/Bewegungsreaktion, Armverletzung mit erhaltener Beinstütze, Zurücksetzen und endliche begrenzte Positionen/Geschwindigkeiten. Grafische Vorher-/Reaktions-/Nachheransicht geprüft. Ein eigener Szenenwechseltest prüft F9 auch aus der verlangsamten Dokumentenansicht, Zeitwiederherstellung, Regionenauswahl, Reset und Rückkehr zum Hauptspiel. Windows/Godot 4.7.2 erfordert einen Praxistest; andere Physik-Backends/Solver können die Reaktion ändern.
+
+Das Labor ist getrennt von den Verkehrs-NPCs. Es enthält keine Ballistik-, Blutungs-, Schmerz-, Heilungs- oder Aufstehlogik und keine fertige menschliche Bewegungs-KI. Virtuelle Stützkräfte sind eine bewusste Vereinfachung aktiver Ragdolls. Die Integration mit Verkehr, Handschellen, Fahrzeuganimationen und vorhandenen Waffen ist ein weiterer Schritt. Der Stand bleibt auf `feature/bodPhysics`.
+
+## Labor-Standardwerte und gemeinsame Hand-/Fußsegmente
+
+Die Standards liegen nun zentral bei 3,0 N·s Impuls und 95 % lokalem Kraftverlust; UI und direkter Trefferaufruf verwenden dieselben Vorgaben. Bei einmaligem Treffer bleibt 5 % der lokalen Reglerstärke, ohne diese Größe als medizinische Verletzungsschwere zu interpretieren.
+
+Die getrennten Fuß-Starrkörper und Sprunggelenke wurden entfernt. Jeder Unterschenkel besitzt jetzt Bein- und Fußgeometrie samt zwei Kollisionsformen auf demselben RigidBody3D. Die Masse von Unterschenkel und Fuß bleibt zusammen 4 kg. Bodennähe und Kraftweitergabe werden an diesem gemeinsamen Segment ermittelt. Jeder Unterarm erhält sichtbare Hände mit eigener Kollisionsform auf demselben Körper, ohne zusätzliche Handgelenke. Fuß- und Handtreffer melden daher die zugehörige gemeinsame Region. Das Modell hat 11 statt 13 Starrkörper und 10 statt 12 Gelenke.
+
+Mit Godot 4.6.3/Linux geprüft: neue Standards, zusammengesetzte Trefferkörper, echte Strahlen auf Hände/Füße, Ruhe- und Bewegungsstabilität, Stand-/Laufreaktion beim Oberschenkeltreffer mit 95 % und 3 N·s, Armverletzung sowie Szenenwechsel. Grafische Darstellung geprüft. Windows/Godot 4.7.2 bleibt vom Nutzer zu testen.
+
+`apply_impulse` erhält direkt den Impulsvektor. Unter der verwendeten Meter-/Kilogramm-Skalierung sind 3,0 daher 3 N·s, nicht 3 N. Eine mittlere Kraft lässt sich erst mit einer angenommenen Dauer bestimmen: 3/0,01 = 300 N. Der Prototyp ist weiterhin keine kalibrierte Ballistiksimulation.
+
+## Körperphysik – Zusammenbrechen nach schweren Kerntreffern
+
+Ursache der unnatürlichen abgestützten Rumpfhaltung: Die Balancehilfe berücksichtigte Rumpfschäden, die aktiven Beinmotoren verfolgten aber weiterhin volle Standziele. Jetzt skaliert die zentrale Kraftreserve auch alle Gliedmaßenmotoren. Bei höchstens 25 % Restkraft in Kopf, Rumpf oder Becken wird der Zusammenbruch bis zum Zurücksetzen gespeichert: keine aktive Aufrichtung, Fortbewegung oder Muskelspannung mehr. Bei höchstens 10 % Kopfrestkraft gilt die Figur als tot. Diese Schwellen sind Gameplay-Regeln im Labor, keine medizinische Simulation. Restgeschwindigkeit und tatsächlicher Treffpunkt bleiben erhalten.
+
+Knie und Ellenbogen erhalten gerichtete Beugegrenzen (bis ca. 132 Grad, maximal ca. 3 Grad Überstreckung); seitliches Knicken und axiales Verdrehen sind auf ca. 3 Grad begrenzt. Die Gelenkgrenzen bleiben auch beim passiven Körper aktiv. Selbstkollisionen sind weiterhin deaktiviert, daher wird damit keine vollständige anatomische Kollisionssimulation erreicht.
+
+Erweiterte echte Physiktests prüfen schwere Kopf-, Rumpf- und Beckentreffer jeweils im Stand und in Bewegung: Stützregelung aus, Becken und Rumpf erreichen den Boden, tödlicher Zustand nur beim schweren Kopftreffer. Ein leichter Rumpftreffer erhält die Standfähigkeit. Bestehende Tests für gesunde Fortbewegung, isolierte Gliedmaßentreffer und Zurücksetzen bleiben enthalten.
+
+## Körperphysik – Integration der Glock-Treffer ins Hauptspiel
+
+### NPC-Modell und Trefferübergabe
+
+Das Fahrer-Platzhaltermodell entspricht jetzt den elf Physikregionen. Die bisherigen vier Bein-/Armpivots bleiben für Ein-/Aussteigen, Durchsuchung und Händehoch erhalten. Geometrienahe Schusskörper auf Layer 32 ordnen auch Hand-/Fußtreffer der gemeinsamen Region zu. Die breite Interaktionskapsel wird bei Schussabfragen ausgeschlossen, damit sie keine regionalen Treffer verdeckt. Fahrzeugtrefferflächen bleiben auf Layer 16 und blockieren die Sichtlinie weiterhin.
+
+Beim ersten Glock-Treffer erstellt der Fahrer den gemeinsamen ActiveBody, übergibt jede sichtbare Segmentpose sowie vorhandene Bewegung und blendet den prozeduralen Rig aus. Danach zeigen die Metadaten der dynamischen Segmente wieder auf denselben Fahrer: Folgetreffer wirken auf die physisch aktuelle Region. 95 % Kraftverlust und 3 N·s kommen aus den gemeinsamen Standardkonstanten. Kleidung, Haare und Gesichtsdetails werden übernommen. Die neutralen anatomischen Gelenkrahmen bleiben bei der Poseübergabe erhalten; Schultern erlauben das Absenken vormals erhobener Arme, Knie/Ellenbogen behalten ihre gerichteten Grenzen.
+
+### Sitzpose, Fahrzeug und Ablaufgrenzen
+
+Die Physikfigur ist ein Top-Level-Kind des Fahrers und wird daher nicht starr mit dem Fahrzeug verschoben, beim Entfernen des Fahrers aber mit aufgeräumt. Sitzende Körper erhalten keine Stehregelung. Da die bisherigen Interaktionskollisionen keine ausmodellierte Kabine bilden, werden eigene grobe Fahrzeugkollisionen ausgenommen und Sitzfläche, Lehne und Fußboden als unsichtbare Stützen auf Layer 64 ergänzt. Diese Helfer folgen dem Fahrzeug und werden beim Reset oder Entfernen des Physikkörpers entfernt.
+
+Der anfängliche Stand bremste jeden verletzten Fahrer mit 4 m/s² ab. Der folgende Schritt „Sitzphysik und Ausrollen“ ersetzt das durch Weiterfahren bei nicht tödlichen Treffern und sanftes Ausrollen erst nach dem Tod. Verletzte Personen sind vorerst von normalen Personeninteraktionen ausgeschlossen; ein laufender Streifenabtransport endet bei verletztem Verdächtigen oder Beamten. Sanitätsdienst, Wiederaufstehen, weitere Verletzteninteraktionen und medizinische Genauigkeit sind nicht Teil dieses Schritts.
+
+### Prüfung
+
+Godot 4.6.3/Linux: neue Integrationstests für alle vier Fahrzeugmodelle mit echten Straßenkollisionen, regionalen Glock-Strahlen, Poseübergabe, dynamischen Folgetreffern, Kopf-/Beinzuständen, erhobenen Armen, Glasabdeckung, Sitzstützen, Abbremsen und Reset. Grafischer Test schießt über die bestehende Waffenfunktion samt Magazinverbrauch; headless wird wegen fehlender Mausaufnahme der unveränderte gemeinsame Trefferpfad genutzt. Bestehende Labortests sowie Fahrer-, Verkehr-, Freigabe-, Inventar- und Streifentests bestanden. Waffen-, Fahrzeugtreffer-, Fahrzeugschaden- und Aufgabetests wurden zusätzlich grafisch geprüft. Windows/Godot 4.7.2 muss weiterhin vor Ort getestet werden.
+
+## Bewaffneter NPC – isolierte Ego-Konfrontation
+
+### Testaufbau und Steuerung
+
+F10 öffnet `scenes/combat_test/combat_test.tscn`, eine spezialisierte Ableitung der Hauptszene. Sie verwendet Straße, Spieler, Fahrzeug und Glock unverändert, behält aber genau ein geparktes Fahrzeug und unterbindet nachspawnenden Verkehr. Der Testfahrer sitzt anfangs im Auto. E löst das Aussteigen aus. Inventar-/Funk-/Dokumenten-/Kletterabläufe sind hier gesperrt, damit die Begegnung eine feste, wiederholbare Abfolge besitzt.
+
+R wird in dieser Szene vor Menüs und Waffeninput verarbeitet und lädt die ganze Szene neu. Das entfernt auch Physikkörper, fallengelassene Waffen, Verletzungen und Fahrzeugschäden; Gesundheit und Inventar entstehen neu. F übernimmt ausschließlich hier das Nachladen. F10 führt in eine neue Hauptspiel-Sitzung zurück. Die normalen R-/F9-Funktionen bleiben außerhalb des Tests erhalten.
+
+### Ziehen, Zeitlupe und Gegenreaktion
+
+`scripts/npc_gunfight.gd` steuert Sitzen → kurze Orientierung → Griff → Ziehen → Zielen/Schießen. Schulter und Ellenbogen bewegen die Hand zur Hüfte und nach vorn; das vorhandene Pistolenmodell wechselt vom Holster zur Hand. Vor abgeschlossenem Ziehen und anschließender Zielpause gibt es keinen Schuss. Die getrennte Komponente ist nur dem Testfahrer zugeordnet. Die bestehende allgemeine Aufgabelogik überlässt dieser Komponente ihre Reaktionsfenster.
+
+Beim Griff senkt die Szene das globale Tempo auf 22 % des vorherigen Wertes für zwei reale Sekunden. Ein entsättigter Bildschirmfilter liegt hinter dem HUD. Spielerblick wird während des Reaktionsfensters ebenfalls mit 22 % Empfindlichkeit verarbeitet; beim Ende gilt sofort wieder die normale Empfindlichkeit. Waffenzeit wird ergänzend unskaliert fortgeschrieben; Fortbewegung und Weltphysik bleiben verlangsamt. Rechtzeitiges vollständiges Zielen über einen echten sichtliniengeprüften Trefferstrahl löst nach 0,22 realen Sekunden Aufgabe aus. Arm-/Handtreffer gehen zuerst durch die regionale Körperphysik und lösen anschließend Entwaffnung/Aufgabe aus. Die Waffe wird als Starrkörper mit Schwerkraft abgelegt. Andere Verletzungen beenden den Angriff in dieser ersten Fassung ebenfalls. Reset, Aufgabe, Tod und Szenenwechsel beenden die Zeitlupe und stellen das vorherige globale Tempo wieder her.
+
+### Spielerschaden und Grenzen
+
+`scripts/player_health.gd` enthält 100 Gesundheit, Schaden, Trefferfeedback und ein einmaliges Todessignal. Die Testszene zeigt Gesundheit und kurzen roten Trefferfilter. NPC-Schüsse kommen vom Waffenlauf, ignorieren den Schützen und berücksichtigen Welt-, Fahrzeug- und Spielerflächen. Ein Treffer verursacht 25 Schaden; die Schussfolge hat 0,9 Sekunden Abstand. Das Ziel wird mit begrenztem Tempo nachgeführt. Bei Spielertod enden Bewegung, Waffeninput und weitere NPC-Schüsse; R bleibt aktiv.
+
+Aggression, Dialogreaktionen und Charakterentscheidungen sind noch keine neue Verkehrs-KI: Nur diese Testfigur startet den Ablauf fest nach dem Aussteigen. Keine Deckungs-/Verfolgungs-KI, NPC-Magazinverwaltung, Spielerrüstung oder medizinischen Körperregionen. Das spätere Auswahlkriterium soll auf verfassten Charakteren und der jeweiligen Kontrollsituation beruhen.
+
+### Prüfung
+
+`tests/combat_test.gd` prüft einen Wagen, sitzenden NPC und Ego-Start, E-Aussteigen, sichtbaren Griff mit Zeitlupe, echte Strahlprüfung bei Aufgabe, kein verfrühtes Schießen, NPC-Treffer und Gesundheit, Deckungsschutz, Tod ohne Folgeschüsse, Entwaffnung über die regionale Armfläche sowie vollständigen R-Reset nach Tod und während Zeitlupe. Grafische Snapshots prüfen Anfang, Griff, Aufgabe, Tod und Entwaffnung. Bisherige NPC-/Laborphysik, Fahrer, Freigabe und Streifentransport bleiben geprüft. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu testen.
+
+## Zeitlupe – Fadenkreuzbewegung
+
+Mausbewegungen werden in der Konfrontationstestszene während der Zeitlupe mit demselben Faktor 0,22 wie die Welt skaliert. Dafür wird nur das weitergereichte Mausereignis kopiert und angepasst; die normale Empfindlichkeit bleibt unverändert und gilt nach Ende, Aufgabe oder Reset automatisch wieder. Grafische Eingabetests prüfen die tatsächliche Kameradrehung während und nach dem Reaktionsfenster.
+
+## Sitzphysik und Ausrollen · feature/bodPhysics
+
+### Fahrerverhalten und Mitführung
+
+Sitzende Verletzte bleiben gegliederte Starrkörper. Eine begrenzte Feder-/Dämpfungskraft am Becken hält den Körper an seiner Sitzposition relativ zur bewegten Kabine; vorhandene Geschwindigkeit wird beim Treffer übernommen. Rumpf und Gliedmaßen bleiben passiv und können zusammensacken. Nicht tödliche Treffer lösen keine Bremsung aus. Es gibt noch keine weiteren Fahrreaktionen auf Verletzungen.
+
+Erst `driver.is_dead()` aktiviert das Ausrollen mit `COAST_DECELERATION = 1.2` m/s². Das Fahrzeug folgt ab dann einer ausreichend langen geraden Auslaufstrecke in seiner bisherigen Richtung. Es verschwindet nicht am alten Routenende, bremst nicht sofort auf null und führt keine normale Aussteigeanimation aus. Nach dem Stillstand bleibt es geparkt. Die Bremslichter werden beim passiven Ausrollen nicht künstlich eingeschaltet. Bei 6 m/s sind ungefähr fünf Sekunden und 15 Meter Auslauf vorgesehen. Lebende Fahrer behalten die bisherigen Verkehrs- und Geschwindigkeitsregeln.
+
+### Gelegentliches Herausfallen
+
+Beim ersten tödlichen Treffer im Fahrzeug wird die Auswahl einmalig mit `corpse_exit_chance` (Standard 0,35) getroffen. Die festen Fälle 0 und 1 sind gezielt testbar; weitere Treffer ändern die Auswahl nicht. Nur ausgewählte tote sitzende Personen starten nach dem Stillstand den Ablauf: Fahrertür öffnen → ausreichende Öffnung abwarten → Sitzstütze lösen → zwei Sekunden begrenzte seitliche Kräfte → passiver Körper auf dem Boden. Es werden keine Körperpositionen versetzt und keine Aussteigeclips abgespielt. Während des Öffnens/Fallens ist manuelles Schließen gesperrt. Danach bleibt die Tür geöffnet und wieder normal bedienbar.
+
+Der seitliche Kraftanteil ist eine Gameplay-Hilfe für die groben Kabinenmodelle, keine vollständige Simulation von Gurt und Innenraum. Reset beseitigt Physikkörper, Stützen, Türzustand, Auswahl und Auslaufstatus. Der Konfrontationstest nutzt weiterhin R für den vollständigen Szenenreset.
+
+### Prüfung
+
+Neue echte Physiktests in `tests/seated_physics_test.gd` prüfen acht Abläufe: alle vier Fahrzeuge jeweils mit 0 und 100 % Herausfallchance. Geprüft werden Weiterfahrt und Mitführung lebender Verletzter, monotone sanfte Verzögerung nach Tod, Auslaufstrecke, Türöffnung erst im Stand, Körper außerhalb der Kabine am Boden beziehungsweise verbleibend im Sitz, begrenzte Geschwindigkeiten und vollständiges Reset. Der vorhandene NPC-Treffertest wartet nun auf das längere Ausrollen und schaltet zufälliges Herausfallen für seine Sitzprüfung aus. Bestehende Konfrontations-, NPC-/Laborphysik-, Verkehrs-, Fahrer-, Freigabe- und Streifenprüfungen bleiben enthalten. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
+
+## Projektilwirkung durch Fahrzeugglas · feature/bodPhysics
+
+Eine gemeinsame begrenzte Strahlverfolgung (`scripts/projectile_trace.gd`) wird von Spieler-Glock und NPC-Pistole benutzt. Intaktes/angerissenes Glas erhält genau einen Schaden pro Schuss; seine Kollisions-RID wird anschließend nur für diesen Schuss ausgeschlossen. Der Strahl wird erneut bis zur nächsten Fläche geprüft. Der Wirkungsfaktor wird je Scheibe mit 0,8 multipliziert. Nach höchstens 16 Glasebenen endet die Durchdringung; feste Flächen stoppen jederzeit. Sicht- und Zielabfragen bleiben ohne Seiteneffekte.
+
+Beim NPC werden Impuls und regionaler Kraftverlust reduziert. Kopfverlust bleibt bei 95 %, damit der Kopfschuss tödlich ist; sein Impuls wird trotzdem reduziert. Eine Scheibe ergibt am Rumpf 76 % statt 95 % Kraftverlust und beim Spieler 20 statt 25 Gesundheitsschaden. Intaktes und angerissenes Glas bieten damit keine vollständige Deckung mehr. Glaszerstörung, Risse und Fahrzeugeinschussmarkierungen bleiben erhalten. Keine Abpraller, Glasdicken- oder Einfallswinkelsimulation.
+
+`tests/glass_penetration_test.gd` prüft alle vier Modelle, dieselbe Kugel an Glas und dahinterliegendem NPC, reduzierte Rumpfwirkung, weiterhin tödliche Kopfschüsse, durchbrochene Scheiben ohne Wirkungsabzug, zwei Scheiben mit 64 % Wirkung, eine dahinterliegende Wand und NPC-Schüsse auf den Spieler. Vorhandene reine Strahlabfragen dürfen weiterhin Glas als nächstes sichtbares Objekt liefern; die tatsächliche Schussauflösung übernimmt die Durchdringung.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.
