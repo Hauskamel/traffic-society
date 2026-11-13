@@ -53,9 +53,10 @@ var patrol: PatrolDispatch
 var player_avatar: Node3D
 var radio_model: Node3D
 var radio_panel: PanelContainer
-var radio_status: Label
-var radio_call_button: Button
-var radio_cancel_button: Button
+const EmergencyDispatch = preload("res://game/police/emergency_dispatch.gd")
+var emergency_dispatch: Node
+var control_hint: Label
+const WalkieTalkieView = preload("res://game/police/walkie_talkie_view.gd")
 var radio_open := false
 var avatar_clock := 0.0
 var cargo_start_pitch := 0.0
@@ -286,36 +287,16 @@ func _ready() -> void:
 	interaction_rows.add_theme_font_size_override("normal_font_size", 20)
 	menu_margin.add_child(interaction_rows)
 	interaction_panel.visible = false
-	radio_panel = PanelContainer.new()
-	radio_panel.position = Vector2(30, 340)
+	emergency_dispatch = EmergencyDispatch.new()
+	emergency_dispatch.scene = self
+	add_child(emergency_dispatch)
+	radio_panel = WalkieTalkieView.new()
 	layer.add_child(radio_panel)
-	var radio_margin := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		radio_margin.add_theme_constant_override("margin_" + side, 18)
-	radio_panel.add_child(radio_margin)
-	var radio_stack := VBoxContainer.new()
-	radio_stack.add_theme_constant_override("separation", 12)
-	radio_margin.add_child(radio_stack)
-	var radio_title := Label.new()
-	radio_title.text = "FUNKGERAET / STREIFE 21-1"
-	radio_stack.add_child(radio_title)
-	radio_status = Label.new()
-	radio_stack.add_child(radio_status)
-	radio_call_button = Button.new()
-	radio_call_button.text = "Streife zur Abholung anfordern"
-	radio_call_button.focus_mode = Control.FOCUS_NONE
-	radio_call_button.pressed.connect(call_patrol)
-	radio_stack.add_child(radio_call_button)
-	radio_cancel_button = Button.new()
-	radio_cancel_button.text = "Anforderung abbrechen"
-	radio_cancel_button.focus_mode = Control.FOCUS_NONE
-	radio_cancel_button.pressed.connect(patrol.cancel_waiting)
-	radio_stack.add_child(radio_cancel_button)
-	var close_radio := Button.new()
-	close_radio.text = "Funk schliessen [T / Esc]"
-	close_radio.focus_mode = Control.FOCUS_NONE
-	close_radio.pressed.connect(set_radio_open.bind(false))
-	radio_stack.add_child(close_radio)
+	radio_panel.closed.connect(set_radio_open.bind(false))
+	radio_panel.dispatch = emergency_dispatch
+	radio_panel.service_requested.connect(emergency_dispatch.request)
+	emergency_dispatch.changed.connect(radio_panel.refresh_requests)
+	radio_panel.refresh_requests()
 	radio_panel.visible = false
 	inventory_view = InventoryView.new()
 	layer.add_child(inventory_view)
@@ -337,6 +318,14 @@ func _ready() -> void:
 	compliance = NpcCompliance.new()
 	compliance.scene = self
 	add_child(compliance)
+	control_hint = Label.new()
+	control_hint.position = Vector2(18, 18)
+	control_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	control_hint.add_theme_font_size_override("font_size", 14)
+	control_hint.add_theme_color_override("font_shadow_color", Color.BLACK)
+	control_hint.add_theme_constant_override("shadow_offset_x", 1)
+	control_hint.add_theme_constant_override("shadow_offset_y", 1)
+	layer.add_child(control_hint)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -626,6 +615,9 @@ func can_interact() -> bool:
 
 ## Aktualisiert Fadenkreuz, Suchfortschritt und kontextbezogene Bedienhinweise.
 func refresh_encounter_ui() -> void:
+	if is_instance_valid(control_hint):
+		control_hint.text = "WASD Bewegen  ·  Tab Perspektive  ·  I Inventar  ·  T Funkgerät\nE Interaktion  ·  Strg Sprinten  ·  Leertaste Klettern\n1/2 Waffe  ·  Shift Griff  ·  Rechtsklick Zielen  ·  Linksklick Schuss  ·  R Nachladen"
+		control_hint.visible = not document_mode.active and not inventory_view.visible
 	update_part_focus()
 	var searching := (
 		(is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car))
@@ -892,28 +884,16 @@ func set_radio_open(value: bool) -> void:
 	if is_instance_valid(radio_panel):
 		radio_panel.visible = value
 	if is_instance_valid(radio_model):
-		radio_model.visible = value and not aerial
+		radio_model.visible = false  # Die Nahansicht ersetzt das kleine Ego-Modell.
 	if value:
 		close_interaction()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if value or aerial else Input.MOUSE_MODE_CAPTURED
 
 
-## Aktualisiert Funkanzeige und verfügbare Abholaktionen.
+## Hält die physische LCD-Beschriftung unabhängig von Einsatzanforderungen statisch.
 func update_radio() -> void:
-	if not is_instance_valid(radio_status):
-		return
-	radio_status.text = patrol.report + "\n" + patrol.display_text().replace("\n", " / ")
-	radio_model.get_meta("screen").text = patrol.display_text()
-	var car := radio_car if radio_open and is_instance_valid(radio_car) else interaction_car()
-	radio_call_button.disabled = (
-		patrol.active()
-		or not is_instance_valid(car)
-		or not car.driver.arrested
-		or car.driver.state != car.driver.State.OUTSIDE
-		or car.officer_aboard
-		or car.cargo_search_active
-	)
-	radio_cancel_button.visible = patrol.stage == PatrolDispatch.Stage.WAITING
+	if is_instance_valid(radio_model):
+		radio_model.get_meta("screen").text = "21-1  BEREIT"
 
 
 ## Übergibt den aktuell ausgewählten Festgenommenen an die Streifenanforderung.

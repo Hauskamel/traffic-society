@@ -606,6 +606,28 @@ Prüfung: Die Syntaxbäume aller 65 GDScripts stimmen nach Normalisierung der ne
 
 PR #6 wurde konfliktfrei mit „Merge Projektstruktur“ (`10a85f7`) nach `develop` übernommen. Der Spielstand entspricht dem zuvor geprüften Feature-Branch. Ordnerstruktur, Ressourcenpfade, Code-Kommentare und Entwicklungswerkzeuge sind damit Bestandteil von `develop`. Die Branch-Buslinie ist aktualisiert.
 
+## Funkgerät-Nahansicht · feature/policeWalkieTalkie
+
+Von `develop` wurde `feature/policeWalkieTalkie` erstellt. Ein separates UI-Modul unter `game/police/` ersetzt die bisherige Anforderungs-/Abbruchoberfläche durch ein Walkie-Talkie-Gehäuse mit grünem LCD. Das Display hat vier Icon-Knöpfe in zwei Spalten: Polizei, Feuerwehr, Sanitäter und Verstärkung. Monospace-Schrift ohne Kantenglättung, dunkle LCD-Farbe und transparente Zeilenstruktur bilden den Referenzstil nach. Antenne, Drehknopf und Lautsprecher machen das Gerät erkennbar. Die vier SVG-Icons sind eigene einfache Grafiken.
+
+T/Esc öffnen und schließen die Ansicht wie bisher. Das kleine Ego-Modell wird dabei ausgeblendet, während die Nahansicht das Gerät repräsentiert; die Avatar-Darstellung bleibt erhalten. Die physische Miniaturanzeige trägt ebenfalls den grünen Funkstil. Alle vier Einsatzknöpfe besitzen absichtlich keine Aktionsverbindungen. Die vorherige Abholanforderung ist in dieser Oberfläche vorübergehend nicht bedienbar. Das bestehende Streifen-Backend bleibt unverändert und wird im bisherigen Integrationstest direkt angefordert. Neue Fahrzeuge, Besatzungen oder Einsätze werden nicht erzeugt.
+
+Für den zweiten Schritt sind ein Polizeiwagen mit zwei Kollegen, ein Krankenwagen mit Tragenbereich und zwei Sanitätern sowie eine Feuerwehr mit vier Personen (drei vorne, eine hinten) vorgemerkt. Die zusätzliche Beschriftung „Polizei“ bleibt wie die anderen nur ein Platzhalter; konkrete Aktionen folgen separat.
+
+Prüfung: neuer Funkgerät-Test für 2×2-Aufteilung, vier Icons/Beschriftungen, fehlende Einsatz-Callbacks, ausbleibenden Spawn und Öffnen/Schließen. Grafische Sichtprüfung des LCD und Gehäuses. Bestehende Streifen- und Polizeiinteraktionsprüfungen prüfen das Backend weiter. Formatierungs- und Ressourcenprüfung gehören zum Abschluss. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
+
+## Einsatzanforderungen, Besatzungen und HUD
+
+Auf `feature/policeWalkieTalkie` ist der „Polizei“-Knopf entfernt. Feuerwehr und Sanitäter haben jeweils eine, Verstärkung zwei Anforderungen pro Hauptspiel-Sitzung. Eine angenommene Bestellung zählt sofort; `EmergencyDispatch` lehnt unbekannte Dienste und weitere Bestellungen nach Ausschöpfen ab. Das LCD zeigt Restzahlen und die Zahl wartender Einheiten. Die Rückkehr in eine neue Hauptspiel-Szene stellt die Kontingente wieder her.
+
+Die Wartezeit beträgt zehn Simulationssekunden. Danach wird bei freier separater Einfahrt ein Einsatzfahrzeug erzeugt. Gleichzeitige Bestellungen werden in Anforderungsreihenfolge abgearbeitet und bei belegter Einfahrt zurückgehalten. Fahrzeuge fahren über eine feste Anfahrspur auf eigene Stellplätze neben der Kontrollbucht; deren Reservierung wird nicht übernommen. Blaulichter blinken abwechselnd und nutzen unverschattete blaue Punktlichter. Besatzungen verwenden das vorhandene Fahrer-/Treffersystem mit kürzerer Übergangszeit von 0,9 statt 3,6 Sekunden. Zivile Fahrer behalten ihre Dauer.
+
+Verstärkung bringt je zwei Kollegen im Polizeiwagen. Der Krankenwagen nutzt einen hinten geöffneten, begehbaren Transporteraufbau mit sichtbarer Trage und zwei Sanitätern. Das Feuerwehrfahrzeug ist länger, besitzt Dachleiter/Gerätefächer und vier Figuren: Fahrer plus zwei weitere vorne und eine hinten. Einsatzkleidung und Feuerwehrhelme unterscheiden die Besatzungen. Nach dem Aussteigen folgen Figuren begrenzten Seitenwegen mit einfacher Hindernisprüfung. Verletzte Figuren werden nicht weiter durch die Spaziersteuerung bewegt. Es gibt keine fachlichen Einsatzaufgaben und noch keine allgemeine Wegfindung, Behandlung oder Kampf-KI.
+
+Neue Module: `game/police/emergency_dispatch.gd`, `emergency_vehicle.gd`, `blue_beacons.gd`. Die Hauptszene verbindet Funkanforderungen mit dem Dienst; das alte Abholbackend bleibt davon unabhängig. Der HUD-Hinweis nennt I/T und die übrigen Kernaktionen; die Konfrontationsszene überschreibt ihre abweichende R-/F-Belegung. Dokumentationsbilder sind per `.gdignore` von Godots Ressourcenimport ausgenommen.
+
+Prüfung: neuer Ablauf prüft drei statt vier Knöpfe, unmittelbaren Kontingentverbrauch, maximal vier Fahrzeuge/zehn Figuren, keinen Spawn vor zehn Sekunden, Warteschlange bei belegter Einfahrt, individuelle Stellplätze, sämtliche Besatzungen außerhalb der Fahrzeuge, aktive wechselnde Blaulichter, Trage, Feuerwehr-Sitzverteilung und tatsächliches Umherlaufen. Bestehende Funk-, Streifen-, Fahrer-, Verkehrs- und Konfrontationsprüfungen sowie die grafische Polizeiinteraktion wurden geprüft. Formatierung/Ressourcen und grafische Sichtprüfung gehören zum Abschluss. Godot 4.6.3/Linux; Windows noch vor Ort prüfen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

@@ -44,7 +44,7 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Linksklick beim Zielen | Glock-Einzelschuss |
 | R | Glock-Magazin wechseln; ersetzt den bisherigen Spieler-Reset |
 | Leertaste | Am offenen Heck von Transporter/Pickup hochklettern; auf der Ladefläche heruntersteigen |
-| T | Funkgerät öffnen / schließen; Streife für festgenommene Person anfordern |
+| T | Funkgerät öffnen / schließen; Feuerwehr, Sanitäter und Verstärkung anfordern |
 | I | Eigenes Inventar in der Ego-Ansicht öffnen; Esc schließt |
 | Linksklick auf Auto | In der Übersicht auswählen; hält das Fahrzeug noch nicht an |
 | Zur Kontrolle anhalten | Ausgewähltes Fahrzeug ausdrücklich in die freie Bucht holen |
@@ -269,6 +269,8 @@ Prüft Pickup und Transporter, geschlossene/blockierte Einstiege, Hochklettern, 
 
 ## Weiterfahren, Spielerfigur und Streifenabholung
 
+**Hinweis für `feature/policeWalkieTalkie`:** Die folgende Abholung beschreibt das vorhandene interne Streifensystem. Die frühere Abholanforderung ist hier durch die neue Einsatzwahl ersetzt. Deren Besatzungen laufen bislang nur umher; sie übernehmen keine Gefangenen.
+
 Beim ausgestiegenen Fahrer stehen **Einsteigen lassen** (Auto bleibt stehen) und **Weiterfahren lassen** (Einsteigen und anschließende Abfahrt) getrennt zur Verfügung. Offene manuelle Klappen müssen vor der Freigabe geschlossen sein. Der Spieler besitzt jetzt eine sichtbare Polizistenfigur in der Vogelperspektive.
 
 1. Fahrer aussteigen lassen und im Personenmenü **Festnehmen** wählen. Solange keine Abholung angefordert ist, lässt sich die Festnahme wieder aufheben.
@@ -478,3 +480,28 @@ Die Glock und NPC-Pistolen durchschlagen intaktes und angerissenes Fahrzeugglas.
 Bei NPCs reduziert Glas den lokalen Kraftverlust statt eines separaten Lebenspunktewerts: Ein normaler Körpertreffer verursacht weiterhin 95 % Verlust, hinter einer Scheibe 76 %. **Kopfschüsse bleiben auch durch Glas tödlich.** Der Trefferimpuls wird auch beim Kopf abgeschwächt. Spieler erhalten hinter einer Scheibe 20 statt 25 Schaden durch NPC-Schüsse. Der Faktor ist zentral in `game/weapons/projectile_trace.gd` definiert.
 
 `tests/weapons/glass_penetration_test.gd` prüft alle vier Fahrzeuge, reduzierte Rumpftreffer durch intaktes Glas, tödliche Kopftreffer durch angerissenes und zerstörtes Glas, mehrere Scheiben, einmalige Beschädigung je Scheibe, feste Deckung sowie reduzierte NPC-Treffer am Spieler. Reine Sicht-/Zielabfragen bleiben unverändernde Abfragen; nur abgegebene Schüsse beschädigen und durchdringen Glas.
+
+
+## Funkgerät und Einsatzanforderungen
+
+![Funkgerät mit grüner LCD-Einsatzwahl](docs/images/walkie_talkie.png)
+
+**T** öffnet das Walkie-Talkie; **T oder Esc** schließt es. Die Welt läuft weiter, während Bewegung und Blick für die Bedienung gesperrt sind. Das LCD hat drei Icon-Schaltflächen; der separate „Polizei“-Knopf ist entfernt. Die Zahlen an den Knöpfen zeigen verbleibende Anforderungen.
+
+| Anforderung | Limit pro laufender Hauptspiel-Sitzung | Fahrzeug und Besatzung |
+| --- | --- | --- |
+| Feuerwehr | 1 | Großes rotes Fahrzeug mit Dachleiter, vier Feuerwehrleuten: drei vorne, einer hinten |
+| Sanitäter | 1 | Krankenwagen mit hinterem Ladebereich, sichtbarer Trage und zwei Sanitätern |
+| Verstärkung | 2 | Je ein zusätzlicher Polizeiwagen mit zwei Kollegen |
+
+Eine gültige Anforderung verbraucht ihr Kontingent sofort; schnelle Mehrfachklicks umgehen das Limit nicht. Nach **zehn Simulationssekunden** spawnt die Einheit auf einer separaten Anfahrspur neben der Straße. Ist der Einstieg noch belegt, wartet die nächste Anforderung kurz, ohne überlappende Fahrzeuge zu erzeugen. Die Anfahrt zu ihrem eigenen Stellplatz dauert zusätzlich. Ausgeschöpfte Knöpfe sind gesperrt. Eine neue Hauptspiel-Sitzung setzt das Kontingent zurück; Speichern und Wiederauffüllen sind noch nicht enthalten.
+
+Alle Einheiten besitzen wechselndes **Blaulicht**, auch im Stand. Nach dem Einparken steigen die Besatzungen innerhalb ungefähr **0,9 Sekunden** aus und laufen mit einfachen begrenzten Wegpunkten neben ihren Fahrzeugen umher. Der Krankenwagen öffnet seine hinteren Türen und zeigt die Trage. Es gibt noch **keine Behandlung, Brandbekämpfung, Gefangenenabholung, Kampfunterstützung oder allgemeine Navigations-KI** für diese Einheiten.
+
+Im HUD steht eine kurze Steuerungshilfe für Bewegung, Perspektive, Inventar, Funk, Interaktionen und Waffen. Der separate Konfrontationstest zeigt seine abweichenden Tasten (F zum Nachladen, R für Szenenreset) korrekt an.
+
+Die Anzeige liegt unter `game/police/walkie_talkie_view.gd`. `emergency_dispatch.gd` verwaltet Kontingente und Spawnwarteschlange, `emergency_vehicle.gd` die Fahrzeuge/Besatzungen und `blue_beacons.gd` das Blaulicht. Das alte Streifen-Abholbackend bleibt separat erhalten.
+
+![Angeforderte Einsatzfahrzeuge und Besatzungen](docs/images/emergency_units.png)
+
+Prüfung: `tests/police/emergency_dispatch_test.gd` kontrolliert beide Limits, verzögerten/entzerrten Spawn, vier Fahrzeuge mit insgesamt zehn Einsatzkräften, Sitzverteilung, Trage, Blaulicht, schnelles Aussteigen und Bewegung. Funkgerät-, Streifen-, Fahrer-, Verkehrs- und Konfrontationsprüfungen bestehen weiterhin. Grafische Prüfung unter Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu testen.
