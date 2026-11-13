@@ -94,7 +94,7 @@ Die Fahrer sind fest definiert. Dieselbe Figur erscheint nicht gleichzeitig in m
 ## Automatischer Ablauf-Test
 
 ```sh
-godot --headless --path . --script res://tests/fundamentals_test.gd
+godot --headless --path . --script res://tests/traffic/fundamentals_test.gd
 ```
 
 Unter Windows gegebenenfalls den vollständigen Pfad zur Godot-Konsolen-EXE verwenden. Der Test prüft unter anderem Einparken, Kollision, Abfahrt, verpasste Einfahrt und Wiederholung; Mausinteraktion braucht zusätzlich einen grafischen Test.
@@ -102,7 +102,7 @@ Unter Windows gegebenenfalls den vollständigen Pfad zur Godot-Konsolen-EXE verw
 Zusätzlicher Verkehrstest:
 
 ```sh
-godot --headless --path . --script res://tests/traffic_test.gd
+godot --headless --path . --script res://tests/traffic/traffic_test.gd
 ```
 
 Er simuliert mehrere Minuten Verkehr ohne Anhalteauftrag sowie Kontrollen aller vier Modelle bei unterschiedlichen Verkehrsphasen. Er prüft Nachschub, feste Identitäten, Auswahl ohne Anhalten, Abstände, die Reservierung der Bucht und das Wiedereinfädeln.
@@ -110,14 +110,14 @@ Er simuliert mehrere Minuten Verkehr ohne Anhalteauftrag sowie Kontrollen aller 
 Grafischer Interaktionstest (benötigt ein Fenster/Display):
 
 ```sh
-godot --path . --script res://tests/fundamentals_interaction_test.gd
+godot --path . --script res://tests/world/fundamentals_interaction_test.gd
 ```
 
 Er prüft die Fahrzeugauswahl per Physikstrahl, Kamerawechsel und die Freigabe über das Menü samt Blick- und Seitenprüfung. Vorschau-Screenshots werden im Godot-Benutzerdatenordner (`user://`) gespeichert. Zusätzliche Tests für Schritt 3:
 
 ```sh
-godot --headless --path . --script res://tests/driver_test.gd
-godot --path . --script res://tests/driver_menu_test.gd
+godot --headless --path . --script res://tests/actors/driver_test.gd
+godot --path . --script res://tests/actors/driver_menu_test.gd
 ```
 
 Der erste prüft bei allen vier Modellen Aus-/Einsteigen, Türbewegung, belegte Wege ohne Abbruch oder Pause, Fahrerkollision und Abfahrtsbedingungen. Der zweite benötigt ein Display und prüft den vollständigen Menüablauf einschließlich Mausrad in beide Richtungen, Esc, pausiertem Mausblick und unverändertem Übersichtszoom.
@@ -127,14 +127,14 @@ Tests unter Linux mit Godot 4.6.3; die neue Funktion ist unter Windows/4.7.2 noc
 Test für die frühzeitige Stellplatzfreigabe:
 
 ```sh
-godot --headless --path . --script res://tests/parking_reservation_test.gd
+godot --headless --path . --script res://tests/traffic/parking_reservation_test.gd
 ```
 
 Prüft alle vier Fahrzeuglängen: keine Freigabe bei überstehendem Heck, sofortige nächste Kontrolle nach Räumen des Stellplatzes und unabhängiges Entfernen des vorherigen Autos.
 
 ## Geschwindigkeiten und Maßstab
 
-1 Godot-Einheit entspricht 1 Meter. Bewegungen verwenden Meter pro Sekunde; die zentralen Werte in `scripts/speed_settings.gd` sind in km/h angegeben und werden durch 3,6 geteilt.
+1 Godot-Einheit entspricht 1 Meter. Bewegungen verwenden Meter pro Sekunde; die zentralen Werte in `game/config/speed_settings.gd` sind in km/h angegeben und werden durch 3,6 geteilt.
 
 | Bewegung | km/h | m/s |
 | --- | --- | --- |
@@ -161,7 +161,7 @@ Am kontrollierten, geparkten Fahrzeug in die Ego-Ansicht wechseln. Mit dem Faden
 Grafischer Test:
 
 ```sh
-godot --path . --script res://tests/vehicle_parts_test.gd
+godot --path . --script res://tests/vehicles/vehicle_parts_test.gd
 ```
 
 Prüft Auswahl/Markierung mit dem Fadenkreuz, E-Hinweise, beide Türen und Kofferraum, Öffnen/Schließen, Reichweite, Verdeckung durch eine Wand, das Fahrer-Menü, die Übergabe an die Fahreranimation und die Abfahrtsbedingungen.
@@ -169,7 +169,7 @@ Prüft Auswahl/Markierung mit dem Fadenkreuz, E-Hinweise, beide Türen und Koffe
 Grafischer Test für alle Modelle:
 
 ```sh
-godot --path . --script res://tests/all_vehicle_parts_test.gd
+godot --path . --script res://tests/vehicles/all_vehicle_parts_test.gd
 ```
 
 Prüft jedes bedienbare Teil an allen vier Modellen: Fadenkreuz-Markierung, benannter E-Hinweis, Öffnen, erneutes Anvisieren zum Schließen und die gesperrte Abfahrt bei offenen Teilen. Für die Ladetüren des Transporters jeweils den linken oder rechten Flügel ansehen.
@@ -191,8 +191,8 @@ Inventare bleiben innerhalb der laufenden Spielsitzung bestehen – auch bei ein
 Tests:
 
 ```sh
-godot --headless --path . --script res://tests/inventory_test.gd
-godot --path . --script res://tests/search_interaction_test.gd
+godot --headless --path . --script res://tests/inventory/inventory_test.gd
+godot --path . --script res://tests/inventory/search_interaction_test.gd
 ```
 
 Der grafische Test prüft den gesamten Menü-/Suchablauf, erst danach sichtbare Items, Anklicken ohne Wegnehmen, Übernehmen und Zurückgeben, gesperrte Bewegung und Mausblick bei weiterlaufendem Verkehr sowie Esc, Abbruch und das eigene Inventar.
@@ -219,8 +219,8 @@ Ein gemeinsames Ladeinventar pro Fahrzeug mit neun Plätzen, keine einzeln durch
 Tests:
 
 ```sh
-godot --headless --path . --script res://tests/cargo_test.gd
-godot --path . --script res://tests/cargo_interaction_test.gd
+godot --headless --path . --script res://tests/inspection/cargo_test.gd
+godot --path . --script res://tests/inspection/cargo_interaction_test.gd
 ```
 
 Der grafische Test durchläuft alle vier Modelle, einschließlich einer einzelnen geöffneten Transportertür, Fadenkreuz-Auswahl, verzögerter Ansicht, sitzendem Fahrer, Entnehmen/Zurücklegen, leerem Laderaum und Abbruch. Der Datentest prüft getrennte Inventare, korrektes Zurücklegen und erhaltene leere Fahrzeug-Inventare bei erneuter Durchfahrt.
@@ -237,14 +237,14 @@ Ein Gegenstandsklick zeigt im mittleren Inventarbereich ein einfaches echtes 3D-
 
 Neun einfache Modellkategorien decken die bisherigen NPC-, Spieler- und Fahrzeuggegenstände ab. Die Vorschau hat eine eigene 3D-Welt mit Kamera und Licht; Drehen verändert weder die Spielkamera noch das Inventar.
 
-Zeiten stehen zentral in `scripts/interaction_timings.gd`: Aus-/Einsteigen 3,6 s, Person durchsuchen 3,2 s, Fahrzeug durchsuchen 3 s. Auch die manuellen Scharnierbewegungen sind etwas langsamer. Nur während Personen- und Fahrzeugdurchsuchungen ersetzt ein kleiner Fortschrittsbalken das Fadenkreuz. Aus-/Einsteigen und Klettern zeigen keinen Ladebalken. Nach Abschluss oder Abbruch erscheint das normale Fadenkreuz wieder.
+Zeiten stehen zentral in `game/config/interaction_timings.gd`: Aus-/Einsteigen 3,6 s, Person durchsuchen 3,2 s, Fahrzeug durchsuchen 3 s. Auch die manuellen Scharnierbewegungen sind etwas langsamer. Nur während Personen- und Fahrzeugdurchsuchungen ersetzt ein kleiner Fortschrittsbalken das Fadenkreuz. Aus-/Einsteigen und Klettern zeigen keinen Ladebalken. Nach Abschluss oder Abbruch erscheint das normale Fadenkreuz wieder.
 
 Einfahren ist auf 14,4 km/h erhöht, Ausfahren bleibt bei 9 km/h. Straßenverkehr und Spielerwerte sind unverändert.
 
 Grafischer Test:
 
 ```sh
-godot --path . --script res://tests/item_inspection_test.gd
+godot --path . --script res://tests/inventory/item_inspection_test.gd
 ```
 
 Prüft alle 13 Modellkategorien, Ziehen, Zoom, Zurücksetzen, Papier-Vorder-/Rückseite, entfernte Besitzerzeile und unveränderte Inventarinhalte. Der bestehende grafische Suchtest prüft zusätzlich den Fortschrittsbalken.
@@ -260,7 +260,7 @@ Boden, Wände und Dach besitzen passende Kollisionen statt eines den ganzen Lade
 Grafischer Test:
 
 ```sh
-godot --path . --script res://tests/climbing_test.gd
+godot --path . --script res://tests/player/climbing_test.gd
 ```
 
 Prüft Pickup und Transporter, geschlossene/blockierte Einstiege, Hochklettern, Bewegung auf dem Boden, automatisch angepasste Höhe, Heruntersteigen, Suchinteraktion von innen und Ladebalken ausschließlich bei Durchsuchungen.
@@ -276,7 +276,7 @@ Beim ausgestiegenen Fahrer stehen **Einsteigen lassen** (Auto bleibt stehen) und
 
 Die Person kehrt während dieser Sitzung nicht in den Verkehr zurück. Das zurückgelassene Fahrzeug wird nach dem Transport vorläufig entfernt und der Kontrollplatz freigegeben. Abschleppen, rechtliche Festnahmeprüfung und dauerhafte Speicherung sind noch nicht umgesetzt. Die Abholung nutzt feste Wege für diesen Kontrollplatz; sie ist kein allgemeines Navigationssystem. Das Funkgerät besitzt auch eine drehbare Inventarvorschau.
 
-Neue Ablaufprüfungen: `tests/departure_test.gd`, `tests/patrol_test.gd` (alle vier Fahrer) und `tests/police_interaction_test.gd` (grafische Bedienung und Abholung). Geprüft unter Linux/Godot 4.6.3; Windows/Godot 4.7.2 benötigt einen Praxistest.
+Neue Ablaufprüfungen: `tests/vehicles/departure_test.gd`, `tests/police/patrol_test.gd` (alle vier Fahrer) und `tests/police/police_interaction_test.gd` (grafische Bedienung und Abholung). Geprüft unter Linux/Godot 4.6.3; Windows/Godot 4.7.2 benötigt einen Praxistest.
 
 ## Dokumente ansehen
 
@@ -284,7 +284,7 @@ Am Fahrerfenster oder beim ausgestiegenen Fahrer mit E das Menü öffnen und **D
 
 Alle vier Fahrer besitzen feste Namen, Geburtsdaten, Führerscheinnummern und Gültigkeitsangaben. Fahrzeugpapiere zeigen Kennzeichen, Halter, Typ, Farbe und Erstzulassung. Eriks Transporter gehört seiner Firma; ein abweichender Halter ist kein automatisch bewerteter Verstoß. Das Lichtbild ist vorläufig passend zum gemeinsamen Fahrer-Platzhalter gestaltet. Noch kein Vergleichsmodus, keine absichtlichen Dokumentenfehler und keine Dokumentendialoge.
 
-Grafischer Test: `tests/documents_test.gd` mit Godot 4.6.3 unter Linux; prüft alle vier Paare, Menüzugang innen/außen, Zuordnung, Kartenpositionen und Rückkehr zur Steuerung.
+Grafischer Test: `tests/documents/documents_test.gd` mit Godot 4.6.3 unter Linux; prüft alle vier Paare, Menüzugang innen/außen, Zuordnung, Kartenpositionen und Rückkehr zur Steuerung.
 
 ### Dokumentenprüfung in Zeitlupe
 
@@ -302,7 +302,7 @@ Der Spieler trägt beide Waffen als echte Gegenstände im Inventar (I). In der E
 
 Inventar, Funk, Dokumentenprüfung, Klettern und Perspektivwechsel beenden die Waffenhaltung. Beim Griff/Zielen sind E-Interaktionen gesperrt. Das Mausrad bedient in Menüs weiterhin die Menüauswahl und in der Vogelperspektive den Zoom. Die Glock unterstützt Einzelschüsse und Magazinwechsel (siehe unten). Der Taser bleibt ohne Wirkung; die Glock kann NPCs zur Aufgabe zwingen (siehe unten). Die Glock 19 ist ein eigener vereinfachter Low-Poly-Nachbau, kein importiertes Detailmodell. Beide Waffen lassen sich in der Inventaransicht in 3D drehen.
 
-Geprüft unter Linux/Godot 4.6.3: `tests/equipment_test.gd`, Inventartransfers und 3D-Gegenstandsvorschau. Windows/Godot 4.7.2 bitte praktisch testen.
+Geprüft unter Linux/Godot 4.6.3: `tests/player/equipment_test.gd`, Inventartransfers und 3D-Gegenstandsvorschau. Windows/Godot 4.7.2 bitte praktisch testen.
 
 ## Schießen und Magazinwechsel testen
 
@@ -316,7 +316,7 @@ Beim Nachladen wird das Ersatzmagazin mit der meisten Munition gewählt. Es muss
 
 **R setzt den Spieler nicht mehr zurück.** Die Glock verursacht Fahrzeugschäden und regionale NPC-Verletzungen (siehe unten); der Taser bleibt ohne Wirkung. Das Erzwingen der Aufgabe durch Zielen ist separat beschrieben. Es gibt noch keine lose Munition, Magazinbefüllung oder separate Patrone im Patronenlager. Welt-Treffer werden nur für temporäre Effekte ermittelt. Ton und Modelle sind einfache eigene Platzhalter.
 
-Geprüft mit Godot 4.6.3 unter Linux: `tests/shooting_test.gd` (Schüsse, leeres Magazin, Nachladezeit, Teilladungen, Abbruch und Munitionserhaltung), Inventar-/Bedienungstests und 13 Kategorien in der 3D-Vorschau. Windows/Godot 4.7.2 bitte testen.
+Geprüft mit Godot 4.6.3 unter Linux: `tests/weapons/shooting_test.gd` (Schüsse, leeres Magazin, Nachladezeit, Teilladungen, Abbruch und Munitionserhaltung), Inventar-/Bedienungstests und 13 Kategorien in der 3D-Vorschau. Windows/Godot 4.7.2 bitte testen.
 
 ## NPCs mit der Glock zur Aufgabe zwingen
 
@@ -328,7 +328,7 @@ Die Aufgabe bleibt beim Senken der Waffe bestehen. Aus der Nähe (etwa zwei Mete
 
 Die Streife kann bei einer blockierten Fahrbahn seitlich anfahren; ihre Abholwege berücksichtigen den tatsächlichen Standort des Verhafteten. Es bleibt ein einfacher Ablauf für diesen Kontrollplatz, kein allgemeines Verkehrs- oder Navigationssystem. Die groben Fahrzeugkollisionen schließen die transparenten Kabinen ein; deshalb wird das anvisierte Fahrzeug bei der Sichtprüfung ausgenommen. Andere Fahrzeuge und feste Hindernisse blockieren die Erkennung.
 
-Geprüft: `tests/compliance_test.gd` grafisch für alle vier Modelle, Aufgabe außerhalb des Autos, Glock/Taser-Abgrenzung, blockierte Sicht, Bremsen vor Aussteigen, Hände oben, direkte Handschellen und Folgeaktionen. `tests/patrol_test.gd` prüft zusätzlich die Straßenabholung bei weiterhin belegter Kontrollbucht. Linux/Godot 4.6.3; Windows/Godot 4.7.2 bitte testen.
+Geprüft: `tests/actors/compliance_test.gd` grafisch für alle vier Modelle, Aufgabe außerhalb des Autos, Glock/Taser-Abgrenzung, blockierte Sicht, Bremsen vor Aussteigen, Hände oben, direkte Handschellen und Folgeaktionen. `tests/police/patrol_test.gd` prüft zusätzlich die Straßenabholung bei weiterhin belegter Kontrollbucht. Linux/Godot 4.6.3; Windows/Godot 4.7.2 bitte testen.
 
 ## Interaktive Werkzeugkoffer · erste Testversion
 
@@ -347,7 +347,7 @@ Verschluss, Deckel und Inhalt bleiben innerhalb der Sitzung erhalten – auch be
 
 Es ist zunächst ein einfacher Behältertyp, noch kein allgemeines System verschachtelter Inventare. Kein Farbeimer, keine Drogenanalyse oder neue Dialoge. Die Kofferöffnung wird in der Untersuchungsansicht dargestellt; der kleine Beladungsplatzhalter im Fahrzeug bleibt vereinfacht.
 
-Prüfung unter Linux/Godot 4.6.3: `tests/toolbox_test.gd` für echtes 3D-Anklicken von Verschluss/Deckel/Inhalt, Funddarstellung, Entnahme/Rückgabe, volle Inventare, Mitnehmen und Wiederkehr. Die gemeinsame 3D-Vorschau umfasst jetzt 15 Modellkategorien. Windows/Godot 4.7.2 bitte testen.
+Prüfung unter Linux/Godot 4.6.3: `tests/inspection/toolbox_test.gd` für echtes 3D-Anklicken von Verschluss/Deckel/Inhalt, Funddarstellung, Entnahme/Rückgabe, volle Inventare, Mitnehmen und Wiederkehr. Die gemeinsame 3D-Vorschau umfasst jetzt 15 Modellkategorien. Windows/Godot 4.7.2 bitte testen.
 
 ## Fahrzeugtreffer · Schritt 1
 
@@ -357,7 +357,7 @@ Bedienung unverändert: Glock wählen, mit Shift greifen, mit Rechtsklick ziehen
 
 Technik: eigener Schuss-Layer 16 und geometrienahe Trefferkörper statt der groben Kabinen-/Bewegungskollision. Intaktes oder angerissenes Glas lässt Schüsse mit reduzierter Wirkung passieren und wird dabei beschädigt; zerstörte Scheiben schwächen nicht weiter ab. Texturierte, an der Flächennormalen ausgerichtete Mesh-Flächen funktionieren mit dem GL-Compatibility-Renderer. Karosserietreffer bleiben rein optisch. Die folgenden Scheiben-/Reifenschäden bauen auf diesen Trefferflächen auf; Regionale NPC-Verletzungen sind auf `feature/bodPhysics` ergänzt (siehe unten).
 
-Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Modelle, Karosserie/Glas/Reifen/Dach, echte Glock-Schüsse, Wände, bewegte Fahrzeuge/Türen und begrenzte Markierungen. Bestehende Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bitte testen.
+Prüfung: `tests/vehicles/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Modelle, Karosserie/Glas/Reifen/Dach, echte Glock-Schüsse, Wände, bewegte Fahrzeuge/Türen und begrenzte Markierungen. Bestehende Verkehrs-, Fahrer-, Stellplatz- und Inventartests bestanden. Windows/Godot 4.7.2 bitte testen.
 
 ## Scheiben- und Reifenschäden · Schritt 2
 
@@ -367,7 +367,7 @@ Prüfung: `tests/vehicle_hits_test.gd` unter Godot 4.6.3/Linux für alle vier Mo
 
 Fahrer können sich nach wie vor ergeben, aussteigen und nach Aufheben der Festnahme wieder einsteigen/weiterfahren. Noch keine Unfälle, Schleudern, Reparatur oder neue Fahrzeugphysik. NPC-Verletzungen sind auf `feature/bodPhysics` ergänzt. Die abgesenkte Stellung ist eine einfache Darstellung auf der ebenen Teststrecke. Scheibenreste/Splitter und Töne sind einfache Platzhalter.
 
-Schäden bleiben am aktuellen Fahrzeug bestehen, werden aber bei einer späteren neu erzeugten Durchfahrt oder nach Spielneustart noch nicht wiederhergestellt. Prüfung unter Linux/Godot 4.6.3: `tests/vehicle_damage_test.gd` für alle vier Modelle, echte Schüsse auf die Scheibe, Risse/Bruch/freie Öffnung, vier einzelne Reifen, Felgen, Mehrfachtreffer, Tempolimits, Aufgabe und beschädigte Abfahrt. Windows/Godot 4.7.2 bitte testen.
+Schäden bleiben am aktuellen Fahrzeug bestehen, werden aber bei einer späteren neu erzeugten Durchfahrt oder nach Spielneustart noch nicht wiederhergestellt. Prüfung unter Linux/Godot 4.6.3: `tests/vehicles/vehicle_damage_test.gd` für alle vier Modelle, echte Schüsse auf die Scheibe, Risse/Bruch/freie Öffnung, vier einzelne Reifen, Felgen, Mehrfachtreffer, Tempolimits, Aufgabe und beschädigte Abfahrt. Windows/Godot 4.7.2 bitte testen.
 
 ## Direkte Fahrzeugdurchsuchung · feature/extendedVehicleSearch
 
@@ -393,11 +393,11 @@ Die Welt läuft weiter; Blick und Bewegung sind während der Ansicht gesperrt. W
 
 Für tiefer liegende Ladung kannst du auf Pickup und Transporter klettern. Beim Transporter empfiehlt es sich, beide Hecktüren zu öffnen; der Einstieg nutzt die freie rechte Seite neben dem Regal. Gegenstände, Regal und andere Weltobjekte können die Sicht versperren – die Perspektive muss deshalb gegebenenfalls geändert werden.
 
-Prüfung unter Godot 4.6.3/Linux: `tests/extended_search_test.gd` (reale Weltziele, geschlossener Zugang, Wandblockade, einzelne Inventaransicht, Behälterschritte, sichtbares und anklickbares Päckchen, Rückgabe und Zustände), `tests/climbing_test.gd`, Werkzeugkoffer-/Inventar-/Verkehrstests sowie die gemeinsame Vorschau mit 18 Modellkategorien. Windows/Godot 4.7.2 bitte praktisch testen.
+Prüfung unter Godot 4.6.3/Linux: `tests/inspection/extended_search_test.gd` (reale Weltziele, geschlossener Zugang, Wandblockade, einzelne Inventaransicht, Behälterschritte, sichtbares und anklickbares Päckchen, Rückgabe und Zustände), `tests/player/climbing_test.gd`, Werkzeugkoffer-/Inventar-/Verkehrstests sowie die gemeinsame Vorschau mit 18 Modellkategorien. Windows/Godot 4.7.2 bitte praktisch testen.
 
 ## Körperphysik-Testlabor · feature/bodPhysics
 
-**F9 im Spiel** öffnet das Labor. Alternativ `scenes/body_lab/body_lab.tscn` im Editor öffnen und mit F6 starten. Links steht ein Körper, rechts bewegt sich ein gleich aufgebauter Körper auf einer kurzen Strecke.
+**F9 im Spiel** öffnet das Labor. Alternativ `prototypes/body_physics/body_lab.tscn` im Editor öffnen und mit F6 starten. Links steht ein Körper, rechts bewegt sich ein gleich aufgebauter Körper auf einer kurzen Strecke.
 
 | Eingabe | Funktion |
 | --- | --- |
@@ -420,7 +420,7 @@ Schwere Rumpf-, Becken- oder Kopftreffer (höchstens 25 % regionale Restkraft) s
 
 **Prototyp-Grenzen:** Die Unterstützung und Gehziele sind vereinfachte prozedurale Regelungen, keine medizinisch genaue Biomechanik oder fertig abgestimmte menschliche Bewegung. Kein Blutungs-, Schmerz-, Heilungs- oder Aufstehsystem. Das Labor nutzt Impulstreffer statt einer Waffen-/Ballistiksimulation. Die Verkehrs-NPCs übernehmen beim ersten Glock-Treffer diesen Physikkörper (siehe unten). Ein Szenenwechsel ins Labor und zurück erhält den laufenden Kontrollfortschritt nicht; F9 zurück startet eine neue Spielsitzung.
 
-Prüfung mit Godot 4.6.3 unter Linux: `tests/body_physics_test.gd` simuliert echte Physikschritte, stabile unverletzte Körper, Bewegung mit Richtungswechsel, regionalen Kraftverlust, den Stand-/Bewegungsvergleich, Arm-/Beinabgrenzung, Zurücksetzen und begrenzte endliche Positionen. `tests/body_lab_entry_test.gd` prüft F9, Wiederherstellung der Zeit nach Dokumentenprüfung und die Rückkehr zum Spiel. Screenshots vor und nach Treffern geprüft. Windows/Godot 4.7.2 bitte testen; Physik-Backend und Solver können das Ergebnis beeinflussen.
+Prüfung mit Godot 4.6.3 unter Linux: `tests/actors/body_physics_test.gd` simuliert echte Physikschritte, stabile unverletzte Körper, Bewegung mit Richtungswechsel, regionalen Kraftverlust, den Stand-/Bewegungsvergleich, Arm-/Beinabgrenzung, Zurücksetzen und begrenzte endliche Positionen. `tests/prototypes/body_lab_entry_test.gd` prüft F9, Wiederherstellung der Zeit nach Dokumentenprüfung und die Rückkehr zum Spiel. Screenshots vor und nach Treffern geprüft. Windows/Godot 4.7.2 bitte testen; Physik-Backend und Solver können das Ergebnis beeinflussen.
 
 Der Impuls ist kein Kraftwert: **3 N·s** entsprechen beispielsweise einer mittleren Kraft von **300 N über 0,01 s** oder **30 N über 0,1 s** (`Impuls = mittlere Kraft × Einwirkdauer`). Das ist eine Einheitenzuordnung für die Meter-/Kilogramm-Simulation, keine Kalibrierung einer realen Schusswirkung. Die 95 % beziehen sich auf die virtuelle lokale Muskelregelung.
 
@@ -435,12 +435,12 @@ Karosserie stoppt Schüsse weiterhin; Scheiben lassen sie mit reduzierter Wirkun
 
 **Aktueller Umfang:** Nach einer Verletzung sind normale Gesprächs-, Durchsuchungs-, Einsteige- und Abtransportabläufe für diese Person gesperrt, auch bei einer isolierten Gliedmaßenverletzung. Ein laufender Abtransport wird bei verletztem Verdächtigen oder Beamten abgebrochen. Medizinische Hilfe, Wiederaufstehen, Leichendurchsuchung und Fortschrittsspeicherung fehlen noch. Kabinenstützen sind eine vereinfachte Kollisionshilfe; das Fahrzeug ist weiterhin kein dynamisches Unfallmodell. Selbstkollisionen der Figur bleiben deaktiviert.
 
-`tests/npc_physics_test.gd` prüft alle vier Fahrzeuge mit echten Strahlabfragen: regionale Treffer, Übergabe ohne Positionssprung, Folgetreffer auf den dynamischen Kopf, Zusammenbruch, fallende erhobene Arme, Scheibenabdeckung, sitzende Verletzte, Abbremsen und Aufräumen beim Reset. Im grafischen Modus benutzt der Test `fire()` inklusive Munition; im Headless-Modus wird wegen fehlender Mausaufnahme nur der gleiche Trefferpfad `cast_shot()` aufgerufen. Bestehende Waffen-, Fahrzeugschaden-, Aufgabe-, Fahrer-, Verkehrs- und Streifentests prüfen die unverletzten Abläufe weiter.
+`tests/actors/npc_physics_test.gd` prüft alle vier Fahrzeuge mit echten Strahlabfragen: regionale Treffer, Übergabe ohne Positionssprung, Folgetreffer auf den dynamischen Kopf, Zusammenbruch, fallende erhobene Arme, Scheibenabdeckung, sitzende Verletzte, Abbremsen und Aufräumen beim Reset. Im grafischen Modus benutzt der Test `fire()` inklusive Munition; im Headless-Modus wird wegen fehlender Mausaufnahme nur der gleiche Trefferpfad `cast_shot()` aufgerufen. Bestehende Waffen-, Fahrzeugschaden-, Aufgabe-, Fahrer-, Verkehrs- und Streifentests prüfen die unverletzten Abläufe weiter.
 
 
 ## Bewaffneter NPC – Ego-Testszene
 
-Im Hauptspiel öffnet **F10** die separate Szene `scenes/combat_test/combat_test.tscn` (alternativ in Godot öffnen und F6 drücken). Sie beginnt aus der Ego-Perspektive mit **einem geparkten Auto, einem sitzenden Testfahrer und dem Spieler**. Kein nachspawnender Verkehr. Die Aggression ist hier ein festes Testszenario und keine neue Eigenschaft der normalen Verkehrs-NPCs.
+Im Hauptspiel öffnet **F10** die separate Szene `prototypes/combat/combat_test.tscn` (alternativ in Godot öffnen und F6 drücken). Sie beginnt aus der Ego-Perspektive mit **einem geparkten Auto, einem sitzenden Testfahrer und dem Spieler**. Kein nachspawnender Verkehr. Die Aggression ist hier ein festes Testszenario und keine neue Eigenschaft der normalen Verkehrs-NPCs.
 
 1. **E** am Fenster fordert den Fahrer zum Aussteigen auf.
 2. Nach dem Aussteigen wartet er kurz und greift sichtbar zur Pistole an seiner Hüfte. Ober-/Unterarm und Waffe bewegen sich prozedural; die Pistole wechselt vom Holster zur Hand.
@@ -455,7 +455,7 @@ Der Spieler startet mit **100 Gesundheit**. Ein NPC-Treffer verursacht **25 Scha
 
 Spätere Begegnungen sollen anhand vorgefertigter Charaktere, ihrer Reaktion auf die Kontrolle und des Gesprächsverlaufs entscheiden, ob sie überhaupt zur Waffe greifen. Ein Wut-/Dialogsystem ist noch nicht implementiert. Die Testfigur greift reproduzierbar nach dem Aussteigen zur Waffe, damit Reaktionsfenster, Ziehbewegung und Trefferverhalten abgestimmt werden können.
 
-Prüfung: `tests/combat_test.gd` testet Ego-Start, Aussteigen, Zeitlupenfenster, Aufgabe durch Zielen, NPC-Schüsse, Deckung, Spielertod, Arm-/Handregion, fallende Waffe und vollständigen R-Reset auch während der Zeitlupe. Globales Zeittempo wird beim Reset und Verlassen wiederhergestellt. Zusätzlich wurden bisherige Körperphysik-, Fahrer- und Streifenabläufe geprüft. Linux/Godot 4.6.3; Windows bitte vor Ort testen.
+Prüfung: `tests/prototypes/combat_test.gd` testet Ego-Start, Aussteigen, Zeitlupenfenster, Aufgabe durch Zielen, NPC-Schüsse, Deckung, Spielertod, Arm-/Handregion, fallende Waffe und vollständigen R-Reset auch während der Zeitlupe. Globales Zeittempo wird beim Reset und Verlassen wiederhergestellt. Zusätzlich wurden bisherige Körperphysik-, Fahrer- und Streifenabläufe geprüft. Linux/Godot 4.6.3; Windows bitte vor Ort testen.
 
 
 ## Sitzende NPCs: Verletzung, Ausrollen und Herausfallen
@@ -466,13 +466,13 @@ Sitzende Treffer aktivieren den gegliederten Physikkörper in der tatsächlichen
 
 Einmal pro sitzendem Todesfall entscheidet eine **35-%-Chance**, ob der Körper herausfällt (`driver.corpse_exit_chance`, 0 bis 1). Weitere Treffer würfeln nicht erneut. Erst nach dem Stillstand öffnet die Fahrertür; sobald die Öffnung groß genug ist, wird die Sitzstütze gelöst. Eine kurze seitliche Kraft hilft dem passiven Körper durch die vereinfachte Kabine. Schwerkraft und Gelenke führen den Fall auf die Straße aus, ohne Teleport oder vorgefertigte Aussteigeanimation. In den übrigen Fällen bleibt der Körper im Auto. Es gibt noch keine detaillierte Gurt-/Sitz- oder Innenraumkollision. Während des Herausfallens lässt sich die Tür nicht manuell schließen.
 
-`tests/seated_physics_test.gd` prüft alle vier Fahrzeugmodelle, Weiterfahren bei nicht tödlicher Verletzung, Mitführen des sitzenden Körpers, sanftes Ausrollen, geschlossene Tür während der Fahrt, beide Ausgangsfälle mit erzwungener 0-/100-%-Chance, Fall auf den Boden und vollständiges Zurücksetzen. Die Tests prüfen Geschwindigkeit und Position über echte Physikschritte. Der normale 35-%-Wert wird dafür nicht zufällig vorausgesetzt.
+`tests/actors/seated_physics_test.gd` prüft alle vier Fahrzeugmodelle, Weiterfahren bei nicht tödlicher Verletzung, Mitführen des sitzenden Körpers, sanftes Ausrollen, geschlossene Tür während der Fahrt, beide Ausgangsfälle mit erzwungener 0-/100-%-Chance, Fall auf den Boden und vollständiges Zurücksetzen. Die Tests prüfen Geschwindigkeit und Position über echte Physikschritte. Der normale 35-%-Wert wird dafür nicht zufällig vorausgesetzt.
 
 
 ## Schüsse durch Fahrzeugglas
 
 Die Glock und NPC-Pistolen durchschlagen intaktes und angerissenes Fahrzeugglas. Derselbe Schuss beschädigt die Scheibe und wird bis zum nächsten Hindernis weiterverfolgt. **Pro Scheibe bleiben 80 % Wirkung und Impuls erhalten**; zwei Scheiben ergeben 64 %. Eine zerstörte Scheibe verursacht keinen weiteren Abzug. Karosserie, Wände und andere feste Trefferflächen stoppen den Schuss weiterhin. Es gibt noch keine Ablenkung oder winkelabhängige Ballistik.
 
-Bei NPCs reduziert Glas den lokalen Kraftverlust statt eines separaten Lebenspunktewerts: Ein normaler Körpertreffer verursacht weiterhin 95 % Verlust, hinter einer Scheibe 76 %. **Kopfschüsse bleiben auch durch Glas tödlich.** Der Trefferimpuls wird auch beim Kopf abgeschwächt. Spieler erhalten hinter einer Scheibe 20 statt 25 Schaden durch NPC-Schüsse. Der Faktor ist zentral in `scripts/projectile_trace.gd` definiert.
+Bei NPCs reduziert Glas den lokalen Kraftverlust statt eines separaten Lebenspunktewerts: Ein normaler Körpertreffer verursacht weiterhin 95 % Verlust, hinter einer Scheibe 76 %. **Kopfschüsse bleiben auch durch Glas tödlich.** Der Trefferimpuls wird auch beim Kopf abgeschwächt. Spieler erhalten hinter einer Scheibe 20 statt 25 Schaden durch NPC-Schüsse. Der Faktor ist zentral in `game/weapons/projectile_trace.gd` definiert.
 
-`tests/glass_penetration_test.gd` prüft alle vier Fahrzeuge, reduzierte Rumpftreffer durch intaktes Glas, tödliche Kopftreffer durch angerissenes und zerstörtes Glas, mehrere Scheiben, einmalige Beschädigung je Scheibe, feste Deckung sowie reduzierte NPC-Treffer am Spieler. Reine Sicht-/Zielabfragen bleiben unverändernde Abfragen; nur abgegebene Schüsse beschädigen und durchdringen Glas.
+`tests/weapons/glass_penetration_test.gd` prüft alle vier Fahrzeuge, reduzierte Rumpftreffer durch intaktes Glas, tödliche Kopftreffer durch angerissenes und zerstörtes Glas, mehrere Scheiben, einmalige Beschädigung je Scheibe, feste Deckung sowie reduzierte NPC-Treffer am Spieler. Reine Sicht-/Zielabfragen bleiben unverändernde Abfragen; nur abgegebene Schüsse beschädigen und durchdringen Glas.

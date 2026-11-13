@@ -20,7 +20,7 @@ Gewählt wurden Godot 4, GDScript und ein einfacher Low-Poly-Stil. Blender ist f
 - Kollisionen am Boden und an ausgewählten Hindernissen.
 - Hinweise zur Steuerung und Rücksetzen der Spielerposition.
 
-Die Szene wird zur Laufzeit aus einfachen Meshes aufgebaut. Der Prototyp verwendet `project.godot`, `main.tscn` und `main.gd`.
+Die Szene wird zur Laufzeit aus einfachen Meshes aufgebaut. Der Prototyp verwendet `project.godot`, `game/world/main.tscn` und `game/world/main.gd`.
 
 ### Einrichtung und Fehlerbehebung
 
@@ -38,7 +38,7 @@ Fahrzeuge, Verkehr, Fahrer, Dokumentenprüfung, Durchsuchungen und Missionen.
 
 Das vom Nutzer angelegte öffentliche Repository `Hauskamel/traffic-society` enthält den hochgeladenen Godot-Stand und die deutsche Dokumentation. Der stabile Branch `main` und der Entwicklungsbranch `develop` beginnen am selben Commit.
 
-Übernommen wurden `project.godot`, `main.tscn`, `main.gd` und `main.gd.uid`. Die Spiellogik wurde nicht verändert. Git normalisiert Zeilenenden auf LF. Der generierte `.godot`-Cache bleibt lokal und wird ignoriert. README, Entwicklungsschritte und Git-Arbeitsablauf dokumentieren den aktuellen Stand; `.gitattributes` vereinheitlicht Textdateien.
+Übernommen wurden `project.godot`, `game/world/main.tscn`, `game/world/main.gd` und `game/world/main.gd.uid`. Die Spiellogik wurde nicht verändert. Git normalisiert Zeilenenden auf LF. Der generierte `.godot`-Cache bleibt lokal und wird ignoriert. README, Entwicklungsschritte und Git-Arbeitsablauf dokumentieren den aktuellen Stand; `.gitattributes` vereinheitlicht Textdateien.
 
 Der in Schritt 1 genannte lokale Starttest wurde vor dem ersten Commit durchgeführt. Neue Spielfunktionen wurden in diesem Schritt nicht umgesetzt.
 
@@ -52,7 +52,7 @@ Nach dem Auftrag fährt das Auto in die Parkbucht und bremst bis zum Stillstand.
 
 ### Technische Umsetzung
 
-- Eigenes Fahrzeugsystem in `scripts/traffic_car.gd`, über `main.gd` in die bestehende Szene eingebunden.
+- Eigenes Fahrzeugsystem in `game/vehicles/traffic_car.gd`, über `game/world/main.gd` in die bestehende Szene eingebunden.
 - Zustände: unterwegs, fährt in die Bucht, geparkt, fährt weg, Testfahrt beendet. Doppelte oder unpassende Aufträge werden zurückgewiesen.
 - Vorgegebene Kurvenrouten statt Verkehrssimulation oder Fahrzeugphysik. Langsames Fahren in der Bucht, Abbremsen vor dem Haltepunkt und Beschleunigen bei Abfahrt.
 - Einfaches selbst erstelltes Low-Poly-Auto mit Karosserie, Scheiben, Spiegeln, Kennzeichen, vier rollenden Rädern, vereinfachtem Lenken und Bremslichtern. Ein fester sitzender Platzhalter stellt Bobby dar.
@@ -63,9 +63,9 @@ Nach dem Auftrag fährt das Auto in die Parkbucht und bremst bis zum Stillstand.
 
 ### Prüfung
 
-Der automatische Test `tests/fundamentals_test.gd` prüft erfolgreichen und doppelten Anhalteauftrag, Parkposition, Stillstand, Kollision mit dem Spieler, ungültige Freigabe, Abfahrt, verpasste Einfahrt und mehrere wiederholte Begegnungen. Ausführung mit Godot 4.6.3 im Headless-Modus.
+Der automatische Test `tests/traffic/fundamentals_test.gd` prüft erfolgreichen und doppelten Anhalteauftrag, Parkposition, Stillstand, Kollision mit dem Spieler, ungültige Freigabe, Abfahrt, verpasste Einfahrt und mehrere wiederholte Begegnungen. Ausführung mit Godot 4.6.3 im Headless-Modus.
 
-Der grafische Test `tests/fundamentals_interaction_test.gd` wurde mit Godot 4.6.3 unter Linux und Software-Rendering ausgeführt und bestanden: sichtbares Fahrzeug beim Start, Auswahl per Physikstrahl, Kamerwechsel, Freigabe am nahen Fahrerfenster und per E. Wegschauen und die Beifahrerseite verhindern die Interaktion. Screenshots von Übersicht, Parkposition und Fahrerfenster wurden visuell geprüft. Ein Test unter Windows mit Godot 4.7.2 bleibt durch den Nutzer erforderlich.
+Der grafische Test `tests/world/fundamentals_interaction_test.gd` wurde mit Godot 4.6.3 unter Linux und Software-Rendering ausgeführt und bestanden: sichtbares Fahrzeug beim Start, Auswahl per Physikstrahl, Kamerwechsel, Freigabe am nahen Fahrerfenster und per E. Wegschauen und die Beifahrerseite verhindern die Interaktion. Screenshots von Übersicht, Parkposition und Fahrerfenster wurden visuell geprüft. Ein Test unter Windows mit Godot 4.7.2 bleibt durch den Nutzer erforderlich.
 
 ### Grenzen
 
@@ -83,7 +83,7 @@ Der Kontrollstellplatz hat genau einen Besitzer, vom Anhalteauftrag bis das ganz
 
 ### Umsetzung
 
-- `scripts/traffic_manager.gd` verwaltet die feste Liste, Auswahl, Buchtreservierung und laufenden Nachschub.
+- `game/traffic/traffic_manager.gd` verwaltet die feste Liste, Auswahl, Buchtreservierung und laufenden Nachschub.
 - Vier Fahrzeuge starten mit Abstand auf derselben Spur. Nachschub wird frühestens im Abstand von elf Sekunden versucht; blockierte Spawnpunkte und bereits anwesende Fahrer werden übersprungen beziehungsweise abgewartet.
 - Es gibt höchstens vier aktive Begegnungen. Eine feste Figur wird nicht dupliziert. Fahrzeuge am Streckenende werden entfernt; freie Identitäten können später wieder erscheinen.
 - Das Fahrzeugskript baut Karosserie, Kollisionskörper, Räder, Kabine und Interaktionspunkt passend zur Variante auf.
@@ -116,7 +116,7 @@ Nach dem Aussteigen wartet der Fahrer neben der linken Tür. Ansehen und E öffn
 
 ### Darstellung und Zustände
 
-- `scripts/driver_actor.gd` enthält einen einfachen Low-Poly-Körper mit Kopf, Armen und Beinen sowie die Zustände sitzend, steigt aus, steht draußen und steigt ein.
+- `game/actors/npc/driver_actor.gd` enthält einen einfachen Low-Poly-Körper mit Kopf, Armen und Beinen sowie die Zustände sitzend, steigt aus, steht draußen und steigt ein.
 - Eine kurze prozedurale Animation öffnet die Fahrertür, bewegt und dreht den Fahrer neben das Auto und schließt die Tür. Der Einstieg verwendet den umgekehrten Ablauf.
 - Alle vier Karosserien erhalten einen separaten Türflügel mit Scharnier und Kollisionskörper. Fenster und Türöffnung werden aus einzelnen Teilen aufgebaut.
 - Sitzhöhe und Türposition passen zur jeweiligen Kabine; der Fahrer steht draußen auf Bodenniveau.
@@ -153,7 +153,7 @@ Feste kurze Bewegungsbahn neben dem Fahrzeug, kein freies NPC-Wegfinden und kein
 
 ## Geschwindigkeitsabstimmung – Verkehr verdoppelt
 
-Die Reisegeschwindigkeit der Autos wurde von 3 m/s (10,8 km/h) auf 6 m/s (21,6 km/h) erhöht. `scripts/speed_settings.gd` definiert den Maßstab und alle Bewegungsgeschwindigkeiten zentral in km/h. Ein relativer Verkehrsfaktor von 2,0 multipliziert das bisherige Grundtempo von 10,8 km/h.
+Die Reisegeschwindigkeit der Autos wurde von 3 m/s (10,8 km/h) auf 6 m/s (21,6 km/h) erhöht. `game/config/speed_settings.gd` definiert den Maßstab und alle Bewegungsgeschwindigkeiten zentral in km/h. Ein relativer Verkehrsfaktor von 2,0 multipliziert das bisherige Grundtempo von 10,8 km/h.
 
 Das Ein-/Ausparktempo bleibt bei 2,5 m/s (9 km/h), der Spieler bei 3,5 m/s (12,6 km/h) ohne Sprint beziehungsweise 6 m/s (21,6 km/h) mit Sprint. Umrechnung: km/h geteilt durch 3,6 ergibt m/s. Es wurde kein zusätzliches Einstellungsmenü eingeführt.
 
@@ -171,7 +171,7 @@ Das Türblech ist vom Fahrerfenster getrennt: An der unteren Türfläche bedient
 
 ### Technik
 
-`scripts/vehicle_part.gd` bündelt Bezeichnung, Trefferfläche, Hervorhebung und reversible Scharnierbewegung. Die Fahrzeuggeometrie wird aus getrennten Fenster-, Tür- und Kofferraumteilen aufgebaut. Eine eigene Physikebene für Interaktionsflächen ermöglicht die gezielte Auswahl. Eine zusätzliche Sichtprüfung berücksichtigt Welt-Hindernisse; Seiten- und Entfernungsprüfungen verhindern Interaktionen von der falschen Seite oder aus der Ferne.
+`game/vehicles/vehicle_part.gd` bündelt Bezeichnung, Trefferfläche, Hervorhebung und reversible Scharnierbewegung. Die Fahrzeuggeometrie wird aus getrennten Fenster-, Tür- und Kofferraumteilen aufgebaut. Eine eigene Physikebene für Interaktionsflächen ermöglicht die gezielte Auswahl. Eine zusätzliche Sichtprüfung berücksichtigt Welt-Hindernisse; Seiten- und Entfernungsprüfungen verhindern Interaktionen von der falschen Seite oder aus der Ferne.
 
 Manuelle Aktionen sind nur am kontrollierten, geparkten Auto und außerhalb der Fahreranimation verfügbar. Die Aus-/Einstiegsanimation übernimmt die Fahrertür, auch wenn diese bereits manuell geöffnet wurde. Alle bedienbaren Bereiche müssen vor der Abfahrt geschlossen sein. Während der Bewegung bleibt das bisherige nachsichtige Verhalten gegenüber Hindernissen erhalten.
 
@@ -206,8 +206,8 @@ Verkehr und Welt laufen weiter. Spielerbewegung, Kamera und Weltinteraktionen si
 
 ### Daten und Umfang
 
-- `scripts/item_inventory.gd`: gemeinsame Inventargrundlage mit Kapazität und atomarem Verschieben derselben Gegenstandsinstanz.
-- `scripts/inventory_view.gd`: Übersicht, Slots, Symbole, Details, getrennte Transferaktionen und Rückmeldungen.
+- `game/inventory/item_inventory.gd`: gemeinsame Inventargrundlage mit Kapazität und atomarem Verschieben derselben Gegenstandsinstanz.
+- `game/inventory/inventory_view.gd`: Übersicht, Slots, Symbole, Details, getrennte Transferaktionen und Rückmeldungen.
 - `assets/items/`: einfache eigene SVG-Symbole für Schlüsselbund, Geldbörse, Quittung und Taschenlampe.
 - Alle vier Fahrer erhalten dieselben drei Gegenstandskategorien mit festen, zur Figur gehörenden Kennungen und individuell beschrifteten Quittungen. Keine zufälligen NPC-Gegenstände.
 - Acht Plätze pro NPC, zwölf beim Spieler. Die Start-Taschenlampe ist ein Platzhalter ohne Benutzungsfunktion. Volles Inventar oder ungültige Übertragung verliert beziehungsweise dupliziert keinen Gegenstand. Fremdes Spielerequipment lässt sich nicht als Rückgabe an einen NPC verschieben.
@@ -233,7 +233,7 @@ E startet eine circa 1,4 Sekunden lange einfache Kamerabewegung. Danach öffnet 
 
 ### Daten und Darstellung
 
-- `scripts/cargo_zone.gd`: eigener Innenraum-Trefferbereich auf Basis der bisherigen Hervorhebung; nur bei geöffnetem Ladebereich aktiv. Keine zusätzlichen Klicks auf einzelne Behälter nötig.
+- `game/inspection/cargo_zone.gd`: eigener Innenraum-Trefferbereich auf Basis der bisherigen Hervorhebung; nur bei geöffnetem Ladebereich aktiv. Keine zusätzlichen Klicks auf einzelne Behälter nötig.
 - Fahrzeug-Inventare sind im Verkehrsmanager getrennt von NPC-Inventaren nach Kennzeichen gespeichert und bleiben innerhalb einer Sitzung erhalten.
 - Neun Plätze und drei feste Gegenstände pro Fahrzeug, eigene Quellenkennung für korrektes Zurücklegen. NPC-Taschen sind kein zulässiges Ziel für Fahrzeuggegenstände.
 - Bobby: Werkzeugkoffer, Ersatzteil, Werkstattbeleg. Nora: Einkaufstasche, Geschenk, Kassenbon. Erik: Paket, Arbeitsmaterial, Lieferschein. Mara: Seil, Werkzeugkoffer, Handschuhe.
@@ -254,9 +254,9 @@ Ein gemeinsames Ladeinventar je Fahrzeug. Keine Handschuhfächer, versteckten F�
 
 Die mittlere Inventarspalte zeigt nach Auswahl ein prozedurales 3D-Modell. Linke Maustaste und Ziehen drehen es frei um zwei Achsen; Mausrad zoomt, ein eigener Knopf setzt die Ansicht zurück. Alle neun vorhandenen Symbolkategorien besitzen Modelle: Schlüssel, Geldbörse, Papier, Werkzeugkoffer, Paket, Tasche, Seil, Handschuhe und Taschenlampe. Quittungen zeigen ihren Inhalt auf Vorder- und Rückseite. Die Beschreibung bleibt als lesbarer Text bestehen, die zusätzliche Besitzerzeile wurde entfernt. Eigentumsdaten werden intern weiterhin zur Rückgabeprüfung verwendet.
 
-`scripts/item_preview.gd` verwendet eine isolierte SubViewport-3D-Welt mit eigener Kamera und Beleuchtung. Die Ansicht verändert keine Gegenstands- oder Spielwelt-Daten. Die Modelle bleiben einfache Platzhalter; es gibt noch keine frei verwendbaren Gegenstände oder neue Beweise.
+`game/inventory/item_preview.gd` verwendet eine isolierte SubViewport-3D-Welt mit eigener Kamera und Beleuchtung. Die Ansicht verändert keine Gegenstands- oder Spielwelt-Daten. Die Modelle bleiben einfache Platzhalter; es gibt noch keine frei verwendbaren Gegenstände oder neue Beweise.
 
-Zeitabstimmung in `scripts/interaction_timings.gd`: Aus-/Einsteigen von 2,4 auf 3,6 s, Personendurchsuchung von 1,6 auf 3,2 s, Fahrzeugdurchsuchung von 1,4 auf 3 s; manuelle Klappenbewegungen von 3,5 auf 2,3 rad/s. Ein kompakter Fortschrittsbalken ersetzt das Fadenkreuz während Fahrer-/Suchanimationen und verschwindet bei Abschluss oder Abbruch. Einfahrtempo von 9 auf 14,4 km/h erhöht; Ausfahrtempo bleibt separat bei 9 km/h.
+Zeitabstimmung in `game/config/interaction_timings.gd`: Aus-/Einsteigen von 2,4 auf 3,6 s, Personendurchsuchung von 1,6 auf 3,2 s, Fahrzeugdurchsuchung von 1,4 auf 3 s; manuelle Klappenbewegungen von 3,5 auf 2,3 rad/s. Ein kompakter Fortschrittsbalken ersetzt das Fadenkreuz während Fahrer-/Suchanimationen und verschwindet bei Abschluss oder Abbruch. Einfahrtempo von 9 auf 14,4 km/h erhöht; Ausfahrtempo bleibt separat bei 9 km/h.
 
 Mit Godot 4.6.3 unter Linux geprüft: Fundament-, Verkehrs-, Fahrer-, Stellplatz-, Personeninventar- und Fahrzeuginventartests mit den angepassten Zeiten weiterhin bestanden. Neuer grafischer Test für neun echte 3D-Modellkategorien, Rotation, Zoom, Rücksetzen, Papierseiten, entfernte Besitzerzeile und unveränderte Gegenstände. Die grafischen Personen-/Fahrzeugsuchtests prüfen die längeren Abläufe, der Personentest zusätzlich den kompakten Fortschrittsbalken. Der bestehende Fahrzeugbereichstest für Türbedienung und Übergabe an die Fahreranimation ist mit den längeren Zeiten ebenfalls bestanden. Vorschau und Balken wurden anhand von Screenshots geprüft. Windows/Godot 4.7.2 ist noch vom Nutzer zu testen.
 
@@ -266,7 +266,7 @@ Der Fortschrittsbalken erscheint nur noch bei Personen- und Fahrzeugdurchsuchung
 
 Am offenen Heck eines geparkten Pickups oder Transporters bietet die Leertaste das Hochklettern an. Die Bewegung hebt den Spieler zunächst über die Kante und setzt ihn auf dem tatsächlichen Ladeboden ab. Anschließend ist normale Bewegung auf der Ladefläche möglich. Leertaste führt wieder hinter das Fahrzeug auf den Boden. Es handelt sich um eine gezielte Fahrzeuginteraktion, noch kein allgemeines Parkour-System.
 
-`scripts/vehicle_climb.gd` prüft Fahrzeug, Blickrichtung, geöffneten Zugang und freien Zielpunkt. Bei einem Hindernis während der Bewegung wird zum Ausgangspunkt zurückgekehrt. Beim Transporter wird eine geöffnete Türseite gewählt und automatisch eine niedrigere Kollisionskapsel mit angepasster Augenhöhe verwendet. Nach dem Verlassen wird die normale Höhe wiederhergestellt.
+`game/player/vehicle_climb.gd` prüft Fahrzeug, Blickrichtung, geöffneten Zugang und freien Zielpunkt. Bei einem Hindernis während der Bewegung wird zum Ausgangspunkt zurückgekehrt. Beim Transporter wird eine geöffnete Türseite gewählt und automatisch eine niedrigere Kollisionskapsel mit angepasster Augenhöhe verwendet. Nach dem Verlassen wird die normale Höhe wiederhergestellt.
 
 Transporter und Pickup haben getrennte Kollisionen für Kabine, Ladeboden und Begrenzungen, der Transporter zusätzlich für das Dach. Während der Spieler an Bord ist, bleiben Abfahrt und Schließen der hinteren Öffnung gesperrt. Die Fahrzeugdurchsuchung ist auch von innen möglich und beendet den Zustand an Bord nicht.
 
@@ -286,7 +286,7 @@ Der Streifenpolizist steigt aus, läuft zum Verhafteten, begleitet ihn um das Fa
 
 ### Technik und Prüfung
 
-`scripts/patrol_dispatch.gd` steuert Wartezeit, Anfahrt, Begleitung, Einsteigen und Abfahrt als Zustandsfolge. `scripts/police_visuals.gd` baut Spielerfigur und Handfunkgerät. Fahrer erhalten einen Festnahmestatus und eine Handschellendarstellung. Der Verkehrsmanager merkt sich abgeholte Personen für die Sitzung, damit sie nicht erneut spawnen.
+`game/police/patrol_dispatch.gd` steuert Wartezeit, Anfahrt, Begleitung, Einsteigen und Abfahrt als Zustandsfolge. `game/police/police_visuals.gd` baut Spielerfigur und Handfunkgerät. Fahrer erhalten einen Festnahmestatus und eine Handschellendarstellung. Der Verkehrsmanager merkt sich abgeholte Personen für die Sitzung, damit sie nicht erneut spawnen.
 
 Godot 4.6.3 unter Linux: Getrennter Einsteige-/Abfahrttest für alle vier Fahrzeugmodelle bestanden. Abholtest für alle vier Fahrer einschließlich 20-Sekunden-Grenze, Abbruch und erneuter Anforderung, zweitem Stellplatz, Begleiten, Einsteigen, Abfahrt, Freigabe des Kontrollplatzes und unterbundener Wiederkehr bestanden. Grafischer Test prüft Figurenanzeige, Menüs, Funkdisplay und die vollständige Abholung. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz- sowie Personen-/Fahrzeuginventartests bestanden. Windows/Godot 4.7.2 bleibt vom Nutzer zu prüfen.
 
@@ -302,7 +302,7 @@ Die neue Aktion „Dokumente anfordern“ steht am Fenster und beim ausgestiegen
 
 ### Daten und Darstellung
 
-`scripts/document_data.gd` enthält feste Identitäten für alle vier Fahrer. Kennzeichen und Fahrzeugtyp stammen aus dem kontrollierten Fahrzeug. Die Papiere zeigen Name, Geburtsdatum, Führerscheinnummer, Klasse, Ausstellungsdatum und Gültigkeit sowie Kennzeichen, Halter, Typ, Farbe und Erstzulassung. Eriks Halter ist „Sommer Logistik“; daraus entsteht keine automatische Bewertung. `scripts/document_view.gd` baut die skalierbare Ansicht mit verschiebbaren Karten. Das Lichtbild bleibt ein gemeinsamer Platzhalter passend zum derzeitigen Fahrer-Modell.
+`game/documents/document_data.gd` enthält feste Identitäten für alle vier Fahrer. Kennzeichen und Fahrzeugtyp stammen aus dem kontrollierten Fahrzeug. Die Papiere zeigen Name, Geburtsdatum, Führerscheinnummer, Klasse, Ausstellungsdatum und Gültigkeit sowie Kennzeichen, Halter, Typ, Farbe und Erstzulassung. Eriks Halter ist „Sommer Logistik“; daraus entsteht keine automatische Bewertung. `game/documents/document_view.gd` baut die skalierbare Ansicht mit verschiebbaren Karten. Das Lichtbild bleibt ein gemeinsamer Platzhalter passend zum derzeitigen Fahrer-Modell.
 
 ### Prüfung und Umfang
 
@@ -312,7 +312,7 @@ Dieser Schritt enthält ausschließlich Anfordern und Ansehen. Vergleichsmodus, 
 
 ## Dokumentenprüfung mit Vogelperspektive und Slow Motion · umgesetzt
 
-`scripts/document_mode.gd` verwaltet einen eigenen Prüfmodus mit separater Kamera. Beim Anfordern gleitet diese in 0,55 Echtzeitsekunden vom Spieler zu einer erhöhten Ansicht über das kontrollierte Fahrzeug. Der Spieler bleibt sichtbar in der Welt. Das normale HUD wird ausgeblendet, die reguläre Übersichtskamera bleibt unverändert.
+`game/documents/document_mode.gd` verwaltet einen eigenen Prüfmodus mit separater Kamera. Beim Anfordern gleitet diese in 0,55 Echtzeitsekunden vom Spieler zu einer erhöhten Ansicht über das kontrollierte Fahrzeug. Der Spieler bleibt sichtbar in der Welt. Das normale HUD wird ausgeblendet, die reguläre Übersichtskamera bleibt unverändert.
 
 Die globale Spielgeschwindigkeit wird auf 18 % des vorherigen Werts gesetzt. Verkehr, Fahreranimationen und Streifen-Wartezeit folgen dieser Zeit. Maus und Kartenverschieben sind ereignisgesteuert und bleiben direkt; die Kameraübergänge ignorieren die Zeitlupe. Bewegung, Blick und andere Aktionen sind während Prüfung und Rückweg gesperrt.
 
@@ -334,7 +334,7 @@ Shift halten startet den Griff; Rechtsklick halten zieht anschließend die ausge
 
 ### Technik und Grenzen
 
-`scripts/player_equipment.gd` steuert Holster-/Griff-/Zielzustand, Auswahl, Eingaben, Schnellleiste, Ego-Hand und Holsterdarstellung. Die Armknoten der Spielerfigur sind nun bewegliche Pivots. `scripts/weapon_visuals.gd` erzeugt eine Glock-19-Silhouette mit kompaktem Schlitten, Griff, offenem Abzugsbügel und Visierung sowie einen gelb abgesetzten Taser. Beide Modelle werden für Gürtel, Ego-Ansicht und Inventar wiederverwendet. Es handelt sich um eigene vereinfachte Low-Poly-Modelle.
+`game/player/player_equipment.gd` steuert Holster-/Griff-/Zielzustand, Auswahl, Eingaben, Schnellleiste, Ego-Hand und Holsterdarstellung. Die Armknoten der Spielerfigur sind nun bewegliche Pivots. `game/weapons/weapon_visuals.gd` erzeugt eine Glock-19-Silhouette mit kompaktem Schlitten, Griff, offenem Abzugsbügel und Visierung sowie einen gelb abgesetzten Taser. Beide Modelle werden für Gürtel, Ego-Ansicht und Inventar wiederverwendet. Es handelt sich um eigene vereinfachte Low-Poly-Modelle.
 
 Waffenbedienung steht nur in freier Ego-Ansicht zur Verfügung. Menüs, Funk, Dokumentenmodus, Klettern, Fokusverlust und Perspektivwechsel setzen die Haltung zurück. Während der Waffenhaltung sind E-Interaktionen gesperrt. Die bestehende Mausradbedienung von Menüs und Übersicht bleibt erhalten. Schießen, Taserwirkung, Munition, Treffer und NPC-Reaktionen gehören nicht zu diesem Schritt.
 
@@ -354,7 +354,7 @@ Ein eingesetztes 15er-Magazin und zwei zusätzliche volle Magazine ergeben 45 St
 
 ### Feedback und Grenzen
 
-`scripts/pistol_action.gd` kapselt Schussabstand, Magazine, Nachladezeit und Effekte. Ein Kamera-Strahl gegen Welt, Fahrzeuge und Personen ermittelt nur den Auftreffpunkt. Kurzer Mündungsblitz mit Licht, Handrückstoß, temporäre Schusslinie und kurz schrumpfender Auftreffpunkt machen den Schuss sichtbar. Eigene synthetische WAV-Dateien liefern Knall und mechanisches Klicken. Es werden keine Schadensmethoden aufgerufen und keine NPC-Zustände verändert.
+`game/weapons/pistol_action.gd` kapselt Schussabstand, Magazine, Nachladezeit und Effekte. Ein Kamera-Strahl gegen Welt, Fahrzeuge und Personen ermittelt nur den Auftreffpunkt. Kurzer Mündungsblitz mit Licht, Handrückstoß, temporäre Schusslinie und kurz schrumpfender Auftreffpunkt machen den Schuss sichtbar. Eigene synthetische WAV-Dateien liefern Knall und mechanisches Klicken. Es werden keine Schadensmethoden aufgerufen und keine NPC-Zustände verändert.
 
 Kein Schadensmodell, keine Taserwirkung, Trefferwertung, Patronenlager-Simulation, lose Munition oder Magazinbefüllung. Die Effekte sind Test-Platzhalter. Die Munitionsdaten gelten wie das bisherige Inventar nur während der Sitzung.
 
@@ -366,7 +366,7 @@ Grafischer Test mit Godot 4.6.3 unter Linux: Startmunition, R ohne Positionsrese
 
 ### Erkennung und Verhalten
 
-`scripts/npc_compliance.gd` erkennt Kopf/Oberkörper im Zielstrahl der vollständig gezogenen Glock. Eine kurze Zielzeit von 0,25 Sekunden und maximal 25 Meter Entfernung verhindern eine Aufgabe beim bloßen Vorbeischwenken. Freie Ego-Bedienung ist erforderlich; Holster, Griff allein, Taser, Nachladen und bereits verhaftete Personen lösen keine neue Aufgabe aus. Die Munition spielt keine Rolle. Sichtstrahlen respektieren Welt und fremde Fahrzeuge; die gesamte Ziel-Fahrzeugkollision wird wegen ihrer bisher groben Kabinenform ausgenommen.
+`game/actors/npc/npc_compliance.gd` erkennt Kopf/Oberkörper im Zielstrahl der vollständig gezogenen Glock. Eine kurze Zielzeit von 0,25 Sekunden und maximal 25 Meter Entfernung verhindern eine Aufgabe beim bloßen Vorbeischwenken. Freie Ego-Bedienung ist erforderlich; Holster, Griff allein, Taser, Nachladen und bereits verhaftete Personen lösen keine neue Aufgabe aus. Die Munition spielt keine Rolle. Sichtstrahlen respektieren Welt und fremde Fahrzeuge; die gesamte Ziel-Fahrzeugkollision wird wegen ihrer bisher groben Kabinenform ausgenommen.
 
 Der Fahrer erhält einen eigenen persistenten Aufgabestatus, getrennt von der Festnahme. Die Arme bleiben in Sitz-, Aussteige- und Außenpose oben, auch wenn die Waffe anschließend gesenkt wird. Ein fahrendes Auto bremst mit 4 m/s² bis zum Stillstand, bevor der Fahrer aussteigt. Ein bereits stehender Fahrer steigt unmittelbar über die vorhandene Aussteigeanimation aus. Erneutes Zielen startet die Animation nicht neu. Ein gerade einsteigender Fahrer kehrt die Bewegung um. Eine automatische Abfahrt wird abgebrochen; solange die Hände oben sind, sind Einsteigen und Weiterfahren gesperrt.
 
@@ -398,7 +398,7 @@ Der Koffer speichert entriegelten/offenen Zustand und ein eigenes kleines Inhalt
 
 ### Technik
 
-`scripts/toolbox_model.gd` baut Basis, Scharnierdeckel, Verschluss, Hammer und Messer mit einfacher Low-Poly-Geometrie. `scripts/toolbox_preview.gd` nutzt eine isolierte 3D-Welt, eigene Kamera und echte Physikstrahlen gegen die anklickbaren Teile. Der Deckel bewegt sich sichtbar; geschlossener oder gerade bewegter Deckel verhindert die Inhaltsbedienung. Die Oberfläche liegt in `scripts/toolbox_inspection.gd`, eingebettet in die bestehende Inventaransicht. Hammer und Messer besitzen eigene SVG-Symbole und verwenden auch außerhalb des Koffers dieselben 3D-Modelle.
+`game/inspection/toolbox_model.gd` baut Basis, Scharnierdeckel, Verschluss, Hammer und Messer mit einfacher Low-Poly-Geometrie. `game/inspection/toolbox_preview.gd` nutzt eine isolierte 3D-Welt, eigene Kamera und echte Physikstrahlen gegen die anklickbaren Teile. Der Deckel bewegt sich sichtbar; geschlossener oder gerade bewegter Deckel verhindert die Inhaltsbedienung. Die Oberfläche liegt in `game/inspection/toolbox_inspection.gd`, eingebettet in die bestehende Inventaransicht. Hammer und Messer besitzen eigene SVG-Symbole und verwenden auch außerhalb des Koffers dieselben 3D-Modelle.
 
 ### Prüfung und Grenzen
 
@@ -414,11 +414,11 @@ Der bedingte Ausdruck für die hervorzuhebenden Meshes erzeugte bei Verschluss u
 
 PR #2 wurde nach `develop` übernommen. `feature/vehicleDamage` basiert auf diesem Integrationsstand und ergänzt zunächst präzise Fahrzeugtreffer und sichtbare Einschussmarkierungen.
 
-`scripts/vehicle_hit_surfaces.gd` erzeugt für die sichtbaren Box-/Reifen-Meshes eigene Schusstrefferkörper auf Layer 16. Boxen entsprechen ihren sichtbaren Abmessungen; Reifen erhalten eine konvexe Form aus ihrem Mesh. Die Trefferflächen folgen der vorhandenen Hierarchie für Türen, Heckklappen, Lenkung und Raddrehung. Karosserie, Glas, Reifen und Felgen sind getrennt klassifiziert. Fahrer, Beladungsplatzhalter und Auswahlring erhalten in diesem Schritt keine Fahrzeugtrefferflächen.
+`game/vehicles/vehicle_hit_surfaces.gd` erzeugt für die sichtbaren Box-/Reifen-Meshes eigene Schusstrefferkörper auf Layer 16. Boxen entsprechen ihren sichtbaren Abmessungen; Reifen erhalten eine konvexe Form aus ihrem Mesh. Die Trefferflächen folgen der vorhandenen Hierarchie für Türen, Heckklappen, Lenkung und Raddrehung. Karosserie, Glas, Reifen und Felgen sind getrennt klassifiziert. Fahrer, Beladungsplatzhalter und Auswahlring erhalten in diesem Schritt keine Fahrzeugtrefferflächen.
 
-`scripts/pistol_action.gd` nutzt weiterhin Hitscan. Der Schussstrahl prüft Welt, die bisherige NPC-Kollision und die neuen Fahrzeugflächen; die groben Fahrzeug-/Türkollisionen für Bewegung werden ausgeschlossen. Dadurch sitzt der Treffer auf der sichtbaren Oberfläche, statt vor einer unsichtbaren Kabinenbox. Andere Weltobjekte blockieren den Strahl weiterhin. NPCs erhalten unverändert keinen Schaden.
+`game/weapons/pistol_action.gd` nutzt weiterhin Hitscan. Der Schussstrahl prüft Welt, die bisherige NPC-Kollision und die neuen Fahrzeugflächen; die groben Fahrzeug-/Türkollisionen für Bewegung werden ausgeschlossen. Dadurch sitzt der Treffer auf der sichtbaren Oberfläche, statt vor einer unsichtbaren Kabinenbox. Andere Weltobjekte blockieren den Strahl weiterhin. NPCs erhalten unverändert keinen Schaden.
 
-`scripts/vehicle_hit_surface.gd` leitet Fahrzeugtreffer an die Markierungsverwaltung weiter. Ein texturiertes Quad liegt knapp über der getroffenen Oberfläche, zeigt entlang ihrer Normalen und ist dem jeweiligen Mesh untergeordnet. Die eigene SVG-Textur ist ein einfacher Einschuss-Platzhalter, rendererkompatibel ohne Decal-Node. Maximal 64 Markierungen je Fahrzeug begrenzen den Ressourcenverbrauch; die ältesten werden bei weiteren Treffern ersetzt. Die Markierungen bestehen bis zum Entfernen des Fahrzeugobjekts, ohne Wiederherstellung bei späterer Durchfahrt oder Spielneustart.
+`game/vehicles/vehicle_hit_surface.gd` leitet Fahrzeugtreffer an die Markierungsverwaltung weiter. Ein texturiertes Quad liegt knapp über der getroffenen Oberfläche, zeigt entlang ihrer Normalen und ist dem jeweiligen Mesh untergeordnet. Die eigene SVG-Textur ist ein einfacher Einschuss-Platzhalter, rendererkompatibel ohne Decal-Node. Maximal 64 Markierungen je Fahrzeug begrenzen den Ressourcenverbrauch; die ältesten werden bei weiteren Treffern ersetzt. Die Markierungen bestehen bis zum Entfernen des Fahrzeugobjekts, ohne Wiederherstellung bei späterer Durchfahrt oder Spielneustart.
 
 Grafischer Test unter Godot 4.6.3/Linux: alle vier Modelle mit Karosserie-, Glas-, Reifen- und Dachtreffern; echte Glock-Schüsse erzeugen Markierungen; sie folgen Türen und Fahrzeugbewegung, und die Trefferkörper folgen geöffneten Türen. Wandblockade und Markierungsbudget geprüft. Darstellung per Screenshot geprüft. Bestehende Fundament-, Verkehrs-, Fahrer-, Stellplatz- sowie Personen-/Fahrzeuginventartests bestanden. Windows/Godot 4.7.2 benötigt einen Praxistest.
 
@@ -460,9 +460,9 @@ Werkzeugkoffer behalten Verschluss, Klappdeckel und die bisherigen Inhalte. Farb
 
 ### Technik und Zustände
 
-`scripts/cargo_item.gd` erweitert die bisherigen Interaktionsbereiche um ein konkretes Ladungsobjekt mit Datenbindung. Reichweite, offener Zugang, Parkzustand, Sichtblockaden und reservierte Abholung begrenzen die Bedienung. Regal und Ladung besitzen einfache Kollisionen; die Leiter bleibt Dekoration. Der Transporter-Einstieg bevorzugt eine geöffnete rechte Tür neben dem Regal.
+`game/inspection/cargo_item.gd` erweitert die bisherigen Interaktionsbereiche um ein konkretes Ladungsobjekt mit Datenbindung. Reichweite, offener Zugang, Parkzustand, Sichtblockaden und reservierte Abholung begrenzen die Bedienung. Regal und Ladung besitzen einfache Kollisionen; die Leiter bleibt Dekoration. Der Transporter-Einstieg bevorzugt eine geöffnete rechte Tür neben dem Regal.
 
-`scripts/cargo_container_model.gd` erweitert die gemeinsame Untersuchungsansicht um Farbeimer, Kühlbox und Wasserfass. Die Kamera blickt je nach Behälter stärker von oben, damit nach dem Freilegen nicht nur ein Datenflag gesetzt ist, sondern das Päckchen tatsächlich sichtbar und per Physikstrahl anklickbar wird. Verdeckte oder bewegte Inhalte sind nicht auswählbar. Modelle und Zustand werden auch in der Fahrzeugwelt verwendet; Weltladung wird nach Entnahme/Rückgabe aktualisiert.
+`game/inspection/cargo_container_model.gd` erweitert die gemeinsame Untersuchungsansicht um Farbeimer, Kühlbox und Wasserfass. Die Kamera blickt je nach Behälter stärker von oben, damit nach dem Freilegen nicht nur ein Datenflag gesetzt ist, sondern das Päckchen tatsächlich sichtbar und per Physikstrahl anklickbar wird. Verdeckte oder bewegte Inhalte sind nicht auswählbar. Modelle und Zustand werden auch in der Fahrzeugwelt verwendet; Weltladung wird nach Entnahme/Rückgabe aktualisiert.
 
 Die bisherigen stabilen Gegenstandskennungen und das Sitzungscache bleiben erhalten. Bei leerer oder teilweiser Wiederkehr werden unsichtbare Originalplätze vorbereitet, aber nur die tatsächlichen Datensätze aus dem aktuellen Inventar eingeblendet und gebunden. Dadurch erzeugt ein zurückgelegter Behälter keine neuen Inhalte. Ganzen Behälter mitnehmen, Einsätze zurücklegen und Inhalte an ihren ursprünglichen Behälter zurückgeben bleiben möglich. Ein volles Inventar verhindert die Übertragung ohne Verlust. Die Abfahrtssperre gilt bis zum vollständigen Schließen der Untersuchungsansicht. Mitgenommene ganze Gegenstände können über I am geöffneten ursprünglichen Fahrzeug zurückgelegt werden, ohne eine Gesamtliste der Ladung anzuzeigen. Dies erhält die Rückgabemöglichkeit auch bei vollständig leerer Ladung.
 
@@ -480,11 +480,11 @@ PR #4 wurde nach `develop` übernommen. Anschließend wurde der aktualisierte In
 
 ### Aufbau und Bedienung
 
-Der Branch basiert auf `develop` nach Übernahme der Fahrzeugschäden. F9 führt aus dem Hauptspiel in `scenes/body_lab/body_lab.tscn`. Zwei gleich aufgebaute Figuren stehen auf einer ebenen Testfläche: links ohne Bewegungsauftrag, rechts mit prozeduralem Gehauftrag auf kurzer Strecke. Region auswählen und Leertaste gibt beiden denselben Testimpuls und regionalen Kraftverlust. Einzelne Regionen lassen sich auch direkt anklicken. Orbitkamera, Zoom, getrennte Regler für Impuls und lokalen Kraftverlust sowie Zurücksetzen ermöglichen wiederholbare Vergleiche. Rückkehr mit F9 startet eine neue Hauptspiel-Sitzung.
+Der Branch basiert auf `develop` nach Übernahme der Fahrzeugschäden. F9 führt aus dem Hauptspiel in `prototypes/body_physics/body_lab.tscn`. Zwei gleich aufgebaute Figuren stehen auf einer ebenen Testfläche: links ohne Bewegungsauftrag, rechts mit prozeduralem Gehauftrag auf kurzer Strecke. Region auswählen und Leertaste gibt beiden denselben Testimpuls und regionalen Kraftverlust. Einzelne Regionen lassen sich auch direkt anklicken. Orbitkamera, Zoom, getrennte Regler für Impuls und lokalen Kraftverlust sowie Zurücksetzen ermöglichen wiederholbare Vergleiche. Rückkehr mit F9 startet eine neue Hauptspiel-Sitzung.
 
 ### Physik und Reaktion
 
-`scripts/active_body.gd` baut im aktuellen Stand pro Figur 11 echte RigidBody3D-Segmente für Becken, Rumpf, Kopf, Oberarme, Unterarme inklusive Hände, Oberschenkel und Unterschenkel inklusive Füße. Zehn Generic6DOFJoint3D-Gelenke verbinden sie mit linearen Sperren und Winkelgrenzen. Selbstkollisionen der Figur sind im Prototyp deaktiviert; Boden und andere Figuren bleiben physikalische Kollisionspartner.
+`game/actors/physics/active_body.gd` baut im aktuellen Stand pro Figur 11 echte RigidBody3D-Segmente für Becken, Rumpf, Kopf, Oberarme, Unterarme inklusive Hände, Oberschenkel und Unterschenkel inklusive Füße. Zehn Generic6DOFJoint3D-Gelenke verbinden sie mit linearen Sperren und Winkelgrenzen. Selbstkollisionen der Figur sind im Prototyp deaktiviert; Boden und andere Figuren bleiben physikalische Kollisionspartner.
 
 Positions- und rotationsabhängige Feder-/Dämpfungskräfte bilden virtuelle Muskeln. Rotationskräfte sind über eine näherungsweise Trägheit der Segmente skaliert; begrenzte Kräfte und gedämpfte Unterstützung vermeiden Explodieren der Glieder. Haltungs- und Gehziele werden mathematisch pro Schritt berechnet, nicht aus AnimationPlayer, AnimationTree oder vorgefertigten Trefferclips abgespielt.
 
@@ -538,25 +538,25 @@ Godot 4.6.3/Linux: neue Integrationstests für alle vier Fahrzeugmodelle mit ech
 
 ### Testaufbau und Steuerung
 
-F10 öffnet `scenes/combat_test/combat_test.tscn`, eine spezialisierte Ableitung der Hauptszene. Sie verwendet Straße, Spieler, Fahrzeug und Glock unverändert, behält aber genau ein geparktes Fahrzeug und unterbindet nachspawnenden Verkehr. Der Testfahrer sitzt anfangs im Auto. E löst das Aussteigen aus. Inventar-/Funk-/Dokumenten-/Kletterabläufe sind hier gesperrt, damit die Begegnung eine feste, wiederholbare Abfolge besitzt.
+F10 öffnet `prototypes/combat/combat_test.tscn`, eine spezialisierte Ableitung der Hauptszene. Sie verwendet Straße, Spieler, Fahrzeug und Glock unverändert, behält aber genau ein geparktes Fahrzeug und unterbindet nachspawnenden Verkehr. Der Testfahrer sitzt anfangs im Auto. E löst das Aussteigen aus. Inventar-/Funk-/Dokumenten-/Kletterabläufe sind hier gesperrt, damit die Begegnung eine feste, wiederholbare Abfolge besitzt.
 
 R wird in dieser Szene vor Menüs und Waffeninput verarbeitet und lädt die ganze Szene neu. Das entfernt auch Physikkörper, fallengelassene Waffen, Verletzungen und Fahrzeugschäden; Gesundheit und Inventar entstehen neu. F übernimmt ausschließlich hier das Nachladen. F10 führt in eine neue Hauptspiel-Sitzung zurück. Die normalen R-/F9-Funktionen bleiben außerhalb des Tests erhalten.
 
 ### Ziehen, Zeitlupe und Gegenreaktion
 
-`scripts/npc_gunfight.gd` steuert Sitzen → kurze Orientierung → Griff → Ziehen → Zielen/Schießen. Schulter und Ellenbogen bewegen die Hand zur Hüfte und nach vorn; das vorhandene Pistolenmodell wechselt vom Holster zur Hand. Vor abgeschlossenem Ziehen und anschließender Zielpause gibt es keinen Schuss. Die getrennte Komponente ist nur dem Testfahrer zugeordnet. Die bestehende allgemeine Aufgabelogik überlässt dieser Komponente ihre Reaktionsfenster.
+`prototypes/combat/npc_gunfight.gd` steuert Sitzen → kurze Orientierung → Griff → Ziehen → Zielen/Schießen. Schulter und Ellenbogen bewegen die Hand zur Hüfte und nach vorn; das vorhandene Pistolenmodell wechselt vom Holster zur Hand. Vor abgeschlossenem Ziehen und anschließender Zielpause gibt es keinen Schuss. Die getrennte Komponente ist nur dem Testfahrer zugeordnet. Die bestehende allgemeine Aufgabelogik überlässt dieser Komponente ihre Reaktionsfenster.
 
 Beim Griff senkt die Szene das globale Tempo auf 22 % des vorherigen Wertes für zwei reale Sekunden. Ein entsättigter Bildschirmfilter liegt hinter dem HUD. Spielerblick wird während des Reaktionsfensters ebenfalls mit 22 % Empfindlichkeit verarbeitet; beim Ende gilt sofort wieder die normale Empfindlichkeit. Waffenzeit wird ergänzend unskaliert fortgeschrieben; Fortbewegung und Weltphysik bleiben verlangsamt. Rechtzeitiges vollständiges Zielen über einen echten sichtliniengeprüften Trefferstrahl löst nach 0,22 realen Sekunden Aufgabe aus. Arm-/Handtreffer gehen zuerst durch die regionale Körperphysik und lösen anschließend Entwaffnung/Aufgabe aus. Die Waffe wird als Starrkörper mit Schwerkraft abgelegt. Andere Verletzungen beenden den Angriff in dieser ersten Fassung ebenfalls. Reset, Aufgabe, Tod und Szenenwechsel beenden die Zeitlupe und stellen das vorherige globale Tempo wieder her.
 
 ### Spielerschaden und Grenzen
 
-`scripts/player_health.gd` enthält 100 Gesundheit, Schaden, Trefferfeedback und ein einmaliges Todessignal. Die Testszene zeigt Gesundheit und kurzen roten Trefferfilter. NPC-Schüsse kommen vom Waffenlauf, ignorieren den Schützen und berücksichtigen Welt-, Fahrzeug- und Spielerflächen. Ein Treffer verursacht 25 Schaden; die Schussfolge hat 0,9 Sekunden Abstand. Das Ziel wird mit begrenztem Tempo nachgeführt. Bei Spielertod enden Bewegung, Waffeninput und weitere NPC-Schüsse; R bleibt aktiv.
+`game/player/player_health.gd` enthält 100 Gesundheit, Schaden, Trefferfeedback und ein einmaliges Todessignal. Die Testszene zeigt Gesundheit und kurzen roten Trefferfilter. NPC-Schüsse kommen vom Waffenlauf, ignorieren den Schützen und berücksichtigen Welt-, Fahrzeug- und Spielerflächen. Ein Treffer verursacht 25 Schaden; die Schussfolge hat 0,9 Sekunden Abstand. Das Ziel wird mit begrenztem Tempo nachgeführt. Bei Spielertod enden Bewegung, Waffeninput und weitere NPC-Schüsse; R bleibt aktiv.
 
 Aggression, Dialogreaktionen und Charakterentscheidungen sind noch keine neue Verkehrs-KI: Nur diese Testfigur startet den Ablauf fest nach dem Aussteigen. Keine Deckungs-/Verfolgungs-KI, NPC-Magazinverwaltung, Spielerrüstung oder medizinischen Körperregionen. Das spätere Auswahlkriterium soll auf verfassten Charakteren und der jeweiligen Kontrollsituation beruhen.
 
 ### Prüfung
 
-`tests/combat_test.gd` prüft einen Wagen, sitzenden NPC und Ego-Start, E-Aussteigen, sichtbaren Griff mit Zeitlupe, echte Strahlprüfung bei Aufgabe, kein verfrühtes Schießen, NPC-Treffer und Gesundheit, Deckungsschutz, Tod ohne Folgeschüsse, Entwaffnung über die regionale Armfläche sowie vollständigen R-Reset nach Tod und während Zeitlupe. Grafische Snapshots prüfen Anfang, Griff, Aufgabe, Tod und Entwaffnung. Bisherige NPC-/Laborphysik, Fahrer, Freigabe und Streifentransport bleiben geprüft. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu testen.
+`tests/prototypes/combat_test.gd` prüft einen Wagen, sitzenden NPC und Ego-Start, E-Aussteigen, sichtbaren Griff mit Zeitlupe, echte Strahlprüfung bei Aufgabe, kein verfrühtes Schießen, NPC-Treffer und Gesundheit, Deckungsschutz, Tod ohne Folgeschüsse, Entwaffnung über die regionale Armfläche sowie vollständigen R-Reset nach Tod und während Zeitlupe. Grafische Snapshots prüfen Anfang, Griff, Aufgabe, Tod und Entwaffnung. Bisherige NPC-/Laborphysik, Fahrer, Freigabe und Streifentransport bleiben geprüft. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch zu testen.
 
 ## Zeitlupe – Fadenkreuzbewegung
 
@@ -578,15 +578,15 @@ Der seitliche Kraftanteil ist eine Gameplay-Hilfe für die groben Kabinenmodelle
 
 ### Prüfung
 
-Neue echte Physiktests in `tests/seated_physics_test.gd` prüfen acht Abläufe: alle vier Fahrzeuge jeweils mit 0 und 100 % Herausfallchance. Geprüft werden Weiterfahrt und Mitführung lebender Verletzter, monotone sanfte Verzögerung nach Tod, Auslaufstrecke, Türöffnung erst im Stand, Körper außerhalb der Kabine am Boden beziehungsweise verbleibend im Sitz, begrenzte Geschwindigkeiten und vollständiges Reset. Der vorhandene NPC-Treffertest wartet nun auf das längere Ausrollen und schaltet zufälliges Herausfallen für seine Sitzprüfung aus. Bestehende Konfrontations-, NPC-/Laborphysik-, Verkehrs-, Fahrer-, Freigabe- und Streifenprüfungen bleiben enthalten. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
+Neue echte Physiktests in `tests/actors/seated_physics_test.gd` prüfen acht Abläufe: alle vier Fahrzeuge jeweils mit 0 und 100 % Herausfallchance. Geprüft werden Weiterfahrt und Mitführung lebender Verletzter, monotone sanfte Verzögerung nach Tod, Auslaufstrecke, Türöffnung erst im Stand, Körper außerhalb der Kabine am Boden beziehungsweise verbleibend im Sitz, begrenzte Geschwindigkeiten und vollständiges Reset. Der vorhandene NPC-Treffertest wartet nun auf das längere Ausrollen und schaltet zufälliges Herausfallen für seine Sitzprüfung aus. Bestehende Konfrontations-, NPC-/Laborphysik-, Verkehrs-, Fahrer-, Freigabe- und Streifenprüfungen bleiben enthalten. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
 
 ## Projektilwirkung durch Fahrzeugglas · feature/bodPhysics
 
-Eine gemeinsame begrenzte Strahlverfolgung (`scripts/projectile_trace.gd`) wird von Spieler-Glock und NPC-Pistole benutzt. Intaktes/angerissenes Glas erhält genau einen Schaden pro Schuss; seine Kollisions-RID wird anschließend nur für diesen Schuss ausgeschlossen. Der Strahl wird erneut bis zur nächsten Fläche geprüft. Der Wirkungsfaktor wird je Scheibe mit 0,8 multipliziert. Nach höchstens 16 Glasebenen endet die Durchdringung; feste Flächen stoppen jederzeit. Sicht- und Zielabfragen bleiben ohne Seiteneffekte.
+Eine gemeinsame begrenzte Strahlverfolgung (`game/weapons/projectile_trace.gd`) wird von Spieler-Glock und NPC-Pistole benutzt. Intaktes/angerissenes Glas erhält genau einen Schaden pro Schuss; seine Kollisions-RID wird anschließend nur für diesen Schuss ausgeschlossen. Der Strahl wird erneut bis zur nächsten Fläche geprüft. Der Wirkungsfaktor wird je Scheibe mit 0,8 multipliziert. Nach höchstens 16 Glasebenen endet die Durchdringung; feste Flächen stoppen jederzeit. Sicht- und Zielabfragen bleiben ohne Seiteneffekte.
 
 Beim NPC werden Impuls und regionaler Kraftverlust reduziert. Kopfverlust bleibt bei 95 %, damit der Kopfschuss tödlich ist; sein Impuls wird trotzdem reduziert. Eine Scheibe ergibt am Rumpf 76 % statt 95 % Kraftverlust und beim Spieler 20 statt 25 Gesundheitsschaden. Intaktes und angerissenes Glas bieten damit keine vollständige Deckung mehr. Glaszerstörung, Risse und Fahrzeugeinschussmarkierungen bleiben erhalten. Keine Abpraller, Glasdicken- oder Einfallswinkelsimulation.
 
-`tests/glass_penetration_test.gd` prüft alle vier Modelle, dieselbe Kugel an Glas und dahinterliegendem NPC, reduzierte Rumpfwirkung, weiterhin tödliche Kopfschüsse, durchbrochene Scheiben ohne Wirkungsabzug, zwei Scheiben mit 64 % Wirkung, eine dahinterliegende Wand und NPC-Schüsse auf den Spieler. Vorhandene reine Strahlabfragen dürfen weiterhin Glas als nächstes sichtbares Objekt liefern; die tatsächliche Schussauflösung übernimmt die Durchdringung.
+`tests/weapons/glass_penetration_test.gd` prüft alle vier Modelle, dieselbe Kugel an Glas und dahinterliegendem NPC, reduzierte Rumpfwirkung, weiterhin tödliche Kopfschüsse, durchbrochene Scheiben ohne Wirkungsabzug, zwei Scheiben mit 64 % Wirkung, eine dahinterliegende Wand und NPC-Schüsse auf den Spieler. Vorhandene reine Strahlabfragen dürfen weiterhin Glas als nächstes sichtbares Objekt liefern; die tatsächliche Schussauflösung übernimmt die Durchdringung.
 
 ## Körperphysik nach develop übernommen
 

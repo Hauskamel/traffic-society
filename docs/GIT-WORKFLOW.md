@@ -35,7 +35,7 @@ Große Binärdateien können bei Bedarf später über Git LFS verwaltet werden. 
 
 ## Erster Projektimport – durchgeführt
 
-Der funktionierende Windows-Stand wurde mit `project.godot`, `main.tscn`, `main.gd` und `main.gd.uid` übernommen. Generierte Inhalte aus `.godot` wurden ausgeschlossen. `main` und `develop` starten am selben Commit. Zukünftige Änderungen erfolgen nach dem oben beschriebenen Ablauf.
+Der funktionierende Windows-Stand wurde mit `project.godot`, `game/world/main.tscn`, `game/world/main.gd` und `game/world/main.gd.uid` übernommen. Generierte Inhalte aus `.godot` wurden ausgeschlossen. `main` und `develop` starten am selben Commit. Zukünftige Änderungen erfolgen nach dem oben beschriebenen Ablauf.
 
 ## Aktueller Entwicklungszweig
 
