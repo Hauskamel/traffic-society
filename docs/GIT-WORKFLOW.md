@@ -35,7 +35,7 @@ Große Binärdateien können bei Bedarf später über Git LFS verwaltet werden. 
 
 ## Erster Projektimport – durchgeführt
 
-Der funktionierende Windows-Stand wurde mit `project.godot`, `main.tscn`, `main.gd` und `main.gd.uid` übernommen. Generierte Inhalte aus `.godot` wurden ausgeschlossen. `main` und `develop` starten am selben Commit. Zukünftige Änderungen erfolgen nach dem oben beschriebenen Ablauf.
+Der funktionierende Windows-Stand wurde mit `project.godot`, `game/world/main.tscn`, `game/world/main.gd` und `game/world/main.gd.uid` übernommen. Generierte Inhalte aus `.godot` wurden ausgeschlossen. `main` und `develop` starten am selben Commit. Zukünftige Änderungen erfolgen nach dem oben beschriebenen Ablauf.
 
 ## Aktueller Entwicklungszweig
 
@@ -48,3 +48,7 @@ Nach Übernahme von PR #3 enthält `develop` sowohl die erweiterte Fahrzeugdurch
 ## Körperphysik übernommen
 
 PR #5 ist mit „Merge Körperphysik“ nach `develop` zusammengeführt. Künftige Features starten von diesem aktualisierten Stand. Commit-Betreffzeilen bleiben kurz und beschreiben die Änderung; Einzelheiten gehören in die Dokumentation oder PR-Beschreibung.
+
+## Strukturüberarbeitung
+
+`feature/projectStructure` startet vom aktualisierten `develop`. Verschiebungen und Ressourcenpfade sind im kurzen Commit „Projekt geordnet“ getrennt von Kommentaren und Formatierung nachvollziehbar. Der Branch enthält keine neuen Spielfunktionen.
