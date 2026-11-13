@@ -20,6 +20,7 @@ var last_world_position := Vector3.ZERO
 var measured_velocity := Vector3.ZERO
 const Timings = preload("res://game/config/interaction_timings.gd")
 const DURATION := Timings.DRIVER_TRANSITION
+var transition_duration := DURATION
 const SEARCH_DURATION := Timings.PERSON_SEARCH
 var arrested := false
 var surrendered := false
@@ -472,7 +473,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not is_busy():
 		return
-	progress = minf(1.0, progress + delta / DURATION)
+	progress = minf(1.0, progress + delta / transition_duration)
 	apply_pose(progress if state == State.EXITING else 1.0 - progress)
 	if progress >= 1.0:
 		state = State.OUTSIDE if state == State.EXITING else State.SEATED

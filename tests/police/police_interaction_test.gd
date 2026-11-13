@@ -89,9 +89,7 @@ func run() -> void:
 	)
 	key(KEY_T)
 	check(scene.radio_open and scene.radio_panel.visible, "T must show walkie-talkie close-up")
-	for button in scene.radio_panel.service_buttons:
-		button.pressed.emit()
-	check(not scene.patrol.active(), "Preview service buttons must not request an incident")
+	check(not scene.patrol.active(), "Opening radio does not start custody request")
 	# The established backend is still covered independently of the new inert UI.
 	check(scene.patrol.request_pickup(source), "Existing pickup backend remains usable")
 	scene.update_radio()

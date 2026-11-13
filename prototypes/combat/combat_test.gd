@@ -228,6 +228,9 @@ func update_part_focus() -> void:
 ## Ersetzt allgemeine Kontrollhinweise durch Aussteigen oder Sichern im Konfrontationstest.
 func refresh_encounter_ui() -> void:
 	super.refresh_encounter_ui()
+	if is_instance_valid(control_hint):
+		control_hint.position = Vector2(18, 145)
+		control_hint.text = "WASD Bewegen · E Interaktion · Shift Griff · Rechtsklick Zielen\nLinksklick Schuss · F Nachladen · R Szene neu starten · F10 Zurück"
 	if not is_instance_valid(combat):
 		return
 	interact_hint.text = (

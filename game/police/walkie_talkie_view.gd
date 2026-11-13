@@ -1,12 +1,14 @@
-## Nahansicht des Funkgeräts mit monochromem LCD und vier Einsatz-Platzhaltern.
-## Die Einsatzknöpfe sind bewusst ohne Signale; nur Schließen ist bereits bedienbar.
+## Funkgerät-Nahansicht mit LCD, Einsatzkontingenten und verzögerter Anforderung.
+## Einsatzlogik liegt in EmergencyDispatch; die Ansicht zeigt nur Auswahl und Restzahlen.
 
 extends PanelContainer
 signal closed
+signal service_requested(service: String)
+var dispatch: Node
+var status_label: Label
 const INK := Color("172d10")
 const LCD := Color("9ccf45")
 const SERVICES := [
-	["police", "Polizei"],
 	["fire", "Feuerwehr"],
 	["medical", "Sanitäter"],
 	["backup", "Verstärkung"],
@@ -83,21 +85,26 @@ func _ready() -> void:
 		button.expand_icon = true
 		button.add_theme_constant_override("icon_max_width", 32)
 		button.add_theme_constant_override("h_separation", 6)
-		button.add_theme_font_size_override("font_size", 16)
+		button.add_theme_font_size_override("font_size", 14)
 		button.custom_minimum_size = Vector2(148, 87)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.add_theme_color_override("font_color", INK)
 		button.focus_mode = Control.FOCUS_NONE
-		button.tooltip_text = "Einsatzfunktion folgt in Schritt 2."
+		button.tooltip_text = "Einheit anfordern (ca. 10 Sekunden)."
+		button.pressed.connect(func(): service_requested.emit(entry[0]))
 		for state in ["normal", "hover", "pressed", "focus"]:
 			button.add_theme_stylebox_override(
 				state, style(Color("8dbd3f") if state == "normal" else Color("b2de61"), INK, 2, 2)
 			)
 			button.add_theme_color_override("font_" + state + "_color", INK)
+		button.add_theme_stylebox_override(
+			"disabled", style(Color("809c48"), Color("526337"), 2, 2)
+		)
+		button.add_theme_color_override("font_disabled_color", Color("344a20"))
 		grid.add_child(button)
 		service_buttons.append(button)
-	var hint := lcd_text("AUSWAHL BEREIT", 13, screen)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label = lcd_text("AUSWAHL BEREIT", 13, screen)
+	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var slots := Label.new()
 	slots.text = "━━━━━━━━━━━━━━━━━━━━\n━━━━━━━━━━━━━━━━━━━━\n━━━━━━━━━━━━━━━━━━━━"
 	slots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -127,3 +134,18 @@ func _ready() -> void:
 func _draw() -> void:
 	draw_style_box(style(Color("182124"), Color("465057"), 7, 2), Rect2(25, -94, 18, 100))
 	draw_style_box(style(Color("303c3e"), Color("52615d"), 4, 2), Rect2(68, -12, 38, 17))
+
+
+## Aktualisiert Restkontingente und sperrt ausgeschöpfte Anforderungsarten.
+func refresh_requests() -> void:
+	if not is_instance_valid(dispatch):
+		return
+	for i in range(service_buttons.size()):
+		var left: int = dispatch.remaining(SERVICES[i][0])
+		service_buttons[i].text = SERVICES[i][1] + " (" + str(left) + ")"
+		service_buttons[i].disabled = left <= 0
+	status_label.text = (
+		"ANFAHRT: " + str(dispatch.pending.size())
+		if not dispatch.pending.is_empty()
+		else "FUNK BEREIT"
+	)

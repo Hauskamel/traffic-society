@@ -53,6 +53,9 @@ var patrol: PatrolDispatch
 var player_avatar: Node3D
 var radio_model: Node3D
 var radio_panel: PanelContainer
+const EmergencyDispatch = preload("res://game/police/emergency_dispatch.gd")
+var emergency_dispatch: Node
+var control_hint: Label
 const WalkieTalkieView = preload("res://game/police/walkie_talkie_view.gd")
 var radio_open := false
 var avatar_clock := 0.0
@@ -284,9 +287,16 @@ func _ready() -> void:
 	interaction_rows.add_theme_font_size_override("normal_font_size", 20)
 	menu_margin.add_child(interaction_rows)
 	interaction_panel.visible = false
+	emergency_dispatch = EmergencyDispatch.new()
+	emergency_dispatch.scene = self
+	add_child(emergency_dispatch)
 	radio_panel = WalkieTalkieView.new()
 	layer.add_child(radio_panel)
 	radio_panel.closed.connect(set_radio_open.bind(false))
+	radio_panel.dispatch = emergency_dispatch
+	radio_panel.service_requested.connect(emergency_dispatch.request)
+	emergency_dispatch.changed.connect(radio_panel.refresh_requests)
+	radio_panel.refresh_requests()
 	radio_panel.visible = false
 	inventory_view = InventoryView.new()
 	layer.add_child(inventory_view)
@@ -308,6 +318,14 @@ func _ready() -> void:
 	compliance = NpcCompliance.new()
 	compliance.scene = self
 	add_child(compliance)
+	control_hint = Label.new()
+	control_hint.position = Vector2(18, 18)
+	control_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	control_hint.add_theme_font_size_override("font_size", 14)
+	control_hint.add_theme_color_override("font_shadow_color", Color.BLACK)
+	control_hint.add_theme_constant_override("shadow_offset_x", 1)
+	control_hint.add_theme_constant_override("shadow_offset_y", 1)
+	layer.add_child(control_hint)
 	update_camera()
 	refresh_encounter_ui()
 
@@ -597,6 +615,9 @@ func can_interact() -> bool:
 
 ## Aktualisiert Fadenkreuz, Suchfortschritt und kontextbezogene Bedienhinweise.
 func refresh_encounter_ui() -> void:
+	if is_instance_valid(control_hint):
+		control_hint.text = "WASD Bewegen  ·  Tab Perspektive  ·  I Inventar  ·  T Funkgerät\nE Interaktion  ·  Strg Sprinten  ·  Leertaste Klettern\n1/2 Waffe  ·  Shift Griff  ·  Rechtsklick Zielen  ·  Linksklick Schuss  ·  R Nachladen"
+		control_hint.visible = not document_mode.active and not inventory_view.visible
 	update_part_focus()
 	var searching := (
 		(is_instance_valid(searching_driver) or is_instance_valid(cargo_search_car))

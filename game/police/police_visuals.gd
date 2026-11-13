@@ -72,9 +72,9 @@ static func radio(parent: Node3D) -> Node3D:
 	screen.modulate = Color("17232b")
 	screen.position = Vector3(0, 0.105, 0.068)
 	handset.add_child(screen)
-	for i in range(4):
+	for i in range(3):
 		var label := Label3D.new()
-		label.text = ["POLIZEI", "FEUERW.", "SANIT.", "VERST."][i]
+		label.text = ["FEUERW.", "SANIT.", "VERST."][i]
 		label.font_size = 12
 		label.pixel_size = 0.00075
 		label.outline_size = 0
