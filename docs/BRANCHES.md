@@ -53,6 +53,7 @@ gitGraph LR:
     branch "feature/policeWalkieTalkie"
     checkout "feature/policeWalkieTalkie"
     commit id: "0535d94" tag: "LCD-Funkgeraet"
+    commit id: "786f5cf" tag: "Einsatzkraefte"
 ```
 
 **So liest du die Buslinie:** Jede Linie ist ein Branch, Punkte sind ausgewählte Commits. Eine Abzweigung startet einen Feature-Branch; eine zurücklaufende Verbindung übernimmt Änderungen. Die Verbindung von `develop` zu `feature/vehicleDamage` zeigt die damalige Aktualisierung des Feature-Branches mit der erweiterten Fahrzeugdurchsuchung, bevor die Fahrzeugschäden nach `develop` übernommen wurden.
@@ -63,7 +64,7 @@ gitGraph LR:
 | --- | --- | --- |
 | `main` | Stabiler Ausgangsstand; spätere Spielfunktionen noch nicht übernommen | `efe140c` – Straße und Parkbucht |
 | `develop` | Integrationsbranch inklusive Körperphysik, NPC-Testszene und neuer Projektstruktur | `10a85f7` – PR #6 übernommen |
-| `feature/policeWalkieTalkie` | Laufende Funkgerät-Vorschau; Einsatzknöpfe noch ohne Aktion | `0535d94` – monochromes LCD mit vier Icon-Knöpfen |
+| `feature/policeWalkieTalkie` | Laufende Funk- und Einsatzanforderungen | `786f5cf` – Kontingente, Einsatzfahrzeuge, Besatzungen und HUD |
 | `feature/projectStructure` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `4f5cee5` – Projektstruktur und Code-Dokumentation |
 | `feature/vehicleDamage` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `d7db46c` – Fahrzeugschäden inklusive damaligem `develop` |
 | `feature/extendedVehicleSearch` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `5384bec` – Gegenstände direkt im Fahrzeug untersuchen |

@@ -55,4 +55,4 @@ PR #5 ist mit „Merge Körperphysik“ nach `develop` zusammengeführt. Künfti
 
 ## Funkgerät-Vorschau
 
-`feature/policeWalkieTalkie` basiert auf dem strukturierten `develop`. Dieser Schritt enthält nur Gehäuse, LCD und vier noch unverbundene Einsatzknöpfe. Fahrzeuge und Besatzungen folgen in einem getrennten Schritt.
+`feature/policeWalkieTalkie` basiert auf dem strukturierten `develop`. Der Branch enthält LCD und drei verbundene Einsatzknöpfe mit begrenzten Anforderungen, verzögertem Spawn sowie Fahrzeugen/Besatzungen. Die Einsatzkräfte steigen aus und laufen umher; fachliche Aufgaben folgen später.

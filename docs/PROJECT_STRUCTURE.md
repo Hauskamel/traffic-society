@@ -22,7 +22,7 @@ traffic-society/
 │   ├── inventory/                # Inventardaten, Oberfläche und Gegenstandsvorschau
 │   ├── inspection/               # Ladungsziele, Behältermodelle und Untersuchung
 │   ├── documents/                # Dokumentdaten, Karten und Prüfungsmodus
-│   └── police/                   # Streifenabholung, Funkgerät und Polizeidarstellung
+│   └── police/                   # Funk, Einsatzanforderungen, Besatzungen und Abholung
 ├── prototypes/                   # Isolierte Entwicklungsumgebungen
 │   ├── body_physics/             # Physiklabor mit eigener Szene und Steuerung
 │   └── combat/                   # Ego-Konfrontation und fester Testgegner-Ablauf
