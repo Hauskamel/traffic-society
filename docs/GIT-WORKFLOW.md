@@ -1,5 +1,7 @@
 # Git-Arbeitsablauf
 
+[Git-Branches als visuelle Buslinie](BRANCHES.md) · Abzweigungen, Merges und aktueller Branch-Status.
+
 ## Branches
 
 - `main`: stabiler, geprüfter Stand. Enthält zu Beginn den hochgeladenen spielbaren Ausgangsstand und die Dokumentation.
