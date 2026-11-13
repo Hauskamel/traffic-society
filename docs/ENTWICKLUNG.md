@@ -588,6 +588,10 @@ Beim NPC werden Impuls und regionaler Kraftverlust reduziert. Kopfverlust bleibt
 
 `tests/glass_penetration_test.gd` prüft alle vier Modelle, dieselbe Kugel an Glas und dahinterliegendem NPC, reduzierte Rumpfwirkung, weiterhin tödliche Kopfschüsse, durchbrochene Scheiben ohne Wirkungsabzug, zwei Scheiben mit 64 % Wirkung, eine dahinterliegende Wand und NPC-Schüsse auf den Spieler. Vorhandene reine Strahlabfragen dürfen weiterhin Glas als nächstes sichtbares Objekt liefern; die tatsächliche Schussauflösung übernimmt die Durchdringung.
 
+## Körperphysik nach develop übernommen
+
+PR #5 wurde als Merge-Commit `860cb75` („Merge Körperphysik“) in `develop` übernommen. Enthalten sind Körperphysik, bewaffnete NPC-Testszene, Spielerschaden, Sitzphysik mit Ausrollen/Herausfallen und Glasdurchschüsse. Der Merge ist konfliktfrei; der übernommene Spielcode entspricht dem zuvor getesteten Feature-Stand. Branch-Buslinie und README sind aktualisiert. `main` und der vorhandene Feature-Branch werden durch diesen Schritt nicht verändert. Künftige Commit-Nachrichten werden kürzer gehalten.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

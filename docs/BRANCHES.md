@@ -2,7 +2,7 @@
 
 Stand: **13. November 2026**. Die farbigen Linien zeigen die tatsächlichen Abzweigungen und Zusammenführungen der Spielfunktionen. GitHub stellt das Mermaid-Diagramm direkt als Grafik dar.
 
-Die Übersicht ist ein **Schnappschuss vor der Ergänzung dieser Dokumentation**. Sie fasst Zwischenstände zusammen; die angegebenen Commit-IDs bezeichnen Spielstände. Die anschließenden reinen Dokumentationscommits auf den einzelnen Branches sind nicht eingezeichnet.
+Die Übersicht zeigt den **Spielstand nach dem Merge von PR #5**. Sie fasst Zwischenstände zusammen; die angegebenen Commit-IDs bezeichnen Spielstände. Die anschließenden reinen Dokumentationscommits auf den einzelnen Branches sind nicht eingezeichnet.
 
 ```mermaid
 gitGraph LR:
@@ -38,6 +38,10 @@ gitGraph LR:
     commit id: "8edd766" tag: "NPC-Treffer im Spiel"
     commit id: "0094051" tag: "Bewaffneter NPC-Test"
     commit id: "22dd1a0" tag: "Zeitlupen-Mausblick"
+    commit id: "aa538d5" tag: "Ausrollen und Herausfallen"
+    commit id: "8a70f82" tag: "Glasdurchschuesse"
+    checkout develop
+    merge "feature/bodPhysics" id: "860cb75"
 ```
 
 **So liest du die Buslinie:** Jede Linie ist ein Branch, Punkte sind ausgewählte Commits. Eine Abzweigung startet einen Feature-Branch; eine zurücklaufende Verbindung übernimmt Änderungen. Die Verbindung von `develop` zu `feature/vehicleDamage` zeigt die damalige Aktualisierung des Feature-Branches mit der erweiterten Fahrzeugdurchsuchung, bevor die Fahrzeugschäden nach `develop` übernommen wurden.
@@ -47,8 +51,8 @@ gitGraph LR:
 | Branch | Rolle / Status | Letzter Spielstand vor der Doku-Ergänzung |
 | --- | --- | --- |
 | `main` | Stabiler Ausgangsstand; spätere Spielfunktionen noch nicht übernommen | `efe140c` – Straße und Parkbucht |
-| `develop` | Integrationsbranch; Grundlagen, Durchsuchungen und Fahrzeugschäden zusammengeführt | `cc49440` – Fahrzeugschäden übernommen |
-| `feature/bodPhysics` | Laufende Entwicklung; noch nicht in `develop` zusammengeführt | `22dd1a0` – Körperphysik, bewaffneter NPC-Test und Zeitlupe |
+| `develop` | Integrationsbranch inklusive Körperphysik und bewaffneter NPC-Testszene | `860cb75` – PR #5 übernommen |
+| `feature/bodPhysics` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `8a70f82` – Körperphysik, NPC-Test, Ausrollen und Glasdurchschüsse |
 | `feature/vehicleDamage` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `d7db46c` – Fahrzeugschäden inklusive damaligem `develop` |
 | `feature/extendedVehicleSearch` | Bereits in `develop` zusammengeführt, Remote-Branch noch vorhanden | `5384bec` – Gegenstände direkt im Fahrzeug untersuchen |
 
@@ -60,7 +64,7 @@ gitGraph LR:
 - [PR #2](https://github.com/Hauskamel/traffic-society/pull/2): `feature/vehicleSearches` → `develop`, zusammengeführt.
 - [PR #4](https://github.com/Hauskamel/traffic-society/pull/4): `feature/extendedVehicleSearch` → `develop`, zusammengeführt.
 - [PR #3](https://github.com/Hauskamel/traffic-society/pull/3): `develop` zunächst in `feature/vehicleDamage` aktualisiert, anschließend `feature/vehicleDamage` → `develop`, zusammengeführt.
-- [PR #5](https://github.com/Hauskamel/traffic-society/pull/5): `feature/bodPhysics` → `develop`, derzeit offen.
+- [PR #5](https://github.com/Hauskamel/traffic-society/pull/5): `feature/bodPhysics` → `develop`, zusammengeführt.
 
 Die zeitliche Reihenfolge **#4 vor #3** ist beabsichtigt und entspricht der Git-Historie. Nach `main` wurden bislang keine späteren Spielfunktionen zusammengeführt. Dass diese Übersicht auch dort liegt, ändert den dortigen Spielstand nicht.
 

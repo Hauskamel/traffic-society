@@ -44,3 +44,7 @@ PR #1, PR #2 und PR #4 wurden nach `develop` übernommen. Der aktive Branch `fea
 ## Körperphysik-Labor
 
 Nach Übernahme von PR #3 enthält `develop` sowohl die erweiterte Fahrzeugdurchsuchung als auch die Fahrzeugschäden. `feature/bodPhysics` wurde von diesem Stand erstellt und ergänzt ein separates aktives Ragdoll-Testlabor. Änderungen werden separat nach `develop` vorgeschlagen.
+
+## Körperphysik übernommen
+
+PR #5 ist mit „Merge Körperphysik“ nach `develop` zusammengeführt. Künftige Features starten von diesem aktualisierten Stand. Commit-Betreffzeilen bleiben kurz und beschreiben die Änderung; Einzelheiten gehören in die Dokumentation oder PR-Beschreibung.

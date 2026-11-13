@@ -15,7 +15,7 @@ Ein kompakter 3D-Prototyp für ein Polizeikontrollspiel: Verkehr aus der Vogelpe
 
 ## Projektstatus
 
-`develop` enthält die Grundlagen, direkte Fahrzeugdurchsuchung und Fahrzeugschäden. Der aktive Branch **feature/bodPhysics** ergänzt ein separates Körperphysik-Testlabor und regionale Glock-Treffer mit Körperphysik für die Spiel-NPCs. `main` bleibt unverändert.
+`develop` enthält die Grundlagen, Fahrzeugdurchsuchungen, Fahrzeugschäden und die über PR #5 zusammengeführte Körperphysik inklusive bewaffneter NPC-Testszene, Spielerschaden, Ausrollen und Glasdurchschüssen. `main` bleibt beim Ausgangsprototyp.
 
 Verkehr, Fahreraktionen, Inventare, Dokumentenansicht, Waffen und Streifenabholung bleiben verfügbar. Die folgenden Abschnitte dokumentieren die einzelnen Ausbaustufen.
 
