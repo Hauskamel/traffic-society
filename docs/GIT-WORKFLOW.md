@@ -52,3 +52,7 @@ PR #5 ist mit „Merge Körperphysik“ nach `develop` zusammengeführt. Künfti
 ## Strukturüberarbeitung
 
 `feature/projectStructure` startet vom aktualisierten `develop`. Verschiebungen und Ressourcenpfade sind im kurzen Commit „Projekt geordnet“ getrennt von Kommentaren und Formatierung nachvollziehbar. Der Branch enthält keine neuen Spielfunktionen.
+
+## Funkgerät-Vorschau
+
+`feature/policeWalkieTalkie` basiert auf dem strukturierten `develop`. Dieser Schritt enthält nur Gehäuse, LCD und vier noch unverbundene Einsatzknöpfe. Fahrzeuge und Besatzungen folgen in einem getrennten Schritt.

@@ -44,7 +44,7 @@ Der Ausgangsstand wurde beim Import mit Godot 4.6.3 im Headless-Modus geprüft. 
 | Linksklick beim Zielen | Glock-Einzelschuss |
 | R | Glock-Magazin wechseln; ersetzt den bisherigen Spieler-Reset |
 | Leertaste | Am offenen Heck von Transporter/Pickup hochklettern; auf der Ladefläche heruntersteigen |
-| T | Funkgerät öffnen / schließen; Streife für festgenommene Person anfordern |
+| T | Funkgerät öffnen / schließen; neue LCD-Einsatzwahl derzeit ohne Einsatzfunktion |
 | I | Eigenes Inventar in der Ego-Ansicht öffnen; Esc schließt |
 | Linksklick auf Auto | In der Übersicht auswählen; hält das Fahrzeug noch nicht an |
 | Zur Kontrolle anhalten | Ausgewähltes Fahrzeug ausdrücklich in die freie Bucht holen |
@@ -269,6 +269,8 @@ Prüft Pickup und Transporter, geschlossene/blockierte Einstiege, Hochklettern, 
 
 ## Weiterfahren, Spielerfigur und Streifenabholung
 
+**Hinweis für `feature/policeWalkieTalkie`:** Die folgende Abholung beschreibt das vorhandene interne Streifensystem. Die frühere Anforderungs-/Abbruchoberfläche ist hier durch eine bewusst funktionslose Display-Vorschau ersetzt. Über die neuen Knöpfe wird in diesem Schritt kein Fahrzeug angefordert.
+
 Beim ausgestiegenen Fahrer stehen **Einsteigen lassen** (Auto bleibt stehen) und **Weiterfahren lassen** (Einsteigen und anschließende Abfahrt) getrennt zur Verfügung. Offene manuelle Klappen müssen vor der Freigabe geschlossen sein. Der Spieler besitzt jetzt eine sichtbare Polizistenfigur in der Vogelperspektive.
 
 1. Fahrer aussteigen lassen und im Personenmenü **Festnehmen** wählen. Solange keine Abholung angefordert ist, lässt sich die Festnahme wieder aufheben.
@@ -478,3 +480,22 @@ Die Glock und NPC-Pistolen durchschlagen intaktes und angerissenes Fahrzeugglas.
 Bei NPCs reduziert Glas den lokalen Kraftverlust statt eines separaten Lebenspunktewerts: Ein normaler Körpertreffer verursacht weiterhin 95 % Verlust, hinter einer Scheibe 76 %. **Kopfschüsse bleiben auch durch Glas tödlich.** Der Trefferimpuls wird auch beim Kopf abgeschwächt. Spieler erhalten hinter einer Scheibe 20 statt 25 Schaden durch NPC-Schüsse. Der Faktor ist zentral in `game/weapons/projectile_trace.gd` definiert.
 
 `tests/weapons/glass_penetration_test.gd` prüft alle vier Fahrzeuge, reduzierte Rumpftreffer durch intaktes Glas, tödliche Kopftreffer durch angerissenes und zerstörtes Glas, mehrere Scheiben, einmalige Beschädigung je Scheibe, feste Deckung sowie reduzierte NPC-Treffer am Spieler. Reine Sicht-/Zielabfragen bleiben unverändernde Abfragen; nur abgegebene Schüsse beschädigen und durchdringen Glas.
+
+
+## Funkgerät mit LCD-Einsatzwahl · erster Schritt
+
+![Funkgerät mit grüner LCD-Einsatzwahl](docs/images/walkie_talkie.png)
+
+**T** öffnet die Nahansicht des Walkie-Talkies, **T oder Esc** schließt sie. Bewegung und Blick sind während der Bedienung gesperrt, die Welt läuft weiter. Die Nahansicht ersetzt das kleine Ego-Modell, damit das Gerät nicht doppelt angezeigt wird. Am Avatar bleibt das physische Funkgerät erhalten.
+
+Das Gehäuse besitzt Antenne, Drehknopf und Lautsprecher. Das grüne monochrome LCD orientiert sich an älteren Handy-Displays: dunkle Schrift, Monospace-Pixelraster, Signal-/Batterieanzeige und feine Displayzeilen. In einem **2×2-Raster** stehen **Polizei**, **Feuerwehr**, **Sanitäter** und **Verstärkung**, jeweils mit eigenem Icon.
+
+**Alle vier Einsatzknöpfe sind Platzhalter ohne Einsatzfunktion.** Es werden keine Fahrzeuge oder Besatzungen erzeugt. Der vorhandene Streifen-Backendablauf bleibt erhalten und wird unabhängig von dieser Oberfläche getestet. Die Beschriftungen werden erst im nächsten Schritt mit Einsatzaktionen verbunden.
+
+Für Schritt 2 vorgemerkt, noch nicht umgesetzt:
+
+- Verstärkung: ein zusätzlicher Polizeiwagen mit zwei Kollegen.
+- Rettungsdienst: ein Krankenwagen mit Tragen-Ladebereich und zwei Sanitätern.
+- Feuerwehr: ein großes Fahrzeug mit vier Feuerwehrleuten, drei vorne und einer hinten.
+
+Die Ansicht liegt unter `game/police/walkie_talkie_view.gd`, die vier eigenen SVG-Icons unter `assets/radio/`. `tests/police/walkie_talkie_test.gd` prüft das Raster, Beschriftungen/Icons, Öffnen/Schließen und dass die Knöpfe keine Einsatzanforderung auslösen. Die statischen Signal-/Batteriesymbole sind vorerst Dekoration, keine Funkreichweiten- oder Akkusimulation.

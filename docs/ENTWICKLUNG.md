@@ -606,6 +606,16 @@ Prüfung: Die Syntaxbäume aller 65 GDScripts stimmen nach Normalisierung der ne
 
 PR #6 wurde konfliktfrei mit „Merge Projektstruktur“ (`10a85f7`) nach `develop` übernommen. Der Spielstand entspricht dem zuvor geprüften Feature-Branch. Ordnerstruktur, Ressourcenpfade, Code-Kommentare und Entwicklungswerkzeuge sind damit Bestandteil von `develop`. Die Branch-Buslinie ist aktualisiert.
 
+## Funkgerät-Nahansicht · feature/policeWalkieTalkie
+
+Von `develop` wurde `feature/policeWalkieTalkie` erstellt. Ein separates UI-Modul unter `game/police/` ersetzt die bisherige Anforderungs-/Abbruchoberfläche durch ein Walkie-Talkie-Gehäuse mit grünem LCD. Das Display hat vier Icon-Knöpfe in zwei Spalten: Polizei, Feuerwehr, Sanitäter und Verstärkung. Monospace-Schrift ohne Kantenglättung, dunkle LCD-Farbe und transparente Zeilenstruktur bilden den Referenzstil nach. Antenne, Drehknopf und Lautsprecher machen das Gerät erkennbar. Die vier SVG-Icons sind eigene einfache Grafiken.
+
+T/Esc öffnen und schließen die Ansicht wie bisher. Das kleine Ego-Modell wird dabei ausgeblendet, während die Nahansicht das Gerät repräsentiert; die Avatar-Darstellung bleibt erhalten. Die physische Miniaturanzeige trägt ebenfalls den grünen Funkstil. Alle vier Einsatzknöpfe besitzen absichtlich keine Aktionsverbindungen. Die vorherige Abholanforderung ist in dieser Oberfläche vorübergehend nicht bedienbar. Das bestehende Streifen-Backend bleibt unverändert und wird im bisherigen Integrationstest direkt angefordert. Neue Fahrzeuge, Besatzungen oder Einsätze werden nicht erzeugt.
+
+Für den zweiten Schritt sind ein Polizeiwagen mit zwei Kollegen, ein Krankenwagen mit Tragenbereich und zwei Sanitätern sowie eine Feuerwehr mit vier Personen (drei vorne, eine hinten) vorgemerkt. Die zusätzliche Beschriftung „Polizei“ bleibt wie die anderen nur ein Platzhalter; konkrete Aktionen folgen separat.
+
+Prüfung: neuer Funkgerät-Test für 2×2-Aufteilung, vier Icons/Beschriftungen, fehlende Einsatz-Callbacks, ausbleibenden Spawn und Öffnen/Schließen. Grafische Sichtprüfung des LCD und Gehäuses. Bestehende Streifen- und Polizeiinteraktionsprüfungen prüfen das Backend weiter. Formatierungs- und Ressourcenprüfung gehören zum Abschluss. Godot 4.6.3/Linux; Windows/Godot 4.7.2 vor Ort noch prüfen.
+
 ## Dokumentationsregel
 
 Jeder umgesetzte Schritt ergänzt diese Datei um Verhalten, relevante technische Entscheidungen, tatsächliche Prüfung und offene Punkte. Geplante Funktionen werden nicht als abgeschlossen dokumentiert.

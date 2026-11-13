@@ -22,14 +22,15 @@ traffic-society/
 │   ├── inventory/                # Inventardaten, Oberfläche und Gegenstandsvorschau
 │   ├── inspection/               # Ladungsziele, Behältermodelle und Untersuchung
 │   ├── documents/                # Dokumentdaten, Karten und Prüfungsmodus
-│   └── police/                   # Streifenabholung und Polizeidarstellung
+│   └── police/                   # Streifenabholung, Funkgerät und Polizeidarstellung
 ├── prototypes/                   # Isolierte Entwicklungsumgebungen
 │   ├── body_physics/             # Physiklabor mit eigener Szene und Steuerung
 │   └── combat/                   # Ego-Konfrontation und fester Testgegner-Ablauf
 ├── assets/
 │   ├── audio/                    # Tondateien
 │   ├── effects/                  # Effekttexturen
-│   └── items/                    # Gegenstandssymbole
+│   ├── items/                    # Gegenstandssymbole
+│   └── radio/                    # Monochrome Einsatz-Icons
 ├── tests/                        # Nach Spielsystem gruppierte Integrationsprüfungen
 ├── tools/                        # Entwicklungswerkzeuge, nicht vom Spiel geladen
 └── docs/                         # Struktur, Konventionen, Entwicklung und Git-Verlauf
