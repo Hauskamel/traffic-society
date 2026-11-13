@@ -1,5 +1,7 @@
 # Entwicklungsschritte
 
+[Git-Branches als visuelle Buslinie](BRANCHES.md) · Abzweigungen, Merges und aktueller Branch-Status.
+
 ## Schritt 0 – Konzept und Technikwahl · abgeschlossen
 
 Ziel ist ein kleines Polizeikontrollspiel mit einer Verkehrsübersicht und begehbaren Kontrollen in der Ego-Perspektive. Figuren sollen vorbereitet sein und kleine eigene Geschichten besitzen. Zufällig erzeugte NPCs sind nicht vorgesehen.
